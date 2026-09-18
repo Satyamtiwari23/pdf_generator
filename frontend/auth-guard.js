@@ -35,7 +35,7 @@
   // Verify token with backend
   // ------------------------------------------------------------
 
-  fetch('/api/auth/me', {
+  fetch('https://pdf-generator-flax.vercel.app/api/auth/me', {
 
     method: 'GET',
 
