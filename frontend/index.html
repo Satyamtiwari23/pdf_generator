@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDFnest — All-in-one PDF toolkit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="theme.js"></script>
+  <script src="auth-guard.js"></script>
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+
+      <!-- Brand -->
+      <a href="index.html" class="brand">
+        <span class="logo">✦</span>
+        <span>
+          PDFnest
+          <small>All-in-one toolkit</small>
+        </span>
+      </a>
+
+      <!-- Header right side -->
+      <div class="header-actions">
+
+        <span class="badge">100% in your browser</span>
+
+        <!-- Theme toggle -->
+        <button id="themeToggle" class="theme-toggle" type="button">
+          <span id="themeIcon">☾</span>
+        </button>
+
+        <!-- Profile -->
+        <div class="profile-wrapper">
+
+          <button id="profileBtn" class="profile-btn" type="button" aria-label="Open profile">
+            <span id="profileInitial">S</span>
+          </button>
+
+          <!-- Profile dropdown -->
+          <div id="profileDropdown" class="profile-dropdown">
+
+            <div class="profile-info">
+              <div id="profileName" class="profile-name">
+                User
+              </div>
+
+              <div id="profileEmail" class="profile-email">
+                user@example.com
+              </div>
+            </div>
+
+            <div class="profile-divider"></div>
+
+            <button id="logoutBtn" class="profile-logout">
+              Logout
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Everything you need to <span class="grad">work with PDFs</span></h1>
+      <p>
+        Six powerful tools — write, convert, merge, compress, edit.
+        Everything runs locally in your browser.
+      </p>
+    </section>
+
+    <div class="tool-grid">
+
+      <a class="tool-card" href="text-to-pdf.html">
+        <span class="tool-icon">✍️</span>
+        <h3>Content to PDF</h3>
+        <p>Write or paste text and turn it into a clean, paginated PDF document.</p>
+        <span class="tool-cta">Open tool →</span>
+      </a>
+
+      <a class="tool-card" href="images-to-pdf.html">
+        <span class="tool-icon">🖼️</span>
+        <h3>Pics to PDF</h3>
+        <p>Drop photos, arrange them in any order, and export a beautiful image PDF.</p>
+        <span class="tool-cta">Open tool →</span>
+      </a>
+
+      <a class="tool-card" href="merge-pdf.html">
+        <span class="tool-icon">🔗</span>
+        <h3>Merge PDFs</h3>
+        <p>Combine multiple PDF files into one, with drag-and-drop reordering.</p>
+        <span class="tool-cta">Open tool →</span>
+      </a>
+
+      <a class="tool-card" href="compress-pdf.html">
+        <span class="tool-icon">🗜️</span>
+        <h3>Compress PDF</h3>
+        <p>Shrink large PDFs by re-encoding pages at your chosen quality level.</p>
+        <span class="tool-cta">Open tool →</span>
+      </a>
+
+      <a class="tool-card" href="word-to-pdf.html">
+        <span class="tool-icon">📄</span>
+        <h3>Word to PDF</h3>
+        <p>Convert .docx files to PDF while keeping headings, paragraphs, and lists.</p>
+        <span class="tool-cta">Open tool →</span>
+      </a>
+
+      <a class="tool-card" href="edit-pdf.html">
+        <span class="tool-icon">✏️</span>
+        <h3>Edit PDF</h3>
+        <p>Click any page to add text, then export your edited PDF instantly.</p>
+        <span class="tool-cta">Open tool →</span>
+      </a>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    Built with jsPDF, pdf-lib, and pdf.js · Your files never leave your device.
+  </footer>
+
+  <script>
+    (function () {
+
+      /* ==========================================================
+         USER PROFILE
+         ========================================================== */
+
+      const profileBtn = document.getElementById('profileBtn');
+      const profileDropdown = document.getElementById('profileDropdown');
+
+      const profileInitial = document.getElementById('profileInitial');
+      const profileName = document.getElementById('profileName');
+      const profileEmail = document.getElementById('profileEmail');
+
+      const user = JSON.parse(
+        localStorage.getItem('user') || 'null'
+      );
+
+      if (user) {
+
+        const name = user.name || 'User';
+        const email = user.email || '';
+
+        profileInitial.textContent =
+          name.trim().charAt(0).toUpperCase() || 'U';
+
+        profileName.textContent = name;
+        profileEmail.textContent = email;
+      }
+
+
+      /* ==========================================================
+         PROFILE DROPDOWN
+         ========================================================== */
+
+      profileBtn?.addEventListener('click', function (event) {
+
+        event.stopPropagation();
+
+        profileDropdown?.classList.toggle('show');
+
+      });
+
+
+      document.addEventListener('click', function (event) {
+
+        if (
+          profileDropdown &&
+          !profileDropdown.contains(event.target) &&
+          !profileBtn.contains(event.target)
+        ) {
+
+          profileDropdown.classList.remove('show');
+
+        }
+
+      });
+
+
+      /* ==========================================================
+         LOGOUT
+         ========================================================== */
+
+      document
+        .getElementById('logoutBtn')
+        ?.addEventListener('click', function () {
+
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+
+          window.location.href = 'login.html';
+
+        });
+
+    })();
+  </script>
+</body>
+
+</html>

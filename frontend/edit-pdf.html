@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Edit PDF — PDFnest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+<script src="theme.js"></script>
+<script src="auth-guard.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <span class="logo">✦</span>
+      <span>PDFnest<small>Edit PDF</small></span>
+    </a>
+    <a href="index.html" class="back-link">← All tools</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Add <span class="grad">text to your PDF</span></h1>
+    <p>Upload a PDF, click any page to drop a text box, then export your edited file.</p>
+  </section>
+
+  <section class="card">
+    <div class="field">
+      <label>Your PDF</label>
+      <div class="dropzone" id="dropzone" tabindex="0" role="button">
+        <div class="dz-icon">✏️</div>
+        <div class="dz-title">Drag &amp; drop a PDF here</div>
+        <div class="dz-sub">or <span class="link">browse files</span></div>
+      </div>
+      <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden />
+    </div>
+
+    <div class="options" id="optionsBlock" hidden>
+      <div class="field">
+        <label for="fontSize">Text size</label>
+        <select id="fontSize">
+          <option value="12">Small — 12pt</option>
+          <option value="14" selected>Medium — 14pt</option>
+          <option value="18">Large — 18pt</option>
+          <option value="24">Extra large — 24pt</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tools</label>
+        <button type="button" class="btn btn-ghost" id="addModeBtn" style="width:100%">➕ Add text (click)</button>
+      </div>
+    </div>
+
+    <div class="actions" id="actionsBlock" hidden>
+      <button class="btn btn-primary" id="exportBtn">⬇ Export edited PDF</button>
+    </div>
+  </section>
+
+  <section id="editorSection" hidden style="margin-top:28px">
+    <div class="section-head">
+      <div>
+        <h2>Pages <span class="count" id="pageCount">0</span></h2>
+        <p>Click "Add text" then click any page to place a text box.</p>
+      </div>
+    </div>
+    <div class="editor-pages" id="editorPages"></div>
+  </section>
+</main>
+
+<footer class="site-footer">Powered by pdf.js + pdf-lib · Files never leave your device.</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+  const $=(s,c=document)=>c.querySelector(s);
+  const $$=(s,c=document)=>Array.prototype.slice.call(c.querySelectorAll(s));
+  const uid=()=>Math.random().toString(36).slice(2,9);
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  let toastTimer=null;
+  function toast(m){ const el=$('#toast'); el.textContent=m; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2600); }
+
+  const state={
+    pdfBytes:null,
+    name:'',
+    pagesMeta:[],       // {w, h} in PDF points
+    annotations:[],     // {id, page, x, y, size, text}
+    addMode:false,
+    renderScale:1.5
+  };
+
+  async function loadPdf(fileList){
+    const f=Array.from(fileList).find(f=>f.type==='application/pdf'||/\.pdf$/i.test(f.name));
+    if(!f){ toast('Please choose a PDF'); return; }
+    try{
+      const buf=await f.arrayBuffer();
+      state.pdfBytes=buf.slice(0);
+      state.name=f.name;
+      state.annotations=[];
+
+      const pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise;
+      const container=$('#editorPages');
+      container.innerHTML='';
+      state.pagesMeta=[];
+
+      for(let i=1;i<=pdf.numPages;i++){
+        const page=await pdf.getPage(i);
+        const viewport=page.getViewport({scale:state.renderScale});
+
+        const wrap=document.createElement('div');
+        wrap.className='editor-page';
+        wrap.dataset.page=i-1;
+
+        const canvas=document.createElement('canvas');
+        canvas.width=Math.floor(viewport.width);
+        canvas.height=Math.floor(viewport.height);
+        wrap.appendChild(canvas);
+
+        const layer=document.createElement('div');
+        layer.className='annotations';
+        wrap.appendChild(layer);
+
+        container.appendChild(wrap);
+        await page.render({canvasContext:canvas.getContext('2d'), viewport}).promise;
+
+        state.pagesMeta.push({
+          w: viewport.width / state.renderScale,
+          h: viewport.height / state.renderScale
+        });
+      }
+
+      $('#pageCount').textContent = pdf.numPages + (pdf.numPages===1?' page':' pages');
+      $('#optionsBlock').hidden=false;
+      $('#actionsBlock').hidden=false;
+      $('#editorSection').hidden=false;
+
+      toast('PDF loaded — click "Add text" to start');
+    }catch(err){ console.error(err); toast('Could not read that PDF'); }
+  }
+
+  function setAddMode(on){
+    state.addMode=on;
+    const btn=$('#addModeBtn');
+    btn.textContent = on ? '✓ Click a page to place text' : '➕ Add text (click)';
+    $$('.editor-page').forEach(el=>el.classList.toggle('adding', on));
+  }
+
+  function renderAnnotations(){
+    $$('.annotations').forEach(l=>l.innerHTML='');
+    state.annotations.forEach(a=>{
+      const wrap=$('.editor-page[data-page="'+a.page+'"]');
+      if(!wrap) return;
+      const layer=wrap.querySelector('.annotations');
+      const meta=state.pagesMeta[a.page];
+      const left = a.x * state.renderScale;
+      const top  = (meta.h - a.y - a.size) * state.renderScale;
+
+      const div=document.createElement('div');
+      div.className='annot';
+      div.dataset.id=a.id;
+      div.style.left=left+'px';
+      div.style.top=top+'px';
+      div.style.fontSize=(a.size*state.renderScale)+'px';
+      div.innerHTML='<input value="'+escapeAttr(a.text)+'" /><button aria-label="Remove">✕</button>';
+
+      const input=div.querySelector('input');
+      input.addEventListener('input',()=>{ a.text=input.value; });
+      div.querySelector('button').addEventListener('click',()=>{
+        state.annotations=state.annotations.filter(x=>x.id!==a.id);
+        renderAnnotations();
+      });
+
+      layer.appendChild(div);
+    });
+  }
+  function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+  function initEditorClicks(){
+    $('#editorPages').addEventListener('click',e=>{
+      if(!state.addMode) return;
+      const wrap=e.target.closest('.editor-page');
+      if(!wrap) return;
+      const canvas=wrap.querySelector('canvas');
+      const rect=canvas.getBoundingClientRect();
+      const xPx=e.clientX-rect.left;
+      const yPx=e.clientY-rect.top;
+      const pageIdx=Number(wrap.dataset.page);
+      const size=Number($('#fontSize').value);
+
+      const xPdf = xPx / state.renderScale;
+      const yPdf = state.pagesMeta[pageIdx].h - (yPx / state.renderScale) - size;
+
+      state.annotations.push({ id:uid(), page:pageIdx, x:xPdf, y:yPdf, size, text:'Your text' });
+      renderAnnotations();
+      setAddMode(false);
+      toast('Text box added — edit it and export');
+    });
+  }
+
+  async function exportPdf(){
+    if(!state.pdfBytes){ toast('Load a PDF first'); return; }
+    const btn=$('#exportBtn'); btn.disabled=true; btn.textContent='Exporting…';
+    try{
+      const { PDFDocument, StandardFonts, rgb } = PDFLib;
+      const doc=await PDFDocument.load(state.pdfBytes);
+      const font=await doc.embedFont(StandardFonts.Helvetica);
+
+      state.annotations.forEach(a=>{
+        const page=doc.getPage(a.page);
+        const text=(a.text||'').trim();
+        if(!text) return;
+        page.drawText(text, {
+          x:a.x, y:a.y, size:a.size, font,
+          color: rgb(0.13, 0.1, 0.2)
+        });
+      });
+
+      const bytes=await doc.save();
+      const blob=new Blob([bytes], {type:'application/pdf'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download='PDFnest-edited-'+new Date().toISOString().slice(0,10)+'.pdf';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      toast('Edited PDF downloaded 🎉');
+    }catch(err){ console.error(err); toast('Export failed — try again'); }
+    finally{ btn.disabled=false; btn.textContent='⬇ Export edited PDF'; }
+  }
+
+  /* dropzone */
+  const dz=$('#dropzone'); const fileInput=$('#fileInput');
+  dz.addEventListener('click',()=>fileInput.click());
+  dz.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fileInput.click(); }});
+  fileInput.addEventListener('change',()=>{ loadPdf(fileInput.files); fileInput.value=''; });
+  ['dragenter','dragover'].forEach(evt=>{
+    dz.addEventListener(evt,e=>{ e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    dz.addEventListener(evt,e=>{
+      e.preventDefault(); e.stopPropagation();
+      if(evt==='dragleave' && dz.contains(e.relatedTarget)) return;
+      dz.classList.remove('dragover');
+    });
+  });
+  dz.addEventListener('drop',e=>{ if(e.dataTransfer && e.dataTransfer.files.length) loadPdf(e.dataTransfer.files); });
+  ['dragover','drop'].forEach(evt=>{
+    window.addEventListener(evt,e=>{ if(!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
+  });
+
+  $('#addModeBtn').addEventListener('click',()=>setAddMode(!state.addMode));
+  $('#exportBtn').addEventListener('click', exportPdf);
+
+  initEditorClicks();
+})();
+</script>
+</body>
+</html>

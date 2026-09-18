@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Word to PDF — PDFnest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+<script src="theme.js"></script>
+<script src="auth-guard.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <span class="logo">✦</span>
+      <span>PDFnest<small>Word to PDF</small></span>
+    </a>
+    <a href="index.html" class="back-link">← All tools</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Convert <span class="grad">Word to PDF</span></h1>
+    <p>Upload a .docx file — we'll keep headings, paragraphs, and lists, and give you a clean PDF.</p>
+  </section>
+
+  <section class="card">
+    <div class="field">
+      <label>Your Word file</label>
+      <div class="dropzone" id="dropzone" tabindex="0" role="button">
+        <div class="dz-icon">📄</div>
+        <div class="dz-title">Drag &amp; drop a .docx file</div>
+        <div class="dz-sub">or <span class="link">browse files</span> · .docx only</div>
+      </div>
+      <input type="file" id="fileInput" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden />
+    </div>
+
+    <div class="file-list" id="fileList"></div>
+
+    <div class="options" id="optionsBlock" hidden>
+      <div class="field">
+        <label for="pageSize">Page size</label>
+        <select id="pageSize">
+          <option value="a4">A4 — 210 × 297 mm</option>
+          <option value="letter">Letter — 8.5 × 11 in</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fontSize">Body font size</label>
+        <select id="fontSize">
+          <option value="11">Small — 11pt</option>
+          <option value="12" selected>Medium — 12pt</option>
+          <option value="14">Large — 14pt</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="convertBtn" disabled>📄 Convert &amp; download</button>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">Powered by mammoth.js + jsPDF · Files never leave your device.</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+  const $=(s,c=document)=>c.querySelector(s);
+
+  const PAGE_SIZES={ a4:{w:595.28,h:841.89}, letter:{w:612,h:792} };
+
+  let toastTimer=null;
+  function toast(m){ const el=$('#toast'); el.textContent=m; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2600); }
+
+  function fmtSize(b){
+    if(b<1024) return b+' B';
+    if(b<1048576) return (b/1024).toFixed(1)+' KB';
+    return (b/1048576).toFixed(2)+' MB';
+  }
+
+  const state={ file:null };
+
+  async function addFile(fileList){
+    const f=Array.from(fileList).find(f=>/\.docx$/i.test(f.name));
+    if(!f){ toast('Please choose a .docx file'); return; }
+    try{
+      const buf=await f.arrayBuffer();
+      state.file={ name:f.name, size:f.size, bytes:buf };
+      renderFile();
+    }catch(err){ console.error(err); toast('Could not read that file'); }
+  }
+
+  function renderFile(){
+    const list=$('#fileList'); list.innerHTML='';
+    if(!state.file){ $('#optionsBlock').hidden=true; $('#convertBtn').disabled=true; return; }
+    const f=state.file;
+    const el=document.createElement('div');
+    el.className='file-item';
+    el.innerHTML=
+      '<span class="file-icon">DOCX</span>'+
+      '<div class="file-info">'+
+        '<div class="file-name">'+f.name+'</div>'+
+        '<div class="file-size">'+fmtSize(f.size)+'</div>'+
+      '</div>'+
+      '<button class="remove" aria-label="Remove">✕</button>';
+    list.appendChild(el);
+    $('#optionsBlock').hidden=false;
+    $('#convertBtn').disabled=false;
+  }
+
+  /* ---------- Content walker: HTML → blocks ---------- */
+  function htmlToBlocks(html){
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const blocks=[];
+    const visit=(node)=>{
+      Array.from(node.children).forEach(el=>{
+        const tag=el.tagName.toLowerCase();
+        const text=(el.textContent||'').replace(/\s+/g,' ').trim();
+        if(!text) return;
+        if(tag==='h1') blocks.push({type:'h1', text});
+        else if(tag==='h2') blocks.push({type:'h2', text});
+        else if(tag==='h3'||tag==='h4') blocks.push({type:'h3', text});
+        else if(tag==='p') blocks.push({type:'p', text});
+        else if(tag==='li') blocks.push({type:'li', text});
+        else if(tag==='ul'||tag==='ol') visit(el);
+        else if(tag==='blockquote') blocks.push({type:'quote', text});
+        else if(tag==='table'){
+          Array.from(el.querySelectorAll('tr')).forEach(tr=>{
+            const cells=Array.from(tr.children).map(td=>(td.textContent||'').trim());
+            if(cells.join('').trim()) blocks.push({type:'p', text:cells.join('   |   ')});
+          });
+        } else {
+          // recurse
+          visit(el);
+        }
+      });
+    };
+    visit(doc.body);
+    return blocks;
+  }
+
+  function wrapLine(ctx, text, fontSize, maxWidth, font){
+    ctx.font = font + ' ' + fontSize + 'px Helvetica, Arial, sans-serif';
+    const words=text.split(/\s+/);
+    const lines=[]; let line='';
+    for(const w of words){
+      const test = line ? line+' '+w : w;
+      if(ctx.measureText(test).width<=maxWidth) line=test;
+      else { if(line) lines.push(line); line=w; }
+    }
+    if(line) lines.push(line);
+    return lines;
+  }
+
+  const measure=document.createElement('canvas').getContext('2d');
+
+  async function convertAndDownload(){
+    if(!state.file){ toast('Add a .docx first'); return; }
+    const btn=$('#convertBtn'); btn.disabled=true; btn.textContent='Converting…';
+    try{
+      const result=await mammoth.convertToHtml({arrayBuffer:state.file.bytes});
+      const blocks=htmlToBlocks(result.value||'');
+      if(!blocks.length){ toast('No readable content in that file'); btn.disabled=false; btn.textContent='📄 Convert & download'; return; }
+
+      const jsPDF=window.jspdf.jsPDF;
+      const sizeKey=$('#pageSize').value;
+      const bodySize=Number($('#fontSize').value);
+      const dims=PAGE_SIZES[sizeKey]||PAGE_SIZES.a4;
+      const margin=56;
+      const maxWidth=dims.w-margin*2;
+
+      const doc=new jsPDF({unit:'pt', format:[dims.w,dims.h], orientation:'portrait', compress:true});
+      doc.setFont('helvetica','normal');
+
+      let y=margin;
+      const lineGap = (fs)=>fs*1.45;
+      const spaceBefore = (fs)=>fs*0.7;
+      const spaceAfter = (fs)=>fs*0.5;
+
+      const ensureSpace=(needed)=>{
+        if(y+needed > dims.h - margin){
+          doc.addPage([dims.w,dims.h],'portrait');
+          y=margin;
+        }
+      };
+
+      for(const b of blocks){
+        let fs=bodySize, bold=false, indent=0, prefix='';
+        if(b.type==='h1'){ fs=bodySize+8; bold=true; }
+        else if(b.type==='h2'){ fs=bodySize+5; bold=true; }
+        else if(b.type==='h3'){ fs=bodySize+2; bold=true; }
+        else if(b.type==='li'){ indent=18; prefix='• '; }
+        else if(b.type==='quote'){ fs=bodySize; indent=16; }
+
+        doc.setFont('helvetica', bold?'bold':'normal');
+        doc.setFontSize(fs);
+
+        const fullText = prefix + b.text;
+        const lines=wrapLine(measure, fullText, fs, maxWidth-indent, bold?'bold':'normal');
+        const lh=lineGap(fs);
+
+        ensureSpace(spaceBefore(fs) + lines.length*lh + spaceAfter(fs));
+        y += spaceBefore(fs);
+
+        for(const line of lines){
+          ensureSpace(lh);
+          doc.text(line, margin+indent, y);
+          y += lh;
+        }
+        y += spaceAfter(fs);
+      }
+
+      doc.save('PDFnest-word-'+new Date().toISOString().slice(0,10)+'.pdf');
+      toast('PDF downloaded 🎉');
+    }catch(err){ console.error(err); toast('Conversion failed — try again'); }
+    finally{ btn.disabled=false; btn.textContent='📄 Convert & download'; }
+  }
+
+  const dz=$('#dropzone'); const fileInput=$('#fileInput');
+  dz.addEventListener('click',()=>fileInput.click());
+  dz.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fileInput.click(); }});
+  fileInput.addEventListener('change',()=>{ addFile(fileInput.files); fileInput.value=''; });
+  ['dragenter','dragover'].forEach(evt=>{
+    dz.addEventListener(evt,e=>{ e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    dz.addEventListener(evt,e=>{
+      e.preventDefault(); e.stopPropagation();
+      if(evt==='dragleave' && dz.contains(e.relatedTarget)) return;
+      dz.classList.remove('dragover');
+    });
+  });
+  dz.addEventListener('drop',e=>{ if(e.dataTransfer && e.dataTransfer.files.length) addFile(e.dataTransfer.files); });
+  ['dragover','drop'].forEach(evt=>{
+    window.addEventListener(evt,e=>{ if(!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
+  });
+
+  $('#fileList').addEventListener('click',e=>{
+    if(!e.target.closest('.remove')) return;
+    state.file=null; renderFile();
+  });
+
+  $('#convertBtn').addEventListener('click', convertAndDownload);
+})();
+</script>
+</body>
+</html>

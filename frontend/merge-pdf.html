@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Merge PDFs — PDFnest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+<script src="theme.js"></script>
+<script src="auth-guard.js"></script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <span class="logo">✦</span>
+      <span>PDFnest<small>Merge PDFs</small></span>
+    </a>
+    <a href="index.html" class="back-link">← All tools</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Merge <span class="grad">multiple PDFs</span> into one</h1>
+    <p>Drop in your PDFs, drag to reorder, and combine them into a single document.</p>
+  </section>
+
+  <section class="card">
+    <div class="field">
+      <label>Your PDF files</label>
+      <div class="dropzone" id="dropzone" tabindex="0" role="button">
+        <div class="dz-icon">📎</div>
+        <div class="dz-title">Drag &amp; drop PDFs here</div>
+        <div class="dz-sub">or <span class="link">browse files</span> · multiple allowed</div>
+      </div>
+      <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple hidden />
+    </div>
+
+    <div class="file-list" id="fileList"></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="mergeBtn" disabled>🔗 Merge &amp; download</button>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">Powered by pdf-lib · Files never leave your device.</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+  const $=(s,c=document)=>c.querySelector(s);
+  const $$=(s,c=document)=>Array.prototype.slice.call(c.querySelectorAll(s));
+  const uid=()=>Math.random().toString(36).slice(2,9);
+
+  let toastTimer=null;
+  function toast(m){ const el=$('#toast'); el.textContent=m; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2600); }
+
+  const state={ files:[] }; // { id, name, size, bytes }
+
+  function fmtSize(b){
+    if(b<1024) return b+' B';
+    if(b<1048576) return (b/1024).toFixed(1)+' KB';
+    return (b/1048576).toFixed(2)+' MB';
+  }
+
+  async function addFiles(fileList){
+    const files=Array.from(fileList).filter(f=>f.type==='application/pdf' || /\.pdf$/i.test(f.name));
+    if(!files.length){ toast('Please choose PDF files'); return; }
+    for(const file of files){
+      try{
+        const buf=await file.arrayBuffer();
+        // verify it's a PDF
+        try{ await PDFLib.PDFDocument.load(buf.slice(0)); }
+        catch(e){ toast('"'+file.name+'" is not a valid PDF'); continue; }
+        state.files.push({ id:uid(), name:file.name, size:file.size, bytes:buf });
+      }catch(err){ console.error(err); toast('Could not read "'+file.name+'"'); }
+    }
+    renderFiles();
+  }
+
+  function renderFiles(){
+    const list=$('#fileList'); list.innerHTML='';
+    state.files.forEach(f=>{
+      const el=document.createElement('div');
+      el.className='file-item';
+      el.draggable=true;
+      el.dataset.id=f.id;
+      el.innerHTML=
+        '<span class="file-handle">⠿</span>'+
+        '<span class="file-icon">PDF</span>'+
+        '<div class="file-info">'+
+          '<div class="file-name">'+f.name+'</div>'+
+          '<div class="file-size">'+fmtSize(f.size)+'</div>'+
+        '</div>'+
+        '<button class="remove" data-id="'+f.id+'" aria-label="Remove">✕</button>';
+      list.appendChild(el);
+    });
+    $('#mergeBtn').disabled = state.files.length < 2;
+  }
+
+  let dragEl=null;
+  function initDrag(){
+    const list=$('#fileList');
+    list.addEventListener('dragstart',e=>{
+      const el=e.target.closest('.file-item'); if(!el) return;
+      dragEl=el; el.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    list.addEventListener('dragend',()=>{
+      if(!dragEl) return; dragEl.classList.remove('dragging'); dragEl=null;
+      syncOrder();
+    });
+    list.addEventListener('dragover',e=>{
+      if(!dragEl) return; e.preventDefault();
+      const after=getAfter(list,e.clientY);
+      if(after==null) list.appendChild(dragEl);
+      else list.insertBefore(dragEl,after);
+    });
+    list.addEventListener('drop',e=>e.preventDefault());
+  }
+  function getAfter(container,y){
+    const els=$$('.file-item:not(.dragging)',container);
+    for(let i=0;i<els.length;i++){
+      const r=els[i].getBoundingClientRect();
+      if(y < r.top + r.height/2) return els[i];
+    }
+    return null;
+  }
+  function syncOrder(){
+    const ids=$$('.file-item',$('#fileList')).map(el=>el.dataset.id);
+    const map=new Map(state.files.map(f=>[f.id,f]));
+    state.files=ids.map(id=>map.get(id)).filter(Boolean);
+  }
+
+  async function mergeAndDownload(){
+    if(state.files.length<2){ toast('Add at least two PDFs'); return; }
+    const btn=$('#mergeBtn'); btn.disabled=true; btn.textContent='Merging…';
+    try{
+      const { PDFDocument } = PDFLib;
+      const out = await PDFDocument.create();
+      for(const f of state.files){
+        const src = await PDFDocument.load(f.bytes);
+        const pages = await out.copyPages(src, src.getPageIndices());
+        pages.forEach(p=>out.addPage(p));
+      }
+      const bytes = await out.save();
+      const blob = new Blob([bytes], {type:'application/pdf'});
+      const url = URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download='PDFnest-merged-'+new Date().toISOString().slice(0,10)+'.pdf';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      toast('Merged PDF downloaded 🎉');
+    }catch(err){ console.error(err); toast('Merge failed — try again'); }
+    finally{ btn.disabled=false; btn.textContent='🔗 Merge & download'; }
+  }
+
+  /* dropzone */
+  const dz=$('#dropzone'); const fileInput=$('#fileInput');
+  dz.addEventListener('click',()=>fileInput.click());
+  dz.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fileInput.click(); }});
+  fileInput.addEventListener('change',()=>{ addFiles(fileInput.files); fileInput.value=''; });
+  ['dragenter','dragover'].forEach(evt=>{
+    dz.addEventListener(evt,e=>{ e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    dz.addEventListener(evt,e=>{
+      e.preventDefault(); e.stopPropagation();
+      if(evt==='dragleave' && dz.contains(e.relatedTarget)) return;
+      dz.classList.remove('dragover');
+    });
+  });
+  dz.addEventListener('drop',e=>{ if(e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
+  ['dragover','drop'].forEach(evt=>{
+    window.addEventListener(evt,e=>{ if(!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
+  });
+
+  $('#fileList').addEventListener('click',e=>{
+    const btn=e.target.closest('.remove'); if(!btn) return;
+    state.files=state.files.filter(f=>f.id!==btn.dataset.id);
+    renderFiles();
+  });
+
+  $('#mergeBtn').addEventListener('click', mergeAndDownload);
+  initDrag();
+})();
+</script>
+</body>
+</html>
