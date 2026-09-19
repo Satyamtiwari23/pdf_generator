@@ -1435,7 +1435,7 @@ body.dark-theme .auth-field input:-webkit-autofill:focus {
     border: none;
     background: transparent;
 
-    color: #ffffff;
+    color: #111111;
     cursor: pointer;
 }
 
@@ -1445,8 +1445,13 @@ body.dark-theme .auth-field input:-webkit-autofill:focus {
     display: block;
 }
 
+/* Dark mode */
+body.dark-theme .password-toggle {
+    color: #ffffff;
+}
+
 .password-toggle:hover {
-    color: #b8b8b8;
+    opacity: 0.7;
 }
 
 .password-toggle:focus {
