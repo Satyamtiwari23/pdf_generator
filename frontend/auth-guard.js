@@ -22,9 +22,7 @@
   if (!token) {
 
     if (!publicPages.includes(currentPage)) {
-
       window.location.href = 'login.html';
-
     }
 
     return;
@@ -35,7 +33,7 @@
   // Verify token with backend
   // ------------------------------------------------------------
 
-  fetch('https://pdf-generator-ochre-two.vercel.app/api/auth', {
+  fetch('https://pdf-generator-ochre-two.vercel.app/api/auth/me', {
 
     method: 'GET',
 
@@ -63,7 +61,6 @@
 
       if (data.user) {
 
-        // Keep user information synchronized
         localStorage.setItem(
           'user',
           JSON.stringify(data.user)
@@ -85,15 +82,11 @@
 
       console.log('Authentication failed:', error.message);
 
-      // Remove invalid authentication data
       localStorage.removeItem('token');
       localStorage.removeItem('user');
 
-      // Send user to login
       if (!publicPages.includes(currentPage)) {
-
         window.location.href = 'login.html';
-
       }
 
     });
