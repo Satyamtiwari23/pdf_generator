@@ -1110,3 +1110,249 @@ body.dark-theme .auth-switch a {
 body.dark-theme .error-msg {
   color: #f87171;
 }
+
+
+
+/* ============================================================
+   DARK THEME — TOOL UI FIXES
+   ============================================================ */
+
+
+/* ---------- DROPZONE ---------- */
+
+body.dark-theme .dropzone {
+  background: linear-gradient(
+    180deg,
+    #211a2d 0%,
+    #191421 100%
+  );
+
+  border-color: #6d4ca5;
+  color: var(--ink);
+}
+
+body.dark-theme .dropzone:hover,
+body.dark-theme .dropzone:focus-visible {
+  background: #241c31;
+  border-color: #a78bfa;
+}
+
+body.dark-theme .dropzone.dragover {
+  background: #2b2040;
+  border-color: #a78bfa;
+}
+
+body.dark-theme .dz-title {
+  color: #f5f2ff;
+}
+
+body.dark-theme .dz-sub {
+  color: #aaa1bd;
+}
+
+body.dark-theme .dz-sub .link {
+  color: #b58cff;
+}
+
+
+/* ---------- FILE LIST ---------- */
+
+body.dark-theme .file-item {
+  background: #1b1624;
+  border-color: #3b2c50;
+}
+
+body.dark-theme .file-item:hover {
+  background: #211a2d;
+  border-color: #6d4ca5;
+}
+
+body.dark-theme .file-name {
+  color: #f5f2ff;
+}
+
+body.dark-theme .file-size {
+  color: #aaa1bd;
+}
+
+body.dark-theme .file-handle {
+  color: #a78bfa;
+}
+
+body.dark-theme .file-item .remove {
+  color: #aaa1bd;
+}
+
+body.dark-theme .file-item .remove:hover {
+  background: rgba(214, 69, 69, .15);
+  color: #f87171;
+}
+
+
+/* ---------- OPTIONS / CHECKBOX ---------- */
+
+body.dark-theme .check {
+  background: #1b1624;
+  border-color: #3b2c50;
+  color: #f5f2ff;
+}
+
+body.dark-theme .check:hover {
+  background: #211a2d;
+}
+
+
+/* ---------- SELECT DROPDOWN ---------- */
+
+body.dark-theme .field select {
+  background-color: #1b1624;
+  color: #f5f2ff;
+  border-color: #3b2c50;
+}
+
+body.dark-theme .field select option {
+  background: #1b1624;
+  color: #f5f2ff;
+}
+
+
+/* ---------- TEXTAREA ---------- */
+
+body.dark-theme textarea {
+  background: #1b1624;
+  color: #f5f2ff;
+  border-color: #3b2c50;
+}
+
+body.dark-theme textarea::placeholder {
+  color: #81778f;
+}
+
+
+/* ---------- UPLOAD IMAGE ITEMS ---------- */
+
+body.dark-theme .upload-item {
+  background: #1b1624;
+  border-color: #3b2c50;
+}
+
+
+/* ---------- PAGE CARDS ---------- */
+
+body.dark-theme .page-card {
+  background: #1b1624;
+  border-color: #3b2c50;
+}
+
+body.dark-theme .page-card:hover {
+  border-color: #6d4ca5;
+}
+
+
+/* ---------- SMALL TOOL BUTTONS ---------- */
+
+body.dark-theme .tool {
+  background: #211a2d;
+  color: #d7c4ff;
+  border-color: #4b3864;
+}
+
+body.dark-theme .tool:hover {
+  background: #2b2040;
+  border-color: #8b5cf6;
+  color: #f5f2ff;
+}
+
+body.dark-theme .tool.danger:hover {
+  background: rgba(214, 69, 69, .15);
+  border-color: #f87171;
+  color: #f87171;
+}
+
+
+/* ---------- EDITOR PAGE ---------- */
+
+/*
+   Keep the actual PDF page WHITE.
+   This represents the real PDF document.
+*/
+
+body.dark-theme .editor-page {
+  border-color: #3b2c50;
+}
+
+
+/* ---------- EDITOR TEXT BOX ---------- */
+
+body.dark-theme .annot {
+  background: rgba(24, 19, 33, .95);
+  border-color: #a78bfa;
+}
+
+body.dark-theme .annot input {
+  color: #f5f2ff;
+}
+
+body.dark-theme .annot button {
+  color: #aaa1bd;
+}
+
+body.dark-theme .annot button:hover {
+  color: #f87171;
+}
+
+
+/* ---------- SECTION HEADINGS ---------- */
+
+body.dark-theme .section-head h2 {
+  color: #f5f2ff;
+}
+
+body.dark-theme .section-head p {
+  color: #aaa1bd;
+}
+
+body.dark-theme .section-head .count {
+  background: rgba(125, 70, 220, .16);
+  color: #d7c4ff;
+  border-color: #4b3864;
+}
+
+
+/* ---------- GHOST BUTTON ---------- */
+
+body.dark-theme .btn-ghost {
+  background: #211a2d;
+  color: #d7c4ff;
+  border-color: #4b3864;
+}
+
+body.dark-theme .btn-ghost:hover {
+  background: #2b2040;
+  color: #f5f2ff;
+}
+
+
+/* ---------- BACK LINK ---------- */
+
+body.dark-theme .back-link {
+  color: #d7c4ff;
+}
+
+
+/* ---------- FOOTER ---------- */
+
+body.dark-theme .site-footer {
+  color: #8f869f;
+}
+
+
+/* ---------- AUTH INPUT AUTOFILL ---------- */
+
+body.dark-theme .auth-field input:-webkit-autofill,
+body.dark-theme .auth-field input:-webkit-autofill:hover,
+body.dark-theme .auth-field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #f5f2ff;
+  -webkit-box-shadow: 0 0 0 1000px #1b1624 inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
