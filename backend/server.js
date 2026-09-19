@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -9,6 +8,23 @@ require('dotenv').config();
 
 const app = express();
 
+// ============================================================
+// MONGODB CONNECTION
+// ============================================================
+
+let isMongoConnected = false;
+
+async function connectDB() {
+  if (isMongoConnected && mongoose.connection.readyState === 1) {
+    return;
+  }
+
+  await mongoose.connect(process.env.MONGO_URI);
+
+  isMongoConnected = true;
+
+  console.log('MongoDB Atlas Connected');
+}
 
 // ============================================================
 // MIDDLEWARE
@@ -95,6 +111,7 @@ function authenticateToken(req, res, next) {
 app.post('/api/auth/signup', async (req, res) => {
 
   try {
+    await connectDB();
 
     const { name, email, password } = req.body;
 
@@ -178,6 +195,8 @@ app.post('/api/auth/login', async (req, res) => {
 
   try {
 
+    await connectDB();
+
     const { email, password } = req.body;
 
     // Basic validation
@@ -255,6 +274,8 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 
   try {
 
+    await connectDB();
+
     const user = await User
       .findById(req.user.id)
       .select('-password');
@@ -289,25 +310,6 @@ app.get('/', (req, res) => {
   });
 });
 
-
-// ============================================================
-// MONGODB ATLAS CONNECTION
-// ============================================================
-
-mongoose.connect(process.env.MONGO_URI)
-
-  .then(() => {
-    console.log('MongoDB Atlas Connected');
-  })
-
-  .catch((error) => {
-
-    console.error(
-      'MongoDB connection error:',
-      error.message
-    );
-
-  });
-
-
 module.exports = app;
+
+
