@@ -1457,3 +1457,20 @@ body.dark-theme .password-toggle {
 .password-toggle:focus {
     outline: none;
 }
+
+
+.forgot-password {
+    text-align: right;
+    margin-top: -8px;
+    margin-bottom: 18px;
+}
+
+.forgot-password a {
+    color: #7c3aed;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.forgot-password a:hover {
+    text-decoration: underline;
+}
