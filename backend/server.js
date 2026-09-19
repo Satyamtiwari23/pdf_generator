@@ -282,27 +282,11 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 });
 
 
-// ============================================================
-// SERVE FRONTEND
-// ============================================================
-
-app.use(
-  express.static(
-    path.join(__dirname, '../frontend')
-  )
-);
-
-
-// ============================================================
-// ROOT ROUTE
-// ============================================================
-
 app.get('/', (req, res) => {
-
-  res.sendFile(
-    path.join(__dirname, '../frontend/index.html')
-  );
-
+  res.status(200).json({
+    status: 'OK',
+    message: 'PDFnest backend server is running'
+  });
 });
 
 
