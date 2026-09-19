@@ -1356,3 +1356,99 @@ body.dark-theme .auth-field input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 1000px #1b1624 inset;
   transition: background-color 5000s ease-in-out 0s;
 }
+
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 45px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 28px;
+    height: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+    border: none;
+    background: transparent;
+
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.eye-icon {
+    width: 19px;
+    height: 19px;
+    display: block;
+}
+
+.password-toggle:hover {
+    color: #b8b8b8;
+}
+
+.password-toggle:focus {
+    outline: none;
+}
+
+
+/* =========================
+   PASSWORD TOGGLE
+========================= */
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 45px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 28px;
+    height: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+    border: none;
+    background: transparent;
+
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.eye-icon {
+    width: 19px;
+    height: 19px;
+    display: block;
+}
+
+.password-toggle:hover {
+    color: #b8b8b8;
+}
+
+.password-toggle:focus {
+    outline: none;
+}
