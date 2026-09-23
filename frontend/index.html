@@ -196,20 +196,20 @@
    LOGOUT
    ========================================================== */
 
-document
-  .getElementById('logoutBtn')
-  ?.addEventListener('click', function (event) {
+      document
+        .getElementById('logoutBtn')
+        ?.addEventListener('click', function (event) {
 
-    event.preventDefault();
+          event.preventDefault();
 
-    // Remove authentication data
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+          // Remove authentication data
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
 
-    // Replace current page instead of adding a new history entry
-    window.location.replace('login.html');
+          // Replace current page instead of adding a new history entry
+          window.location.replace('login.html');
 
-  });
+        });
     })();
   </script>
 </body>

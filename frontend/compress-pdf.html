@@ -1,201 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Compress PDF — PDFnest</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css" />
-<script src="theme.js"></script>
-<script src="auth-guard.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compress PDF — PDFnest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="theme.js"></script>
+  <script src="auth-guard.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
+
 <body>
 
-<header class="site-header">
-  <div class="header-inner">
-    <a href="index.html" class="brand">
-      <span class="logo">✦</span>
-      <span>PDFnest<small>Compress PDF</small></span>
-    </a>
-    <a href="index.html" class="back-link">← All tools</a>
-  </div>
-</header>
-
-<main>
-  <section class="hero">
-    <h1>Make your PDF <span class="grad">smaller</span></h1>
-    <p>Pick a compression level and we'll re-render every page as a compressed image. Best for scans and image-heavy PDFs.</p>
-  </section>
-
-  <section class="card">
-    <div class="field">
-      <label>Your PDF</label>
-      <div class="dropzone" id="dropzone" tabindex="0" role="button">
-        <div class="dz-icon">🗜️</div>
-        <div class="dz-title">Drag &amp; drop a PDF here</div>
-        <div class="dz-sub">or <span class="link">browse files</span></div>
-      </div>
-      <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden />
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <span class="logo">✦</span>
+        <span>PDFnest<small>Compress PDF</small></span>
+      </a>
+      <a href="index.html" class="back-link">← All tools</a>
     </div>
+  </header>
 
-    <div class="file-list" id="fileList"></div>
+  <main>
+    <section class="hero">
+      <h1>Make your PDF <span class="grad">smaller</span></h1>
+      <p>Pick a compression level and we'll re-render every page as a compressed image. Best for scans and image-heavy
+        PDFs.</p>
+    </section>
 
-    <div class="options" id="optionsBlock" hidden>
+    <section class="card">
       <div class="field">
-        <label for="level">Compression level</label>
-        <select id="level">
-          <option value="low">Low — smallest file</option>
-          <option value="medium" selected>Medium — balanced</option>
-          <option value="high">High — best quality</option>
-        </select>
+        <label>Your PDF</label>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button">
+          <div class="dz-icon">🗜️</div>
+          <div class="dz-title">Drag &amp; drop a PDF here</div>
+          <div class="dz-sub">or <span class="link">browse files</span></div>
+        </div>
+        <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden />
       </div>
-    </div>
 
-    <div class="actions">
-      <button class="btn btn-primary" id="compressBtn" disabled>🗜️ Compress &amp; download</button>
-    </div>
-  </section>
-</main>
+      <div class="file-list" id="fileList"></div>
 
-<footer class="site-footer">Powered by pdf.js + jsPDF · Files never leave your device.</footer>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+      <div class="options" id="optionsBlock" hidden>
+        <div class="field">
+          <label for="level">Compression level</label>
+          <select id="level">
+            <option value="low">Low — smallest file</option>
+            <option value="medium" selected>Medium — balanced</option>
+            <option value="high">High — best quality</option>
+          </select>
+        </div>
+      </div>
 
-<script>
-(function(){
-  'use strict';
-  const $=(s,c=document)=>c.querySelector(s);
-  const uid=()=>Math.random().toString(36).slice(2,9);
+      <div class="actions">
+        <button class="btn btn-primary" id="compressBtn" disabled>🗜️ Compress &amp; download</button>
+      </div>
+    </section>
+  </main>
 
-  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  <footer class="site-footer">Powered by pdf.js + jsPDF · Files never leave your device.</footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  let toastTimer=null;
-  function toast(m){ const el=$('#toast'); el.textContent=m; el.classList.add('show');
-    clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2600); }
+  <script>
+    (function () {
+      'use strict';
+      const $ = (s, c = document) => c.querySelector(s);
+      const uid = () => Math.random().toString(36).slice(2, 9);
 
-  function fmtSize(b){
-    if(b<1024) return b+' B';
-    if(b<1048576) return (b/1024).toFixed(1)+' KB';
-    return (b/1048576).toFixed(2)+' MB';
-  }
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-  const state={ file:null };
-
-  async function addFile(fileList){
-    const f=Array.from(fileList).find(f=>f.type==='application/pdf'||/\.pdf$/i.test(f.name));
-    if(!f){ toast('Please choose a PDF'); return; }
-    try{
-      const buf=await f.arrayBuffer();
-      // quick validity check
-      await pdfjsLib.getDocument({data:new Uint8Array(buf.slice(0))}).promise;
-      state.file={ name:f.name, size:f.size, bytes:buf };
-      renderFile();
-    }catch(err){ console.error(err); toast('Could not read that PDF'); }
-  }
-
-  function renderFile(){
-    const list=$('#fileList'); list.innerHTML='';
-    if(!state.file){ $('#optionsBlock').hidden=true; $('#compressBtn').disabled=true; return; }
-    const f=state.file;
-    const el=document.createElement('div');
-    el.className='file-item';
-    el.innerHTML=
-      '<span class="file-icon">PDF</span>'+
-      '<div class="file-info">'+
-        '<div class="file-name">'+f.name+'</div>'+
-        '<div class="file-size">Original: '+fmtSize(f.size)+'</div>'+
-      '</div>'+
-      '<button class="remove" aria-label="Remove">✕</button>';
-    list.appendChild(el);
-    $('#optionsBlock').hidden=false;
-    $('#compressBtn').disabled=false;
-  }
-
-  const LEVELS = {
-    low:    { scale:1.0, quality:0.5,  jpeg:'FAST' },
-    medium: { scale:1.4, quality:0.7,  jpeg:'MEDIUM' },
-    high:   { scale:1.8, quality:0.88, jpeg:'SLOW' }
-  };
-
-  async function compressAndDownload(){
-    if(!state.file){ toast('Add a PDF first'); return; }
-    const btn=$('#compressBtn'); btn.disabled=true; btn.textContent='Compressing…';
-    try{
-      const cfg=LEVELS[$('#level').value]||LEVELS.medium;
-      const pdf=await pdfjsLib.getDocument({data:new Uint8Array(state.file.bytes.slice(0))}).promise;
-      const jsPDF=window.jspdf.jsPDF;
-      let doc=null;
-
-      for(let i=1;i<=pdf.numPages;i++){
-        const page=await pdf.getPage(i);
-        const viewport=page.getViewport({scale:cfg.scale});
-        const canvas=document.createElement('canvas');
-        canvas.width=Math.floor(viewport.width);
-        canvas.height=Math.floor(viewport.height);
-        const ctx=canvas.getContext('2d');
-        ctx.fillStyle='#ffffff';
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        await page.render({canvasContext:ctx, viewport}).promise;
-        const imgData=canvas.toDataURL('image/jpeg', cfg.quality);
-
-        const wPt=viewport.width/cfg.scale;
-        const hPt=viewport.height/cfg.scale;
-        const orientation = wPt>hPt ? 'landscape' : 'portrait';
-
-        if(!doc){
-          doc=new jsPDF({ unit:'pt', format:[wPt,hPt], orientation, compress:true });
-        } else {
-          doc.addPage([wPt,hPt], orientation);
-        }
-        doc.addImage(imgData, 'JPEG', 0, 0, wPt, hPt, undefined, cfg.jpeg);
+      let toastTimer = null;
+      function toast(m) {
+        const el = $('#toast'); el.textContent = m; el.classList.add('show');
+        clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
       }
 
-      const out=doc.output('blob');
-      const url=URL.createObjectURL(out);
-      const a=document.createElement('a');
-      a.href=url;
-      a.download='PDFnest-compressed-'+new Date().toISOString().slice(0,10)+'.pdf';
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      function fmtSize(b) {
+        if (b < 1024) return b + ' B';
+        if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+        return (b / 1048576).toFixed(2) + ' MB';
+      }
 
-      const saved=state.file.size-out.size;
-      const pct=Math.max(0, Math.round(saved/state.file.size*100));
-      toast(pct>0
-        ? 'Done — '+fmtSize(out.size)+' ('+pct+'% smaller) 🎉'
-        : 'Done — new file is '+fmtSize(out.size));
-    }catch(err){ console.error(err); toast('Compression failed — try again'); }
-    finally{ btn.disabled=false; btn.textContent='🗜️ Compress & download'; }
-  }
+      const state = { file: null };
 
-  const dz=$('#dropzone'); const fileInput=$('#fileInput');
-  dz.addEventListener('click',()=>fileInput.click());
-  dz.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fileInput.click(); }});
-  fileInput.addEventListener('change',()=>{ addFile(fileInput.files); fileInput.value=''; });
-  ['dragenter','dragover'].forEach(evt=>{
-    dz.addEventListener(evt,e=>{ e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); });
-  });
-  ['dragleave','drop'].forEach(evt=>{
-    dz.addEventListener(evt,e=>{
-      e.preventDefault(); e.stopPropagation();
-      if(evt==='dragleave' && dz.contains(e.relatedTarget)) return;
-      dz.classList.remove('dragover');
-    });
-  });
-  dz.addEventListener('drop',e=>{ if(e.dataTransfer && e.dataTransfer.files.length) addFile(e.dataTransfer.files); });
-  ['dragover','drop'].forEach(evt=>{
-    window.addEventListener(evt,e=>{ if(!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
-  });
+      async function addFile(fileList) {
+        const f = Array.from(fileList).find(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+        if (!f) { toast('Please choose a PDF'); return; }
+        try {
+          const buf = await f.arrayBuffer();
+          // quick validity check
+          await pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
+          state.file = { name: f.name, size: f.size, bytes: buf };
+          renderFile();
+        } catch (err) { console.error(err); toast('Could not read that PDF'); }
+      }
 
-  $('#fileList').addEventListener('click',e=>{
-    if(!e.target.closest('.remove')) return;
-    state.file=null; renderFile();
-  });
+      function renderFile() {
+        const list = $('#fileList'); list.innerHTML = '';
+        if (!state.file) { $('#optionsBlock').hidden = true; $('#compressBtn').disabled = true; return; }
+        const f = state.file;
+        const el = document.createElement('div');
+        el.className = 'file-item';
+        el.innerHTML =
+          '<span class="file-icon">PDF</span>' +
+          '<div class="file-info">' +
+          '<div class="file-name">' + f.name + '</div>' +
+          '<div class="file-size">Original: ' + fmtSize(f.size) + '</div>' +
+          '</div>' +
+          '<button class="remove" aria-label="Remove">✕</button>';
+        list.appendChild(el);
+        $('#optionsBlock').hidden = false;
+        $('#compressBtn').disabled = false;
+      }
 
-  $('#compressBtn').addEventListener('click', compressAndDownload);
-})();
-</script>
+      const LEVELS = {
+        low: { scale: 1.0, quality: 0.5, jpeg: 'FAST' },
+        medium: { scale: 1.4, quality: 0.7, jpeg: 'MEDIUM' },
+        high: { scale: 1.8, quality: 0.88, jpeg: 'SLOW' }
+      };
+
+      async function compressAndDownload() {
+        if (!state.file) { toast('Add a PDF first'); return; }
+        const btn = $('#compressBtn'); btn.disabled = true; btn.textContent = 'Compressing…';
+        try {
+          const cfg = LEVELS[$('#level').value] || LEVELS.medium;
+          const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(state.file.bytes.slice(0)) }).promise;
+          const jsPDF = window.jspdf.jsPDF;
+          let doc = null;
+
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const viewport = page.getViewport({ scale: cfg.scale });
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.floor(viewport.width);
+            canvas.height = Math.floor(viewport.height);
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            await page.render({ canvasContext: ctx, viewport }).promise;
+            const imgData = canvas.toDataURL('image/jpeg', cfg.quality);
+
+            const wPt = viewport.width / cfg.scale;
+            const hPt = viewport.height / cfg.scale;
+            const orientation = wPt > hPt ? 'landscape' : 'portrait';
+
+            if (!doc) {
+              doc = new jsPDF({ unit: 'pt', format: [wPt, hPt], orientation, compress: true });
+            } else {
+              doc.addPage([wPt, hPt], orientation);
+            }
+            doc.addImage(imgData, 'JPEG', 0, 0, wPt, hPt, undefined, cfg.jpeg);
+          }
+
+          const out = doc.output('blob');
+          const url = URL.createObjectURL(out);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'PDFnest-compressed-' + new Date().toISOString().slice(0, 10) + '.pdf';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+          const saved = state.file.size - out.size;
+          const pct = Math.max(0, Math.round(saved / state.file.size * 100));
+          toast(pct > 0
+            ? 'Done — ' + fmtSize(out.size) + ' (' + pct + '% smaller) 🎉'
+            : 'Done — new file is ' + fmtSize(out.size));
+        } catch (err) { console.error(err); toast('Compression failed — try again'); }
+        finally { btn.disabled = false; btn.textContent = '🗜️ Compress & download'; }
+      }
+
+      const dz = $('#dropzone'); const fileInput = $('#fileInput');
+      dz.addEventListener('click', () => fileInput.click());
+      dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+      fileInput.addEventListener('change', () => { addFile(fileInput.files); fileInput.value = ''; });
+      ['dragenter', 'dragover'].forEach(evt => {
+        dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        dz.addEventListener(evt, e => {
+          e.preventDefault(); e.stopPropagation();
+          if (evt === 'dragleave' && dz.contains(e.relatedTarget)) return;
+          dz.classList.remove('dragover');
+        });
+      });
+      dz.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files.length) addFile(e.dataTransfer.files); });
+      ['dragover', 'drop'].forEach(evt => {
+        window.addEventListener(evt, e => { if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
+      });
+
+      $('#fileList').addEventListener('click', e => {
+        if (!e.target.closest('.remove')) return;
+        state.file = null; renderFile();
+      });
+
+      $('#compressBtn').addEventListener('click', compressAndDownload);
+    })();
+  </script>
 </body>
+
 </html>
