@@ -1,12 +1,12 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+const { google } = require('googleapis');
 
-require('dotenv').config();
 
 const app = express();
 
@@ -76,17 +76,32 @@ const userSchema = new mongoose.Schema(
 const User = mongoose.model('User', userSchema);
 
 // ============================================================
-// PASSWORD RESET EMAIL
+// GMAIL API
 // ============================================================
 
-const mailTransporter = nodemailer.createTransport({
-  service: 'gmail',
+const googleOAuth2Client = new google.auth.OAuth2(
+    process.env.GMAIL_CLIENT_ID,
+    process.env.GMAIL_CLIENT_SECRET,
+    process.env.GMAIL_REDIRECT_URI
+);
 
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_APP_PASSWORD
-  }
+googleOAuth2Client.setCredentials({
+    refresh_token: process.env.GMAIL_REFRESH_TOKEN
 });
+
+const gmail = google.gmail({
+    version: 'v1',
+    auth: googleOAuth2Client
+});
+
+googleOAuth2Client.getAccessToken()
+    .then(() => {
+        console.log('GMAIL OAUTH INITIALIZED SUCCESSFULLY');
+    })
+    .catch((error) => {
+        console.error('GMAIL OAUTH INITIALIZATION FAILED:');
+        console.error(error.message);
+    });
 
 
 // ============================================================
@@ -341,72 +356,89 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const resetLink =
       `https://satyamtiwari23.github.io/pdf_generator/reset-password.html?token=${resetToken}`;
 
-    await mailTransporter.sendMail({
-
-      from: `"PDFnest" <${process.env.EMAIL_USER}>`,
-
-      to: user.email,
-
-      subject: 'Reset your PDFnest password',
-
-      html: `
-        <div style="
-          font-family: Arial, sans-serif;
-          max-width: 600px;
-          margin: auto;
-          padding: 30px;
-          color: #222;
-        ">
-
-          <h2 style="margin-bottom: 10px;">
-            Reset your PDFnest password
-          </h2>
-
-          <p>
-            Hi ${user.name},
-          </p>
-
-          <p>
-            We received a request to reset your PDFnest password.
-          </p>
-
-          <p>
-            Click the button below to create a new password.
-          </p>
-
-          <a
-            href="${resetLink}"
-            style="
-              display: inline-block;
-              padding: 12px 22px;
-              background: linear-gradient(90deg, #6d3df5, #9b35e8);
-              color: white;
-              text-decoration: none;
-              border-radius: 8px;
-              font-weight: bold;
-            "
-          >
-            Reset Password
-          </a>
-
-          <p style="margin-top: 25px;">
-            This link will expire in <strong>15 minutes</strong>.
-          </p>
-
-          <p>
-            If you did not request a password reset, you can safely
-            ignore this email.
-          </p>
-
-          <hr style="margin-top: 30px;">
-
-          <p style="font-size: 12px; color: #777;">
-            PDFnest — All-in-one PDF toolkit
-          </p>
-
-        </div>
+    const emailContent = [
+      `From: PDFnest <${process.env.GMAIL_USER}>`,
+      `To: ${user.email}`,
+      `Subject: Reset your PDFnest password`,
+      `Content-Type: text/html; charset=utf-8`,
+      ``,
       `
+  <div style="
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: auto;
+    padding: 30px;
+    color: #222;
+  ">
+
+    <h2 style="margin-bottom: 10px;">
+      Reset your PDFnest password
+    </h2>
+
+    <p>
+      Hi ${user.name},
+    </p>
+
+    <p>
+      We received a request to reset your PDFnest password.
+    </p>
+
+    <p>
+      Click the button below to create a new password.
+    </p>
+
+    <p>
+      <a
+        href="${resetLink}"
+        style="
+          display: inline-block;
+          padding: 12px 22px;
+          background: linear-gradient(90deg, #6d3df5, #9b35e8);
+          color: white;
+          text-decoration: none;
+          border-radius: 8px;
+          font-weight: bold;
+        "
+      >
+        Reset Password
+      </a>
+    </p>
+
+    <p style="margin-top: 25px;">
+      This link will expire in <strong>15 minutes</strong>.
+    </p>
+
+    <p>
+      If you did not request a password reset, you can safely ignore this email.
+    </p>
+
+    <hr style="margin-top: 30px;">
+
+    <p style="font-size: 12px; color: #777;">
+      PDFnest — All-in-one PDF toolkit
+    </p>
+
+  </div>
+  `
+    ].join('\r\n');
+
+    const encodedMessage = Buffer.from(emailContent)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    const result = await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: {
+        raw: encodedMessage
+      }
     });
+
+    console.log(
+      'Gmail reset email sent successfully:',
+      result.data.id
+    );
 
     res.json({
       message:
@@ -549,6 +581,16 @@ app.get('/', (req, res) => {
   });
 });
 
+// ============================================================
+// SERVER
+// ============================================================
+
+const PORT = process.env.PORT || 5050;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Backend running at http://localhost:${PORT}`);
+  });
+}
+
 module.exports = app;
-
-
