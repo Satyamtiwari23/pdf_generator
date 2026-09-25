@@ -60,21 +60,37 @@
        ========================================================= */
     .app-container {
       display: flex;
-      height: 100vh;
+      flex-direction: row;
+
       width: 100vw;
+      height: 100vh;
+
+      margin: 0;
+      padding: 0;
+
       background: var(--bg-dark);
       color: #fff;
+
+      overflow: hidden;
     }
 
     /* Left Sidebar */
     .sidebar-left {
       width: 240px;
+      min-width: 240px;
+      max-width: 240px;
+
       background: var(--bg-panel);
       border-right: 1px solid var(--border);
+
       display: flex;
       flex-direction: column;
+
+      flex: 0 0 240px;
       flex-shrink: 0;
+
       z-index: 10;
+
       transition: background 0.3s ease, border-color 0.3s ease;
     }
 
@@ -171,6 +187,45 @@
       flex-direction: column;
       background: var(--bg-workspace);
       position: relative;
+    }
+
+    /* =========================================================
+   FULL-WIDTH EDITOR AREA
+   Remove unwanted horizontal gaps
+   ========================================================= */
+
+    #edSec {
+      width: 100vw !important;
+      height: 100vh !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    #edSec .main-area {
+      flex: 1 1 auto !important;
+      width: auto !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    #edSec .top-bar {
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding-left: 20px;
+      padding-right: 20px;
+      box-sizing: border-box;
+    }
+
+    #edSec .workspace {
+      width: 100% !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-sizing: border-box;
     }
 
     /* Top Bar */
@@ -272,7 +327,8 @@
     /* Workspace */
     .workspace {
       flex: 1;
-      overflow: auto;
+      min-height: 0;
+      overflow: hidden;
       padding: 0;
       display: flex;
       flex-direction: column;
@@ -285,8 +341,19 @@
 
     #pages {
       width: 100%;
+      height: 100%;
+      min-height: 0;
       margin: 0;
       padding: 0;
+      overflow: auto;
+
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      scrollbar-width: thin;
+      scrollbar-color: #555 var(--bg-dark);
     }
 
     .workspace::-webkit-scrollbar {
@@ -680,84 +747,256 @@
       border-color: #ccc;
     }
 
-    /* Floating Page Navigation */
-    .page-nav-floating {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: 40px;
-      padding: 6px 12px;
-      box-shadow: var(--shadow-lg);
-      z-index: 50;
-      backdrop-filter: blur(8px);
-      transition: background 0.3s ease, border-color 0.3s ease;
-    }
+    /* =========================================================
+   GLASS PAGE NAVIGATION
+   ========================================================= */
 
-    .page-nav-floating .nav-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      border: none;
-      background: transparent;
-      color: var(--text-main);
-      font-size: 18px;
-      cursor: pointer;
+    .page-nav-floating {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.15s, color 0.15s;
+      gap: 8px;
+
+      padding: 7px 10px;
+
+      /* Strong glass */
+      background: rgba(30, 30, 40, 0.55);
+
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 18px;
+
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.20);
+
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+
+      z-index: 1000;
+
+      user-select: none;
+      pointer-events: auto;
+
+      /* Prevent text from becoming transparent */
+      color: #ffffff;
+    }
+
+
+    /* =========================================================
+   ARROW BUTTONS
+   ========================================================= */
+
+    .page-nav-floating .nav-btn {
+      width: 34px;
+      height: 34px;
+
+      border: 0;
+      border-radius: 11px;
+
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+
+      font-size: 18px;
+      font-weight: 700;
+
+      cursor: pointer;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      transition:
+        background 0.18s ease,
+        transform 0.18s ease,
+        color 0.18s ease;
     }
 
     .page-nav-floating .nav-btn:hover:not(:disabled) {
-      background: var(--bg-hover);
-      color: var(--primary);
+      background: rgba(255, 255, 255, 0.24);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .page-nav-floating .nav-btn:active:not(:disabled) {
+      transform: translateY(0);
     }
 
     .page-nav-floating .nav-btn:disabled {
-      opacity: 0.3;
+      opacity: 0.45;
+      color: #ffffff;
       cursor: not-allowed;
     }
+
+
+    /* =========================================================
+   PAGE INDICATOR
+   ========================================================= */
 
     .page-indicator {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-muted);
+
+      min-width: 76px;
+      height: 34px;
+
+      padding: 0 8px;
+
+      border-radius: 11px;
+
+      background: rgba(255, 255, 255, 0.13);
+
+      border: 1px solid rgba(255, 255, 255, 0.18);
+
+      color: #ffffff !important;
+
+      font-size: 13px;
+      font-weight: 800;
+
+      white-space: nowrap;
+
+      text-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.65);
     }
 
-    /* Clean Number Input (No Spinners) */
+
+    /* =========================================================
+   CURRENT PAGE INPUT
+   ========================================================= */
+
     .page-indicator input {
       width: 42px;
-      padding: 4px;
+      height: 28px;
+
+      padding: 3px 5px;
+
+      box-sizing: border-box;
+
       text-align: center;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg-hover);
-      color: var(--text-main);
-      font-weight: 700;
+
+      border: 1px solid rgba(255, 255, 255, 0.30);
+      border-radius: 8px;
+
+      background: rgba(255, 255, 255, 0.18);
+
+      color: #ffffff !important;
+
+      font-weight: 800;
       font-family: var(--font-ui);
-      font-size: 14px;
+      font-size: 13px;
+
       outline: none;
-      transition: border-color 0.15s, background 0.15s;
+
+      text-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.65);
+
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+
+      transition:
+        border-color 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
     }
 
+    .page-indicator input:focus {
+      border-color: rgba(255, 255, 255, 0.65);
+
+      background: rgba(255, 255, 255, 0.24);
+
+      box-shadow:
+        0 0 0 2px rgba(167, 139, 250, 0.22);
+    }
+
+
+    /* The "/ 40" text */
+    .page-indicator>span {
+      color: #ffffff !important;
+
+      font-weight: 800;
+      font-size: 13px;
+
+      opacity: 1 !important;
+
+      text-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.70);
+    }
+
+
+    /* Remove number input spinners */
     .page-indicator input::-webkit-outer-spin-button,
     .page-indicator input::-webkit-inner-spin-button {
       -webkit-appearance: none;
       margin: 0;
     }
 
-    .page-indicator input:focus {
+    .page-indicator input[type="number"] {
+      appearance: textfield;
+    }
+
+
+    /* =========================================================
+   LIGHT MODE GLASS
+   ========================================================= */
+
+    body:not(.dark-theme) .page-nav-floating {
+      background: rgba(255, 255, 255, 0.72);
+
+      border-color: rgba(255, 255, 255, 0.85);
+
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+
+      color: #111827;
+    }
+
+    body:not(.dark-theme) .page-nav-floating .nav-btn {
+      background: rgba(255, 255, 255, 0.45);
+      color: #111827;
+    }
+
+    body:not(.dark-theme) .page-nav-floating .nav-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.75);
+      color: #111827;
+    }
+
+    body:not(.dark-theme) .page-indicator {
+      background: rgba(255, 255, 255, 0.55);
+
+      border-color: rgba(255, 255, 255, 0.85);
+
+      color: #111827 !important;
+
+      text-shadow: none;
+    }
+
+    body:not(.dark-theme) .page-indicator>span {
+      color: #111827 !important;
+
+      text-shadow: none;
+    }
+
+    body:not(.dark-theme) .page-indicator input {
+      background: rgba(255, 255, 255, 0.72);
+
+      border-color: rgba(0, 0, 0, 0.15);
+
+      color: #111827 !important;
+
+      text-shadow: none;
+    }
+
+    body:not(.dark-theme) .page-indicator input:focus {
+      background: rgba(255, 255, 255, 0.90);
+
       border-color: var(--primary);
-      background: var(--bg-panel);
     }
 
     /* Upload Screen */
@@ -863,8 +1102,7 @@
 
     body.dark-theme .sidebar-left,
     body.dark-theme .sidebar-right,
-    body.dark-theme .top-bar,
-    body.dark-theme .page-nav-floating {
+    body.dark-theme .top-bar {
       background: var(--bg-panel);
       border-color: var(--border);
       color: var(--text-main);
@@ -918,6 +1156,71 @@
 
     body.dark-theme .upload-overlay {
       background: linear-gradient(135deg, #141418 0%, #1E1E24 100%);
+    }
+
+    /* =========================================================
+   DARK MODE GLASS PAGE NAVIGATION
+   ========================================================= */
+
+    body.dark-theme .page-nav-floating {
+      background: rgba(20, 20, 28, 0.62);
+
+      border-color: rgba(255, 255, 255, 0.20);
+
+      box-shadow:
+        0 12px 35px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+
+      color: #ffffff !important;
+    }
+
+    body.dark-theme .page-nav-floating .nav-btn {
+      background: rgba(255, 255, 255, 0.10);
+
+      color: #ffffff !important;
+    }
+
+    body.dark-theme .page-nav-floating .nav-btn:hover:not(:disabled) {
+      background: rgba(167, 139, 250, 0.22);
+
+      color: #ffffff !important;
+    }
+
+    body.dark-theme .page-indicator {
+      background: rgba(255, 255, 255, 0.08);
+
+      border-color: rgba(255, 255, 255, 0.16);
+
+      color: #ffffff !important;
+
+      text-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.70);
+    }
+
+    body.dark-theme .page-indicator>span {
+      color: #ffffff !important;
+
+      opacity: 1 !important;
+
+      text-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.70);
+    }
+
+    body.dark-theme .page-indicator input {
+      background: rgba(255, 255, 255, 0.10);
+
+      border-color: rgba(255, 255, 255, 0.20);
+
+      color: #ffffff !important;
+
+      text-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.70);
+    }
+
+    body.dark-theme .page-indicator input:focus {
+      background: rgba(255, 255, 255, 0.18);
+
+      border-color: rgba(167, 139, 250, 0.70);
     }
   </style>
 </head>
