@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Noto+Sans:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Open+Sans:wght@400;700&family=Roboto:wght@400;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;700&family=Noto+Sans:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Open+Sans:wght@400;700&family=Roboto:wght@400;700&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <script src="theme.js"></script>
@@ -17,376 +17,830 @@
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
   <style>
-    .tbar {
-      position: sticky;
-      top: 0;
-      z-index: 50;
+    /* =========================================================
+       DESIGN SYSTEM & VARIABLES
+       ========================================================= */
+    :root {
+      --bg-dark: #1E1E24;
+      --bg-panel: #FFFFFF;
+      --bg-workspace: #2C2C36;
+      --bg-hover: #F3F4F6;
+      --bg-active: #EEF2FF;
+      --primary: #7B61FF;
+      --primary-hover: #6A4DFF;
+      --primary-light: #F0EDFF;
+      --text-main: #1A1A1A;
+      --text-muted: #6B7280;
+      --border: #E5E7EB;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+      --shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      --font-ui: 'Inter', 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-ui); background: var(--bg-dark); color: var(--text-main); height: 100vh; overflow: hidden; }
+
+    /* =========================================================
+       APP LAYOUT
+       ========================================================= */
+    .app-container {
       display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-      padding: 10px;
-      margin: 0 0 12px;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, .08)
-    }
-
-    .tbar .tb {
-      padding: 7px 11px;
-      border: 1px solid #d5d5dd;
-      background: #fafafc;
-      color: #222;
-      border-radius: 8px;
-      font: 600 13px 'Plus Jakarta Sans', sans-serif;
-      cursor: pointer
-    }
-
-    .tbar .tb:hover {
-      background: #eef
-    }
-
-    .tbar .tb.on {
-      background: #5b4bff;
+      height: 100vh;
+      width: 100vw;
+      background: var(--bg-dark);
       color: #fff;
-      border-color: #5b4bff
     }
 
-    .tbar .tb:disabled {
-      opacity: .4;
-      cursor: default
-    }
-
-    .tbar .sep {
-      width: 1px;
-      height: 24px;
-      background: #ddd;
-      margin: 0 4px
-    }
-
-    .tbar .zl {
-      min-width: 48px;
-      text-align: center;
-      font: 600 13px sans-serif;
-      color: #222
-    }
-
-    #props {
+    /* Left Sidebar */
+    .sidebar-left {
+      width: 240px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 10;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .sidebar-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
       align-items: center;
-      width: 100%;
-      padding-top: 8px;
-      border-top: 1px dashed #ddd;
-      font: 13px sans-serif;
-      color: #222
+      gap: 12px;
     }
+    .sidebar-header .logo { font-size: 24px; color: var(--primary); }
+    .sidebar-header h2 { font-size: 16px; font-weight: 700; color: var(--text-main); }
+    .sidebar-header small { font-size: 11px; color: var(--text-muted); display: block; }
 
-    #props[hidden] {
-      display: none
-    }
-
-    #props label {
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 12px;
       display: flex;
-      gap: 5px;
-      align-items: center
+      flex-direction: column;
+      gap: 24px;
     }
 
-    #props input[type=number] {
-      width: 60px
+    .tool-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .tool-group-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      padding: 0 12px;
+      margin-bottom: 4px;
     }
 
-    .ws {
-      background: #8d8fa3;
-      border-radius: 12px;
-      padding: 20px 8px;
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 10px 12px;
+      text-align: left;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    .tool-btn:hover { background: var(--bg-hover); color: var(--text-main); }
+    .tool-btn.active {
+      background: var(--bg-active);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .tool-btn .icon {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Main Area */
+    .main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-workspace);
+      position: relative;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      height: 60px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+      z-index: 10;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    .top-bar-left, .top-bar-right { display: flex; align-items: center; gap: 12px; }
+    .top-bar-center { display: flex; align-items: center; gap: 8px; background: var(--bg-hover); padding: 4px 8px; border-radius: var(--radius-md); }
+
+    .icon-btn {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent; border: none; border-radius: var(--radius-sm);
+      color: var(--text-muted); cursor: pointer; font-size: 18px;
+      transition: all 0.15s ease;
+    }
+    .icon-btn:hover { background: var(--bg-hover); color: var(--text-main); }
+    .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .icon-btn.active { background: var(--bg-active); color: var(--primary); }
+
+    .zoom-label { font-size: 13px; font-weight: 600; color: var(--text-main); min-width: 48px; text-align: center; }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      font-family: var(--font-ui);
+    }
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* Workspace */
+    .workspace {
+      flex: 1;
       overflow: auto;
-      max-height: 80vh;
-      text-align: center
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--bg-dark);
+      position: relative;
+      scrollbar-width: thin;
+      scrollbar-color: #555 var(--bg-dark);
     }
+    .workspace::-webkit-scrollbar { width: 8px; height: 8px; }
+    .workspace::-webkit-scrollbar-track { background: var(--bg-dark); }
+    .workspace::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
 
     .pg {
       position: relative;
-      display: inline-block;
-      margin: 0 auto 18px;
+      margin: 0 auto 20px;
       background: #fff;
-      box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
       text-align: left;
-      vertical-align: top
+      transition: transform 0.2s ease;
     }
+    .pg:hover { box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); }
 
-    .pg canvas {
-      display: block
-    }
+    .pg canvas { display: block; }
+    .ol, .txl { position: absolute; inset: 0; }
+    .txl { pointer-events: none; }
+    .txl.on { pointer-events: auto; }
 
-    .ol,
-    .txl {
+    /* Page Controls (Hover) */
+    .pgt {
       position: absolute;
-      inset: 0
+      top: 8px;
+      right: 8px;
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: 5;
+      background: rgba(30,30,40,0.9);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      backdrop-filter: blur(4px);
     }
+    .pg:hover .pgt { opacity: 1; }
+    .pgt button {
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: #fff;
+      padding: 6px 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.15s;
+    }
+    .pgt button:hover { background: rgba(255,255,255,0.2); }
 
-    .txl {
-      pointer-events: none
-    }
-
-    .txl.on {
-      pointer-events: auto
-    }
-
-    .tx {
-      position: absolute;
-      cursor: pointer
-    }
-
-    .tx:hover {
-      background: rgba(91, 75, 255, .22);
-      outline: 1px solid #5b4bff
-    }
-
-    .crosshair .pg {
-      cursor: crosshair
-    }
+    /* Objects on Canvas */
+    .tx { position: absolute; cursor: pointer; }
+    .tx:hover { background: rgba(91, 75, 255, 0.15); outline: 1px solid var(--primary); }
+    .crosshair .pg { cursor: crosshair; }
 
     .obj {
       position: absolute;
       box-sizing: border-box;
       cursor: move;
-      touch-action: none
+      touch-action: none;
     }
-
-    .obj.sel {
-      outline: 1.5px solid #5b4bff
-    }
-
-    .obj:hover {
-      outline: 1px dashed #5b4bff
-    }
-
+    .obj.sel { outline: 1.5px solid var(--primary); outline-offset: 0px; }
+    .obj:hover { outline: 1px dashed rgba(91, 75, 255, 0.5); }
     .obj .b {
-      white-space: pre;
+      white-space: pre-wrap;
       line-height: 1.2;
       outline: none;
       min-width: 12px;
       padding: 0;
-      margin: 0
+      margin: 0;
     }
-
     .obj.img img {
-      width: 100%;
-      height: 100%;
-      display: block;
-      pointer-events: none;
-      -webkit-user-drag: none
+      width: 100%; height: 100%; display: block;
+      pointer-events: none; -webkit-user-drag: none;
     }
 
-    /* =========================================================
-   8 RESIZE HANDLES
-   ========================================================= */
-
+    /* Resize Handles */
     .obj .h {
       display: none;
       position: absolute;
-      width: 10px;
-      height: 10px;
-      background: #5b4bff;
+      width: 10px; height: 10px;
+      background: var(--primary);
       border: 2px solid #fff;
       border-radius: 50%;
       box-sizing: border-box;
       z-index: 20;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
+    .obj.sel .h { display: block; }
+    .obj .h.nw { left: -6px; top: -6px; cursor: nwse-resize; }
+    .obj .h.ne { right: -6px; top: -6px; cursor: nesw-resize; }
+    .obj .h.se { right: -6px; bottom: -6px; cursor: nwse-resize; }
+    .obj .h.sw { left: -6px; bottom: -6px; cursor: nesw-resize; }
+    .obj .h.n { left: 50%; top: -6px; transform: translateX(-50%); cursor: ns-resize; }
+    .obj .h.e { right: -6px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+    .obj .h.s { left: 50%; bottom: -6px; transform: translateX(-50%); cursor: ns-resize; }
+    .obj .h.w { left: -6px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
 
-    .obj.sel .h {
-      display: block;
-    }
+    .obj.path .h { display: none !important; }
+    .obj.path { min-width: 8px; min-height: 8px; }
+    .obj.path svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+    .obj.rect.e { border-radius: 50%; }
 
-    /* Corners */
-    .obj .h.nw {
-      left: -6px;
-      top: -6px;
-      cursor: nwse-resize;
-    }
-
-    .obj .h.ne {
-      right: -6px;
-      top: -6px;
-      cursor: nesw-resize;
-    }
-
-    .obj .h.se {
-      right: -6px;
-      bottom: -6px;
-      cursor: nwse-resize;
-    }
-
-    .obj .h.sw {
-      left: -6px;
-      bottom: -6px;
-      cursor: nesw-resize;
-    }
-
-    /* Middle handles */
-    .obj .h.n {
-      left: 50%;
-      top: -6px;
-      transform: translateX(-50%);
-      cursor: ns-resize;
-    }
-
-    .obj .h.e {
-      right: -6px;
-      top: 50%;
-      transform: translateY(-50%);
-      cursor: ew-resize;
-    }
-
-    .obj .h.s {
-      left: 50%;
-      bottom: -6px;
-      transform: translateX(-50%);
-      cursor: ns-resize;
-    }
-
-    .obj .h.w {
-      left: -6px;
-      top: 50%;
-      transform: translateY(-50%);
-      cursor: ew-resize;
-    }
-
-    .pgt {
-      position: absolute;
-      top: 6px;
-      right: 6px;
+    /* Right Sidebar (Properties) */
+    .sidebar-right {
+      width: 240px;
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border);
       display: flex;
-      gap: 3px;
-      opacity: 0;
-      transition: .15s;
-      z-index: 5
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 10;
+      transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+      overflow-y: auto;
+    }
+    .sidebar-right[hidden] { display: none; }
+
+    .props-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .pg:hover .pgt {
-      opacity: 1
+    #props {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 20px;
+      font-size: 13px;
+      color: var(--text-main);
     }
 
-    .pgt button {
-      border: 0;
-      border-radius: 6px;
-      background: rgba(30, 30, 40, .88);
-      color: #fff;
-      padding: 4px 8px;
+    .prop-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .prop-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .prop-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* Inputs & Controls */
+    select, input[type="number"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      background: #FAFAFA;
+      transition: border-color 0.15s;
+    }
+    select:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #fff;
+    }
+    input[type="number"] { width: 60px; text-align: center; }
+    
+    input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+      width: 32px; height: 32px;
+      border-radius: 50%;
       cursor: pointer;
-      font-size: 12px
+      padding: 0;
+      background: transparent;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch { border: 2px solid var(--border); border-radius: 50%; }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: var(--shadow-sm);
     }
 
-    .obj.path .h {
-      display: none !important
+    .btn-group {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .btn-group button {
+      flex: 1;
+      padding: 8px;
+      background: #FAFAFA;
+      border: none;
+      border-right: 1px solid var(--border);
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    .btn-group button:last-child { border-right: none; }
+    .btn-group button:hover { background: var(--bg-hover); color: var(--text-main); }
+    .btn-group button.active { background: var(--primary-light); color: var(--primary); }
+
+    .btn-full {
+      width: 100%;
+      padding: 10px;
+      background: #FAFAFA;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: all 0.15s;
+    }
+    .btn-full:hover { background: var(--bg-hover); border-color: #ccc; }
+
+    /* Floating Page Navigation */
+    .page-nav-floating {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 6px 12px;
+      box-shadow: var(--shadow-lg);
+      z-index: 50;
+      backdrop-filter: blur(8px);
+      transition: background 0.3s ease, border-color 0.3s ease;
     }
 
-    .obj.path {
-      min-width: 8px;
-      min-height: 8px
+    .page-nav-floating .nav-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .page-nav-floating .nav-btn:hover:not(:disabled) {
+      background: var(--bg-hover);
+      color: var(--primary);
+    }
+    .page-nav-floating .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
     }
 
-    .obj.path svg {
-      position: absolute;
-      left: 0;
-      top: 0;
-      overflow: visible;
-      pointer-events: none
+    .page-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    
+    /* Clean Number Input (No Spinners) */
+    .page-indicator input {
+      width: 42px;
+      padding: 4px;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-hover);
+      color: var(--text-main);
+      font-weight: 700;
+      font-family: var(--font-ui);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+      
+      /* Hide default spinners */
+      -moz-appearance: textfield;
+    }
+    .page-indicator input::-webkit-outer-spin-button,
+    .page-indicator input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .page-indicator input:focus {
+      border-color: var(--primary);
+      background: var(--bg-panel);
     }
 
-    .obj.rect.e {
-      border-radius: 50%
+    /* Upload Screen */
+    .upload-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 24px;
+    }
+    .upload-overlay[hidden] { display: none; }
+    
+    .dropzone {
+      background: #fff;
+      border: 2px dashed #CBD5E1;
+      border-radius: var(--radius-lg);
+      padding: 60px 40px;
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-lg);
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      transform: translateY(-2px);
+    }
+    .dz-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+    .dz-title { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+    .dz-sub { font-size: 14px; color: var(--text-muted); }
+    .dz-sub .link { color: var(--primary); font-weight: 600; text-decoration: underline; cursor: pointer; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1E1E24;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 200;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* =========================================================
+       DARK MODE OVERRIDES
+       ========================================================= */
+    body.dark-theme {
+      --bg-dark: #141418;
+      --bg-panel: #1E1E24;
+      --bg-workspace: #141418;
+      --bg-hover: #2A2A35;
+      --bg-active: #3A2F5A;
+      --text-main: #F3F4F6;
+      --text-muted: #9CA3AF;
+      --border: #374151;
+      --primary-light: #2E244D;
+    }
+
+    body.dark-theme .sidebar-left,
+    body.dark-theme .sidebar-right,
+    body.dark-theme .top-bar,
+    body.dark-theme .page-nav-floating {
+      background: var(--bg-panel);
+      border-color: var(--border);
+      color: var(--text-main);
+    }
+
+    body.dark-theme .tool-btn:hover { background: var(--bg-hover); }
+    body.dark-theme .tool-btn.active { background: var(--bg-active); color: #A78BFA; }
+    body.dark-theme select, body.dark-theme input[type="number"] {
+      background: var(--bg-hover);
+      color: var(--text-main);
+      border-color: var(--border);
+    }
+    body.dark-theme select:focus, body.dark-theme input[type="number"]:focus {
+      background: var(--bg-panel);
+    }
+    body.dark-theme .btn-group button, body.dark-theme .btn-full {
+      background: var(--bg-hover);
+      border-color: var(--border);
+      color: var(--text-main);
+    }
+    body.dark-theme .btn-group button:hover, body.dark-theme .btn-full:hover {
+      background: #374151;
+    }
+    body.dark-theme .dropzone {
+      background: #1E1E24;
+      border-color: #4B5563;
+    }
+    body.dark-theme .dz-title { color: #F3F4F6; }
+    body.dark-theme .dz-sub { color: #9CA3AF; }
+    body.dark-theme .upload-overlay {
+      background: linear-gradient(135deg, #141418 0%, #1E1E24 100%);
     }
   </style>
 </head>
 
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="index.html" class="brand"><span class="logo">✦</span><span>PDFnest<small>Edit PDF</small></span></a>
-      <a href="index.html" class="back-link">← All tools</a>
+  <!-- Upload Screen -->
+  <div class="upload-overlay" id="upCard">
+    <div class="dropzone" id="dropzone" tabindex="0" role="button">
+      <span class="dz-icon">✏️</span>
+      <div class="dz-title">Drag &amp; drop a PDF here</div>
+      <div class="dz-sub">or <span class="link">browse files</span></div>
     </div>
-  </header>
+  </div>
 
-  <main>
-    <section class="hero">
-      <h1>Edit your <span class="grad">PDF</span></h1>
-      <p>Existing text edit ya delete karo, naya text aur images add karo, opacity, zoom, undo — sab kuch browser me.
-      </p>
-    </section>
+  <!-- Hidden File Inputs (Using CSS opacity instead of hidden attribute) -->
+  <input type="file" id="fileInput" accept="application/pdf,.pdf" style="position: absolute; width: 0; height: 0; opacity: 0; z-index: -1;" />
+  <input type="file" id="imgInput" accept="image/*" style="position: absolute; width: 0; height: 0; opacity: 0; z-index: -1;" />
+  <input type="file" id="addPdf" accept="application/pdf" style="position: absolute; width: 0; height: 0; opacity: 0; z-index: -1;" />
 
-    <section class="card" id="upCard">
-      <div class="dropzone" id="dropzone" tabindex="0" role="button">
-        <div class="dz-icon">✏️</div>
-        <div class="dz-title">Drag &amp; drop a PDF here</div>
-        <div class="dz-sub">or <span class="link">browse files</span></div>
+  <!-- Main App Container -->
+  <div class="app-container" id="edSec" hidden>
+    
+    <!-- Left Sidebar: Tools -->
+    <aside class="sidebar-left">
+      <div class="sidebar-header">
+        <span class="logo">✦</span>
+        <div>
+          <h2>PDFnest</h2>
+          <small>Edit PDF</small>
+        </div>
       </div>
-    </section>
-    <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden />
-    <input type="file" id="imgInput" accept="image/*" hidden />
-    <input type="file" id="addPdf" accept="application/pdf" hidden />
+      <div class="sidebar-content">
+        
+        <div class="tool-group">
+          <span class="tool-group-label">Edit</span>
+          <button class="tool-btn active" data-tool="select">
+            <span class="icon">↖</span> Select
+          </button>
+          <button class="tool-btn" id="bEdit" title="Click any existing text to edit/delete it">
+            <span class="icon">✎</span> Edit Text
+          </button>
+          <button class="tool-btn" data-tool="text">
+            <span class="icon">T</span> Add Text
+          </button>
+        </div>
 
-    <section id="edSec" hidden style="margin-top:8px">
-      <div class="tbar" id="tbar">
-        <button class="tb" id="bOpen">📂 Open</button>
-        <button class="tb" id="bUndo">↶</button><button class="tb" id="bRedo">↷</button>
-        <span class="sep"></span>
-        <button class="tb on" data-tool="select">↖ Select</button>
-        <button class="tb" id="bEdit" title="Click any existing text to edit/delete it">✎ Edit existing text</button>
-        <button class="tb" data-tool="text">T Text</button>
-        <button class="tb" id="bImg">🖼 Image</button>
-        <button class="tb" data-tool="erase" title="Drag over anything to erase it">▭ Erase</button>
-        <button class="tb" data-tool="rect">■ Box</button><button class="tb" data-tool="ellipse">●
-          Circle</button><button class="tb" data-tool="hl">🖍 Highlight</button><button class="tb" data-tool="pen">✍
-          Draw / Sign</button><button class="tb" data-tool="line">╱ Line</button><button class="tb" data-tool="arrow">➜
-          Arrow</button>
-        <span class="sep"></span>
-        <button class="tb" id="zo">−</button><span class="zl" id="zl">100%</span><button class="tb" id="zi">+</button>
-        <button class="tb" id="zf">Fit</button><span class="sep"></span><button class="tb" id="bWm">💧
-          Watermark</button><button class="tb" id="bPn">№ Page numbers</button><button class="tb" id="bAdd">＋ Add /
-          merge PDF</button>
-        <span class="sep"></span>
-        <button class="tb on" id="bExport" style="background:#5b4bff;color:#fff">⬇ Export PDF</button>
-        <div id="props" hidden>
+        <div class="tool-group">
+          <span class="tool-group-label">Insert</span>
+          <button class="tool-btn" id="bImg">
+            <span class="icon">🖼</span> Image
+          </button>
+          <button class="tool-btn" data-tool="rect">
+            <span class="icon">■</span> Box
+          </button>
+          <button class="tool-btn" data-tool="ellipse">
+            <span class="icon">●</span> Circle
+          </button>
+        </div>
+
+        <div class="tool-group">
+          <span class="tool-group-label">Draw</span>
+          <button class="tool-btn" data-tool="pen">
+            <span class="icon">✍</span> Draw / Sign
+          </button>
+          <button class="tool-btn" data-tool="hl">
+            <span class="icon">🖍</span> Highlight
+          </button>
+          <button class="tool-btn" data-tool="line">
+            <span class="icon">╱</span> Line
+          </button>
+          <button class="tool-btn" data-tool="arrow">
+            <span class="icon">➜</span> Arrow
+          </button>
+          <button class="tool-btn" data-tool="erase">
+            <span class="icon">▭</span> Erase
+          </button>
+        </div>
+
+        <div class="tool-group">
+          <span class="tool-group-label">Tools</span>
+          <button class="tool-btn" id="bWm">
+            <span class="icon">💧</span> Watermark
+          </button>
+          <button class="tool-btn" id="bPn">
+            <span class="icon">№</span> Page Numbers
+          </button>
+          <button class="tool-btn" id="bAdd">
+            <span class="icon">＋</span> Add / Merge PDF
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Area -->
+    <main class="main-area">
+      
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="icon-btn" id="bOpen" title="Open PDF">📂</button>
+          <button class="icon-btn" id="bUndo" title="Undo (Ctrl+Z)">↶</button>
+          <button class="icon-btn" id="bRedo" title="Redo (Ctrl+Y)">↷</button>
+        </div>
+        
+        <div class="top-bar-center">
+          <button class="icon-btn" id="zo" title="Zoom Out">−</button>
+          <span class="zoom-label" id="zl">100%</span>
+          <button class="icon-btn" id="zi" title="Zoom In">+</button>
+          <button class="icon-btn" id="zf" title="Fit to Width" style="font-size: 14px;">Fit</button>
+        </div>
+        
+        <div class="top-bar-right">
+          <button class="btn-primary" id="bExport">
+            <span>⬇</span> Export PDF
+          </button>
+        </div>
+      </header>
+
+      <!-- Workspace -->
+      <div class="workspace" id="ws">
+        <div id="pages"></div>
+        
+        <!-- Floating Page Navigation -->
+        <div class="page-nav-floating">
+          <button id="prevPage" class="nav-btn" title="Previous Page">←</button>
+          <div class="page-indicator">
+            <input type="number" id="pageInput" value="1" min="1" />
+            <span>/ <span id="totalPages">1</span></span>
+          </div>
+          <button id="nextPage" class="nav-btn" title="Next Page">→</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Sidebar: Properties -->
+    <aside class="sidebar-right" id="props-sidebar" hidden>
+      <div class="props-header">
+        <span>Properties</span>
+        <button class="icon-btn" id="closeProps" style="width: 24px; height: 24px; font-size: 14px;">✕</button>
+      </div>
+      <div id="props">
+        <!-- Font Family -->
+        <div class="prop-group tx-only">
+          <label>Font</label>
           <select id="fFont">
             <option value="Helvetica">Arial / Helvetica</option>
             <option value="Times">Times New Roman</option>
             <option value="Courier">Courier New</option>
-
             <option value="Georgia">Georgia</option>
             <option value="Verdana">Verdana</option>
             <option value="Trebuchet">Trebuchet MS</option>
-
             <option value="Roboto">Roboto</option>
             <option value="OpenSans">Open Sans</option>
             <option value="Montserrat">Montserrat</option>
             <option value="NotoSans">Noto Sans</option>
-
             <option value="Unicode">Noto Sans Devanagari / Hindi</option>
           </select>
-          <label class="tx-only">Size <input type="number" id="fSize" min="4" max="200" /></label>
-          <button class="tb tx-only" id="fB"><b>B</b></button><button class="tb tx-only"
-            id="fI"><i>I</i></button><button class="tb tx-only" id="fU"><u>U</u></button><button class="tb tx-only"
-            id="fS"><s>S</s></button>
-          <label id="colL"><span id="colT">Color</span> <input type="color" id="fColor" /></label>
-          <label>Opacity <input type="range" id="fOp" min="5" max="100" /> <span id="opT">100%</span></label>
-          <label class="sw-only">Border <input type="color" id="fSc" class="rc-only"> <input type="number" id="fSw"
-              min="0" max="40"></label><label class="rc-only"><input type="checkbox" id="fFill"> Fill</label><button
-            class="tb" id="fFront">⬆ Front</button><button class="tb" id="fBack">⬇ Back</button><button class="tb"
-            id="fDup">⧉ Duplicate</button>
-          <button class="tb" id="fDel">🗑 Delete</button>
+        </div>
+
+        <!-- Font Size & Style -->
+        <div class="prop-group tx-only">
+          <label>Size & Style</label>
+          <div class="prop-row">
+            <input type="number" id="fSize" min="4" max="200" value="16" style="flex:1;" />
+            <div class="btn-group" style="flex: 2;">
+              <button id="fB" title="Bold"><b>B</b></button>
+              <button id="fI" title="Italic"><i>I</i></button>
+              <button id="fU" title="Underline"><u>U</u></button>
+              <button id="fS" title="Strikethrough"><s>S</s></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Color -->
+        <div class="prop-group" id="colL">
+          <label id="colT">Color</label>
+          <div class="prop-row">
+            <input type="color" id="fColor" value="#000000" />
+            <span style="font-size:12px; color:var(--text-muted);">Pick a color</span>
+          </div>
+        </div>
+
+        <!-- Opacity -->
+        <div class="prop-group">
+          <label>Opacity <span id="opT" style="margin-left:auto; color:var(--text-main);">100%</span></label>
+          <input type="range" id="fOp" min="5" max="100" value="100" />
+        </div>
+
+        <!-- Shape Borders -->
+        <div class="prop-group sw-only">
+          <label>Border</label>
+          <div class="prop-row">
+            <input type="color" id="fSc" class="rc-only" value="#000000" />
+            <input type="number" id="fSw" min="0" max="40" value="0" />
+          </div>
+        </div>
+
+        <div class="prop-group rc-only">
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="fFill" checked /> Fill Shape
+          </label>
+        </div>
+
+        <!-- Layering & Actions -->
+        <div class="prop-group">
+          <label>Layering</label>
+          <div class="prop-row">
+            <button class="btn-full" id="fFront">⬆ Front</button>
+            <button class="btn-full" id="fBack">⬇ Back</button>
+          </div>
+        </div>
+
+        <div class="prop-group">
+          <button class="btn-full" id="fDup" style="margin-bottom:8px;">⧉ Duplicate</button>
+          <button class="btn-full" id="fDel" style="color:#EF4444; border-color:#FCA5A5;">🗑 Delete</button>
         </div>
       </div>
-      <div class="ws" id="ws">
-        <div id="pages"></div>
-      </div>
-    </section>
-  </main>
+    </aside>
+  </div>
 
-  <footer class="site-footer">Powered by pdf.js + pdf-lib · Files never leave your device.</footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -395,7 +849,11 @@
       const $ = (s, c = document) => c.querySelector(s);
       const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
       const uid = () => Math.random().toString(36).slice(2, 9);
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      
+      // Ensure pdfjsLib is loaded before setting worker
+      if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
 
       let tt; function toast(m) { const e = $('#toast'); e.textContent = m; e.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => e.classList.remove('show'), 2600); }
 
@@ -406,16 +864,13 @@
         Helvetica: 'Arial, Helvetica, sans-serif',
         Times: '"Times New Roman", Times, serif',
         Courier: '"Courier New", Courier, monospace',
-
         Georgia: 'Georgia, serif',
         Verdana: 'Verdana, sans-serif',
         Trebuchet: '"Trebuchet MS", sans-serif',
-
         Roboto: 'Roboto, sans-serif',
         OpenSans: '"Open Sans", sans-serif',
         Montserrat: 'Montserrat, sans-serif',
         NotoSans: '"Noto Sans", sans-serif',
-
         Unicode: '"Noto Sans Devanagari", "Noto Sans", sans-serif'
       };
       const FPDF = { Helvetica: ['Helvetica', 'Bold', 'Oblique', 'BoldOblique'], Times: ['TimesRoman', 'Bold', 'Italic', 'BoldItalic'], Courier: ['Courier', 'Bold', 'Oblique', 'BoldOblique'] };
@@ -447,6 +902,7 @@
             const c = await p.getTextContent(); S.items.push({ list: c.items.filter(t => t.str && t.str.trim()), styles: c.styles });
           }
           $('#upCard').hidden = true; $('#edSec').hidden = false; syncProps(); btns();
+          updatePageNav();
           await renderAll();
         } catch (e) { console.error(e); toast('Could not read that PDF'); }
       }
@@ -489,11 +945,9 @@
         el.dataset.id = o.id;
 
         if (o.t === 'text') {
-
           const b = document.createElement('div');
           b.className = 'b';
           b.textContent = o.text;
-
           el.appendChild(b);
 
           b.addEventListener('input', () => {
@@ -504,13 +958,8 @@
 
           b.addEventListener('blur', () => {
             b.contentEditable = 'false';
-
             ensureTextBoxFits(o);
-
-            if (
-              JSON.stringify(S.objs) !==
-              S.hist[S.hist.length - 1]
-            ) {
+            if (JSON.stringify(S.objs) !== S.hist[S.hist.length - 1]) {
               commit();
             }
           });
@@ -519,63 +968,36 @@
             editText(o.id);
           });
         }
-
         else if (o.t === 'img') {
-
           const im = document.createElement('img');
-
           im.src = IMG[o.img].url;
-
           el.appendChild(im);
         }
 
-        /* =========================================================
-           8 RESIZE HANDLES
-           ========================================================= */
-
-        const handles = [
-          'nw', 'n', 'ne',
-          'e',
-          'se', 's', 'sw',
-          'w'
-        ];
-
+        /* 8 RESIZE HANDLES */
+        const handles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
         handles.forEach(dir => {
-
           const h = document.createElement('div');
-
           h.className = 'h ' + dir;
-
           h.dataset.dir = dir;
-
           h.addEventListener('pointerdown', e => {
             startResize(e, o, dir);
           });
-
           el.appendChild(h);
         });
 
         el.addEventListener('pointerdown', e => {
-
-          if (e.target.classList.contains('h')) {
-            return;
-          }
-
-          if (e.target.isContentEditable) {
-            return;
-          }
-
+          if (e.target.classList.contains('h')) return;
+          if (e.target.isContentEditable) return;
           e.stopPropagation();
-
           select(o.id);
-
           startDrag(e, o);
         });
 
         pg.querySelector('.ol').appendChild(el);
-
         refresh(o);
       }
+
       function arrow(o) {
         const p = o.pts, a = p[p.length - 2], b = p[p.length - 1], t = Math.atan2(b[1] - a[1], b[0] - a[0]), L = 6 + o.sw * 3;
         return [[b[0] - L * Math.cos(t - .45), b[1] - L * Math.sin(t - .45)], b, [b[0] - L * Math.cos(t + .45), b[1] - L * Math.sin(t + .45)]];
@@ -586,201 +1008,76 @@
       }
 
       function getTextMetrics(o) {
-
-        const canvas =
-          document.createElement('canvas');
-
-        const ctx =
-          canvas.getContext('2d');
-
-        const weight =
-          o.b ? '700' : '400';
-
-        const style =
-          o.i ? 'italic' : 'normal';
-
-        ctx.font =
-          `${style} ${weight} ${o.size}px ${FCSS[o.font] || FCSS.Helvetica
-          }`;
-
-        const lines =
-          String(o.text || 'Type here').split('\n');
-
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const weight = o.b ? '700' : '400';
+        const style = o.i ? 'italic' : 'normal';
+        ctx.font = `${style} ${weight} ${o.size}px ${FCSS[o.font] || FCSS.Helvetica}`;
+        const lines = String(o.text || 'Type here').split('\n');
         let width = 20;
-
         lines.forEach(line => {
-
-          width = Math.max(
-            width,
-            ctx.measureText(line).width
-          );
-
+          width = Math.max(width, ctx.measureText(line).width);
         });
-
-        return {
-          width,
-          height:
-            Math.max(1, lines.length) *
-            o.size *
-            1.2
-        };
+        return { width, height: Math.max(1, lines.length) * o.size * 1.2 };
       }
-
 
       function ensureTextBoxFits(o) {
-
         if (o.t !== 'text') return;
-
         const m = getTextMetrics(o);
-
-        /*
-          Only enlarge the box when the font/content
-          would touch or exceed the current border.
-      
-          Never shrink the existing box automatically.
-        */
-
-        if (!o.w || m.width + 6 > o.w) {
-          o.w = m.width + 6;
-        }
-
-        if (!o.h || m.height + 4 > o.h) {
-          o.h = m.height + 4;
-        }
+        if (!o.w || m.width + 6 > o.w) o.w = m.width + 6;
+        if (!o.h || m.height + 4 > o.h) o.h = m.height + 4;
       }
 
-
       function refresh(o) {
-
         const el = elOf(o.id);
-
         if (!el) return;
-
         const k = K();
-
         el.style.left = o.x * k + 'px';
         el.style.top = o.y * k + 'px';
         el.style.opacity = o.op;
 
-        /* =========================================================
-           TEXT
-           ========================================================= */
-
         if (o.t === 'text') {
-
           const b = el.firstChild;
-
-          /*
-            Old text objects may not have width/height.
-            Give them a sensible initial box.
-          */
-
           if (!o.w || !o.h) {
             const metrics = getTextMetrics(o);
-
-            o.w = Math.max(
-              o.w || 0,
-              metrics.width + 6
-            );
-
-            o.h = Math.max(
-              o.h || 0,
-              metrics.height + 4
-            );
+            o.w = Math.max(o.w || 0, metrics.width + 6);
+            o.h = Math.max(o.h || 0, metrics.height + 4);
           }
-
           el.style.width = o.w * k + 'px';
           el.style.height = o.h * k + 'px';
-
           b.style.width = '100%';
           b.style.height = '100%';
-
-          b.style.fontSize =
-            o.size * k + 'px';
-
-          b.style.color =
-            o.color;
-
-          b.style.fontFamily =
-            FCSS[o.font] || FCSS.Helvetica;
-
-          b.style.fontWeight =
-            o.b ? 700 : 400;
-
-          b.style.fontStyle =
-            o.i ? 'italic' : 'normal';
-
-          b.style.textDecoration =
-            [
-              o.u && 'underline',
-              o.s && 'line-through'
-            ]
-              .filter(Boolean)
-              .join(' ') || 'none';
-
+          b.style.fontSize = o.size * k + 'px';
+          b.style.color = o.color;
+          b.style.fontFamily = FCSS[o.font] || FCSS.Helvetica;
+          b.style.fontWeight = o.b ? 700 : 400;
+          b.style.fontStyle = o.i ? 'italic' : 'normal';
+          b.style.textDecoration = [o.u && 'underline', o.s && 'line-through'].filter(Boolean).join(' ') || 'none';
           b.style.whiteSpace = 'pre-wrap';
           b.style.overflow = 'hidden';
-
           return;
         }
 
-        /* =========================================================
-           OTHER OBJECTS
-           ========================================================= */
-
-        el.style.width =
-          o.w * k + 'px';
-
-        el.style.height =
-          o.h * k + 'px';
+        el.style.width = o.w * k + 'px';
+        el.style.height = o.h * k + 'px';
 
         if (o.t === 'rect') {
-
-          el.classList.toggle(
-            'e',
-            o.k === 'e'
-          );
-
-          el.style.background =
-            o.fill === false
-              ? 'transparent'
-              : o.color;
-
-          el.style.border =
-            o.sw > 0
-              ? o.sw * k + 'px solid ' + o.sc
-              : '0';
+          el.classList.toggle('e', o.k === 'e');
+          el.style.background = o.fill === false ? 'transparent' : o.color;
+          el.style.border = o.sw > 0 ? o.sw * k + 'px solid ' + o.sc : '0';
         }
 
         if (o.t === 'path') {
-
           el.querySelector('svg')?.remove();
-
-          const pl = a =>
-            `<polyline points="${a.map(
-              p => p[0] * k + ',' + p[1] * k
-            ).join(' ')}"
-      fill="none"
-      stroke="${o.color}"
-      stroke-width="${o.sw * k}"
-      stroke-linecap="round"
-      stroke-linejoin="round"/>`;
-
-          el.insertAdjacentHTML(
-            'afterbegin',
-            `<svg width="1" height="1">
-        ${pl(o.pts)}
-        ${o.ar && o.pts.length > 1
-              ? pl(arrow(o))
-              : ''
-            }
-      </svg>`
-          );
+          const pl = a => `<polyline points="${a.map(p => p[0] * k + ',' + p[1] * k).join(' ')}" fill="none" stroke="${o.color}" stroke-width="${o.sw * k}" stroke-linecap="round" stroke-linejoin="round"/>`;
+          el.insertAdjacentHTML('afterbegin', `<svg width="1" height="1">${pl(o.pts)}${o.ar && o.pts.length > 1 ? pl(arrow(o)) : ''}</svg>`);
         }
       }
+
       function add(o) { o.id = uid(); o.op = o.op ?? 1; S.objs.push(o); mount(o); select(o.id); commit(); return o; }
       function select(id) {
         S.sel = id; $$('.obj').forEach(e => e.classList.toggle('sel', e.dataset.id === id)); syncProps();
+        $('#props-sidebar').hidden = !id;
       }
       function editText(id) {
         const b = elOf(id)?.firstChild; if (!b) return; b.contentEditable = 'true'; b.focus();
@@ -796,134 +1093,37 @@
       }
 
       function startResize(e, o, dir) {
-
-        e.stopPropagation();
-        e.preventDefault();
-
+        e.stopPropagation(); e.preventDefault();
         select(o.id);
-
-        const sx = e.clientX;
-        const sy = e.clientY;
-
-        const ox = o.x;
-        const oy = o.y;
-
-        const ow = o.w;
-        const oh = o.h;
-
-        const minW =
-          o.t === 'text'
-            ? 20
-            : 4;
-
-        const minH =
-          o.t === 'text'
-            ? Math.max(15, o.size * 1.2)
-            : 4;
-
+        const sx = e.clientX, sy = e.clientY;
+        const ox = o.x, oy = o.y, ow = o.w, oh = o.h;
+        const minW = o.t === 'text' ? 20 : 4;
+        const minH = o.t === 'text' ? Math.max(15, o.size * 1.2) : 4;
         let changed = false;
 
         const mv = ev => {
+          const dx = (ev.clientX - sx) / K();
+          const dy = (ev.clientY - sy) / K();
+          let nx = ox, ny = oy, nw = ow, nh = oh;
 
-          const dx =
-            (ev.clientX - sx) / K();
+          if (dir.includes('w')) { nx = ox + dx; nw = ow - dx; if (nw < minW) { nw = minW; nx = ox + ow - minW; } }
+          if (dir.includes('e')) { nw = Math.max(minW, ow + dx); }
+          if (dir.includes('n')) { ny = oy + dy; nh = oh - dy; if (nh < minH) { nh = minH; ny = oy + oh - minH; } }
+          if (dir.includes('s')) { nh = Math.max(minH, oh + dy); }
 
-          const dy =
-            (ev.clientY - sy) / K();
-
-          let nx = ox;
-          let ny = oy;
-
-          let nw = ow;
-          let nh = oh;
-
-          /* LEFT */
-
-          if (dir.includes('w')) {
-
-            nx = ox + dx;
-
-            nw = ow - dx;
-
-            if (nw < minW) {
-              nw = minW;
-              nx = ox + ow - minW;
-            }
-          }
-
-          /* RIGHT */
-
-          if (dir.includes('e')) {
-
-            nw =
-              Math.max(
-                minW,
-                ow + dx
-              );
-          }
-
-          /* TOP */
-
-          if (dir.includes('n')) {
-
-            ny = oy + dy;
-
-            nh = oh - dy;
-
-            if (nh < minH) {
-              nh = minH;
-              ny = oy + oh - minH;
-            }
-          }
-
-          /* BOTTOM */
-
-          if (dir.includes('s')) {
-
-            nh =
-              Math.max(
-                minH,
-                oh + dy
-              );
-          }
-
-          o.x = nx;
-          o.y = ny;
-          o.w = nw;
-          o.h = nh;
-
+          o.x = nx; o.y = ny; o.w = nw; o.h = nh;
           changed = true;
-
           refresh(o);
           syncProps(true);
         };
 
         const up = () => {
-
-          removeEventListener(
-            'pointermove',
-            mv
-          );
-
-          removeEventListener(
-            'pointerup',
-            up
-          );
-
-          if (changed) {
-            commit();
-          }
+          removeEventListener('pointermove', mv);
+          removeEventListener('pointerup', up);
+          if (changed) commit();
         };
-
-        addEventListener(
-          'pointermove',
-          mv
-        );
-
-        addEventListener(
-          'pointerup',
-          up
-        );
+        addEventListener('pointermove', mv);
+        addEventListener('pointerup', up);
       }
 
       /* ---------- colour sampling / existing text ---------- */
@@ -958,65 +1158,47 @@
 
       /* ---------- toolbar / props ---------- */
       function setTool(t) {
-        S.tool = t; $$('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === t));
+        S.tool = t; $$('[data-tool]').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
         $('#ws').classList.toggle('crosshair', t !== 'select');
       }
-      function setEdit(on) { S.edit = on; $('#bEdit').classList.toggle('on', on); $$('.txl').forEach(l => l.classList.toggle('on', on)); if (on) setTool('select'); }
+      function setEdit(on) { S.edit = on; $('#bEdit').classList.toggle('active', on); $$('.txl').forEach(l => l.classList.toggle('on', on)); if (on) setTool('select'); }
+      
       function syncProps(light) {
-        const o = get(S.sel), p = $('#props'); p.hidden = !o; if (!o) return;
-        $$('.tx-only').forEach(e => e.style.display = o.t === 'text' ? '' : 'none');
-        $$('.rc-only').forEach(e => e.style.display = o.t === 'rect' ? '' : 'none');
-        $$('.sw-only').forEach(e => e.style.display = (o.t === 'rect' || o.t === 'path') ? '' : 'none');
-        $('#fSw').value = o.sw || 0; $('#fSc').value = o.sc || '#000000'; $('#fFill').checked = o.fill !== false;
-        $('#fU').classList.toggle('on', !!o.u); $('#fS').classList.toggle('on', !!o.s);
-        $('#colL').style.display = o.t === 'img' ? 'none' : ''; $('#colT').textContent = o.t === 'rect' ? 'Fill' : 'Color';
-        $('#fOp').value = Math.round(o.op * 100); $('#opT').textContent = Math.round(o.op * 100) + '%';
-        if (o.t === 'text') { $('#fSize').value = Math.round(o.size); if (!light) { $('#fFont').value = o.font; $('#fB').classList.toggle('on', o.b); $('#fI').classList.toggle('on', o.i); } }
+        const o = get(S.sel), p = $('#props-sidebar'); 
+        if (!o) { p.hidden = true; return; }
+        p.hidden = false;
+        
+        $$('.tx-only', p).forEach(e => e.style.display = o.t === 'text' ? '' : 'none');
+        $$('.rc-only', p).forEach(e => e.style.display = o.t === 'rect' ? '' : 'none');
+        $$('.sw-only', p).forEach(e => e.style.display = (o.t === 'rect' || o.t === 'path') ? '' : 'none');
+        
+        $('#fSw').value = o.sw || 0; 
+        $('#fSc').value = o.sc || '#000000'; 
+        $('#fFill').checked = o.fill !== false;
+        $('#fU').classList.toggle('active', !!o.u); 
+        $('#fS').classList.toggle('active', !!o.s);
+        
+        $('#colL').style.display = o.t === 'img' ? 'none' : ''; 
+        $('#colT').textContent = o.t === 'rect' ? 'Fill' : 'Color';
+        
+        $('#fOp').value = Math.round(o.op * 100); 
+        $('#opT').textContent = Math.round(o.op * 100) + '%';
+        
+        if (o.t === 'text') { 
+          $('#fSize').value = Math.round(o.size); 
+          if (!light) { 
+            $('#fFont').value = o.font; 
+            $('#fB').classList.toggle('active', o.b); 
+            $('#fI').classList.toggle('active', o.i); 
+          } 
+        }
         if (o.t !== 'img') $('#fColor').value = o.color;
       }
+
       function upd(fn, final = true) { const o = get(S.sel); if (!o) return; fn(o); refresh(o); syncProps(true); if (final) commit(); }
-      $('#fFont').onchange = e => {
-
-        upd(o => {
-
-          o.font = e.target.value;
-
-          /*
-            If the new font is wider than the current box,
-            automatically enlarge the box.
-          */
-
-          ensureTextBoxFits(o);
-
-        });
-
-      };
-
-
-      $('#fSize').onchange = e => {
-
-        upd(o => {
-
-          o.size =
-            Math.max(
-              4,
-              Math.min(
-                200,
-                +e.target.value || 12
-              )
-            );
-
-          /*
-            Font size changes independently.
-            Only enlarge the box if the text touches
-            its current boundary.
-          */
-
-          ensureTextBoxFits(o);
-
-        });
-
-      };
+      
+      $('#fFont').onchange = e => { upd(o => { o.font = e.target.value; ensureTextBoxFits(o); }); };
+      $('#fSize').onchange = e => { upd(o => { o.size = Math.max(4, Math.min(200, +e.target.value || 12)); ensureTextBoxFits(o); }); };
       $('#fB').onclick = () => { upd(o => o.b = !o.b); syncProps(); };
       $('#fI').onclick = () => { upd(o => o.i = !o.i); syncProps(); };
       $('#fColor').oninput = e => upd(o => o.color = e.target.value, false);
@@ -1025,23 +1207,31 @@
       $('#fOp').onchange = () => commit();
       $('#fDel').onclick = delSel;
       $('#fSw').onchange = e => upd(o => o.sw = Math.max(0, +e.target.value || 0));
-      $('#fSc').oninput = e => upd(o => o.sc = e.target.value, false); $('#fSc').onchange = () => commit();
+      $('#fSc').oninput = e => upd(o => o.sc = e.target.value, false); 
+      $('#fSc').onchange = () => commit();
       $('#fFill').onchange = e => upd(o => o.fill = e.target.checked);
-      $('#fU').onclick = () => upd(o => o.u = !o.u); $('#fS').onclick = () => upd(o => o.s = !o.s);
+      $('#fU').onclick = () => upd(o => o.u = !o.u); 
+      $('#fS').onclick = () => upd(o => o.s = !o.s);
+      
       function reorder(f) { const o = get(S.sel); if (!o) return; S.objs = S.objs.filter(q => q !== o); f ? S.objs.push(o) : S.objs.unshift(o); mountAll(); commit(); }
-      $('#fFront').onclick = () => reorder(true); $('#fBack').onclick = () => reorder(false);
+      $('#fFront').onclick = () => reorder(true); 
+      $('#fBack').onclick = () => reorder(false);
       $('#fDup').onclick = () => { const o = get(S.sel); if (o) add({ ...o, x: o.x + 12, y: o.y + 12 }); };
 
       $$('[data-tool]').forEach(b => b.onclick = () => { setTool(b.dataset.tool); if (S.tool !== 'select') setEdit(false); });
       $('#bEdit').onclick = () => setEdit(!S.edit);
-      $('#bUndo').onclick = undo; $('#bRedo').onclick = redo;
+      $('#bUndo').onclick = undo; 
+      $('#bRedo').onclick = redo;
       $('#bOpen').onclick = () => $('#fileInput').click();
       $('#bImg').onclick = () => $('#imgInput').click();
+      $('#closeProps').onclick = () => { select(null); };
 
       /* zoom */
-      let zt; function setZoom(z) { S.zoom = Math.max(.4, Math.min(3, z)); $('#zl').textContent = Math.round(S.zoom * 100) + '%'; clearTimeout(zt); zt = setTimeout(renderAll, 150); }
-      $('#zi').onclick = () => setZoom(S.zoom + .15); $('#zo').onclick = () => setZoom(S.zoom - .15);
-      $('#zf').onclick = () => { const w = $('#ws').clientWidth - 30; setZoom(w / (S.meta[0].w * 1.333)); };
+      let zt; 
+      function setZoom(z) { S.zoom = Math.max(.4, Math.min(3, z)); $('#zl').textContent = Math.round(S.zoom * 100) + '%'; clearTimeout(zt); zt = setTimeout(renderAll, 150); }
+      $('#zi').onclick = () => setZoom(S.zoom + .15); 
+      $('#zo').onclick = () => setZoom(S.zoom - .15);
+      $('#zf').onclick = () => { const w = $('#ws').clientWidth - 80; setZoom(w / (S.meta[0].w * 1.333)); };
       $('#ws').addEventListener('wheel', e => { if (e.ctrlKey) { e.preventDefault(); setZoom(S.zoom + (e.deltaY < 0 ? .1 : -.1)); } }, { passive: false });
 
       /* image upload */
@@ -1065,39 +1255,20 @@
       $('#pages').addEventListener('pointerdown', e => {
         const pg = e.target.closest('.pg'); if (!pg || e.target.closest('.obj') || e.target.closest('.tx') || e.target.closest('.pgt')) return;
         const pi = +pg.dataset.i, r = pg.getBoundingClientRect(), k = K(), x = (e.clientX - r.left) / k, y = (e.clientY - r.top) / k;
+        
         if (S.tool === 'select') { select(null); $$('.obj .b').forEach(b => b.blur()); return; }
+        
         if (S.tool === 'text') {
-
           add({
-            t: 'text',
-            page: pi,
-            x,
-            y,
-            text: 'Type here',
-            size: 16,
-
-            /*
-              Initial text box size.
-              This is independent from font size.
-            */
-
-            w: 120,
-            h: 24,
-
-            color: '#000000',
-            font: 'Helvetica',
-            b: false,
-            i: false,
-            u: false,
-            s: false
+            t: 'text', page: pi, x, y, text: 'Type here', size: 16,
+            w: 120, h: 24, color: '#000000', font: 'Helvetica',
+            b: false, i: false, u: false, s: false
           });
-
           setTool('select');
-
           editText(S.sel);
-
           return;
         }
+        
         if (['pen', 'line', 'arrow'].includes(S.tool)) {
           const T = S.tool, pts = [[x, y]], o = { id: uid(), t: 'path', page: pi, x, y, w: 1, h: 1, pts: [[0, 0]], color: '#e11d48', sw: 2, op: 1, ar: T === 'arrow' };
           S.objs.push(o); mount(o);
@@ -1108,6 +1279,7 @@
           };
           addEventListener('pointermove', mv); addEventListener('pointerup', up); return;
         }
+        
         const T = S.tool, o = { id: uid(), t: 'rect', page: pi, x, y, w: 1, h: 1, color: T === 'erase' ? '#ffffff' : T === 'hl' ? '#ffe600' : '#5b4bff', op: T === 'hl' ? .4 : 1, k: T === 'ellipse' ? 'e' : 'r', fill: true, sc: '#000000', sw: 0 };
         S.objs.push(o); mount(o); select(o.id);
         const mv = ev => { o.w = Math.max(1, (ev.clientX - r.left) / k - x); o.h = Math.max(1, (ev.clientY - r.top) / k - y); refresh(o); };
@@ -1134,11 +1306,13 @@
       /* ---------- build / export / page tools ---------- */
       const FU = 'https://cdn.jsdelivr.net/fontsource/fonts/', UB = {},
         UF = { d4: 'noto-sans-devanagari@latest/devanagari-400-normal.woff', d7: 'noto-sans-devanagari@latest/devanagari-700-normal.woff', l4: 'noto-sans@latest/latin-400-normal.woff', l7: 'noto-sans@latest/latin-700-normal.woff' };
+      
       async function build() {
         const { PDFDocument, StandardFonts, rgb, LineCapStyle } = PDFLib, doc = await PDFDocument.load(S.buf.slice(0)), FN = {}, imgs = {};
         if (window.fontkit) doc.registerFontkit(fontkit);
         const col = h => { const n = parseInt(h.slice(1), 16); return rgb((n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255); };
         const getF = async k => FN[k] || (FN[k] = (k[0] === 'd' || k[0] === 'l') ? await doc.embedFont(UB[k] = UB[k] || await (await fetch(FU + UF[k])).arrayBuffer(), { subset: true }) : await doc.embedFont(StandardFonts[k]));
+        
         for (const o of S.objs) {
           const page = doc.getPage(o.page), H = S.meta[o.page].h, Y = y => H - y;
           if (o.t === 'rect') {
@@ -1168,6 +1342,7 @@
         }
         return doc;
       }
+
       async function exportPdf() {
         if (!S.buf) return; const btn = $('#bExport'); btn.disabled = true; btn.textContent = 'Exporting…';
         try {
@@ -1175,16 +1350,16 @@
           a.href = url; a.download = S.name.replace(/\.pdf$/i, '') + '-edited.pdf'; document.body.appendChild(a); a.click(); a.remove();
           setTimeout(() => URL.revokeObjectURL(url), 4000); toast('Edited PDF downloaded 🎉');
         } catch (err) { console.error(err); toast('Export failed — ' + err.message); }
-        finally { btn.disabled = false; btn.textContent = '⬇ Export PDF'; }
+        finally { btn.disabled = false; btn.innerHTML = '<span>⬇</span> Export PDF'; }
       }
       $('#bExport').onclick = exportPdf;
 
-      /* page operations: current edits are baked into the PDF first (undo history resets) */
       async function mutate(fn) {
         toast('Applying…');
         try { const doc = await build(); await fn(doc); const b = await doc.save(); await openBytes(b.slice().buffer); }
         catch (e) { console.error(e); toast('Failed — ' + e.message); }
       }
+      
       $('#pages').addEventListener('click', e => {
         const b = e.target.closest('[data-op]'); if (!b) return;
         const i = +b.closest('.pg').dataset.i, op = b.dataset.op, n = S.pdf.numPages, m = S.meta[i];
@@ -1200,11 +1375,13 @@
           }
         });
       });
+      
       $('#bAdd').onclick = () => $('#addPdf').click();
       $('#addPdf').onchange = async e => {
         const f = e.target.files[0]; e.target.value = ''; if (!f) return; const buf = await f.arrayBuffer();
         mutate(async doc => { const src = await PDFLib.PDFDocument.load(buf); (await doc.copyPages(src, src.getPageIndices())).forEach(p => doc.addPage(p)); });
       };
+      
       const newText = (i, o) => { const t = Object.assign({ id: uid(), t: 'text', page: i, b: false, i: false, op: 1, color: '#000000', font: 'Helvetica' }, o); S.objs.push(t); mount(t); };
       $('#bWm').onclick = () => {
         const t = prompt('Watermark text'); if (!t) return;
@@ -1212,15 +1389,83 @@
       };
       $('#bPn').onclick = () => { S.meta.forEach((m, i) => newText(i, { text: String(i + 1), x: m.w / 2 - 4, y: m.h - 32, size: 11 })); commit(); toast('Page numbers added (editable)'); };
 
-      /* dropzone */
+      /* ---------- page navigation ---------- */
+      let currentPage = 1;
+      
+      function updatePageNav() {
+        const total = S.pdf ? S.pdf.numPages : 1;
+        $('#totalPages').textContent = total;
+        $('#pageInput').value = currentPage;
+        $('#prevPage').disabled = currentPage <= 1;
+        $('#nextPage').disabled = currentPage >= total;
+      }
+
+      function scrollToPage(num) {
+        const pg = document.querySelector(`.pg[data-i="${num - 1}"]`);
+        if (pg) {
+          pg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+
+      $('#prevPage').onclick = () => { 
+        if (currentPage > 1) { 
+          currentPage--; 
+          scrollToPage(currentPage); 
+          updatePageNav(); 
+        } 
+      };
+
+      $('#nextPage').onclick = () => { 
+        if (S.pdf && currentPage < S.pdf.numPages) { 
+          currentPage++; 
+          scrollToPage(currentPage); 
+          updatePageNav(); 
+        } 
+      };
+
+      // Handle manual input of page number
+      $('#pageInput').onchange = (e) => {
+        let v = parseInt(e.target.value);
+        if (v >= 1 && S.pdf && v <= S.pdf.numPages) {
+          currentPage = v;
+          scrollToPage(currentPage);
+        }
+        updatePageNav(); // Reset input to valid number if invalid was entered
+      };
+      
+      // Optional: Allow pressing Enter to trigger the change
+      $('#pageInput').onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.target.blur(); // Triggers onchange
+        }
+      };
+
+      /* dropzone and file input handling */
       const dz = $('#dropzone'), fi = $('#fileInput');
-      dz.onclick = () => fi.click();
-      dz.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } };
-      fi.onchange = () => { loadPdf(fi.files); fi.value = ''; };
-      ['dragenter', 'dragover'].forEach(v => dz.addEventListener(v, e => { e.preventDefault(); dz.classList.add('dragover'); }));
-      ['dragleave', 'drop'].forEach(v => dz.addEventListener(v, e => { e.preventDefault(); dz.classList.remove('dragover'); }));
-      dz.addEventListener('drop', e => { if (e.dataTransfer.files.length) loadPdf(e.dataTransfer.files); });
-      ['dragover', 'drop'].forEach(v => addEventListener(v, e => { if (!e.target.closest('#dropzone')) e.preventDefault(); }));
+      if (dz && fi) {
+        dz.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          fi.click();
+        });
+        
+        dz.onkeydown = e => { 
+          if (e.key === 'Enter' || e.key === ' ') { 
+            e.preventDefault(); 
+            fi.click(); 
+          } 
+        };
+        
+        fi.onchange = () => { 
+          loadPdf(fi.files); 
+          fi.value = ''; 
+        };
+        
+        ['dragenter', 'dragover'].forEach(v => dz.addEventListener(v, e => { e.preventDefault(); dz.classList.add('dragover'); }));
+        ['dragleave', 'drop'].forEach(v => dz.addEventListener(v, e => { e.preventDefault(); dz.classList.remove('dragover'); }));
+        dz.addEventListener('drop', e => { if (e.dataTransfer.files.length) loadPdf(e.dataTransfer.files); });
+        ['dragover', 'drop'].forEach(v => addEventListener(v, e => { if (!e.target.closest('#dropzone')) e.preventDefault(); }));
+      }
     })();
   </script>
 </body>
