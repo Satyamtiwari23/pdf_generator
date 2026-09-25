@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Edit PDF — PDFnest</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -61,24 +61,48 @@
     .app-container {
       display: flex;
       flex-direction: row;
-
       width: 100vw;
       height: 100vh;
-
       margin: 0;
       padding: 0;
-
       background: var(--bg-dark);
       color: #fff;
-
       overflow: hidden;
+      position: relative;
+    }
+
+    /* Overlay for mobile sidebars */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .sidebar-overlay.open {
+      display: block;
+      opacity: 1;
+      pointer-events: auto;
     }
 
     /* Left Sidebar */
     .sidebar-left {
+      flex: 0 0 240px;
+
       width: 240px;
       min-width: 240px;
       max-width: 240px;
+
+      height: 100vh;
+
+      margin: 0;
+      padding: 0;
 
       background: var(--bg-panel);
       border-right: 1px solid var(--border);
@@ -86,12 +110,12 @@
       display: flex;
       flex-direction: column;
 
-      flex: 0 0 240px;
-      flex-shrink: 0;
+      z-index: 1000;
 
-      z-index: 10;
-
-      transition: background 0.3s ease, border-color 0.3s ease;
+      transition:
+        left 0.3s ease,
+        background 0.3s ease,
+        border-color 0.3s ease;
     }
 
     .sidebar-header {
@@ -117,6 +141,12 @@
       font-size: 11px;
       color: var(--text-muted);
       display: block;
+    }
+
+    #closeSidebar {
+      display: none;
+      margin-left: auto;
+      font-size: 16px;
     }
 
     .sidebar-content {
@@ -182,63 +212,42 @@
 
     /* Main Area */
     .main-area {
-      flex: 1;
+      flex: 1 1 auto;
+      width: calc(100vw - 240px);
+      min-width: 0;
+      min-height: 0;
+
+      margin: 0;
+      padding: 0;
+
       display: flex;
       flex-direction: column;
+
       background: var(--bg-workspace);
       position: relative;
     }
 
-    /* =========================================================
-   FULL-WIDTH EDITOR AREA
-   Remove unwanted horizontal gaps
-   ========================================================= */
-
-    #edSec {
-      width: 100vw !important;
-      height: 100vh !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    #edSec .main-area {
-      flex: 1 1 auto !important;
-      width: auto !important;
-      max-width: none !important;
-      min-width: 0 !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    #edSec .top-bar {
-      width: 100% !important;
-      max-width: none !important;
-      margin: 0 !important;
-      padding-left: 20px;
-      padding-right: 20px;
-      box-sizing: border-box;
-    }
-
-    #edSec .workspace {
-      width: 100% !important;
-      max-width: none !important;
-      min-width: 0 !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      box-sizing: border-box;
-    }
-
     /* Top Bar */
     .top-bar {
+      width: 100%;
       height: 60px;
+
+      margin: 0;
+      padding: 0 20px;
+
       background: var(--bg-panel);
       border-bottom: 1px solid var(--border);
+
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 20px;
-      flex-shrink: 0;
-      z-index: 10;
+
+      flex: 0 0 60px;
+      box-sizing: border-box;
+
+      z-index: 200;
+      position: relative;
+
       transition: background 0.3s ease, border-color 0.3s ease;
     }
 
@@ -271,6 +280,7 @@
       cursor: pointer;
       font-size: 18px;
       transition: all 0.15s ease;
+      flex-shrink: 0;
     }
 
     .icon-btn:hover {
@@ -286,6 +296,10 @@
     .icon-btn.active {
       background: var(--bg-active);
       color: var(--primary);
+    }
+
+    #menuToggle {
+      display: none;
     }
 
     .zoom-label {
@@ -310,6 +324,7 @@
       gap: 8px;
       transition: all 0.15s ease;
       font-family: var(--font-ui);
+      white-space: nowrap;
     }
 
     .btn-primary:hover {
@@ -326,31 +341,46 @@
 
     /* Workspace */
     .workspace {
-      flex: 1;
+      flex: 1 1 auto;
+
+      width: 100%;
+      height: auto;
+
+      min-width: 0;
       min-height: 0;
-      overflow: hidden;
+
+      margin: 0;
       padding: 0;
+
+      overflow: hidden;
+
       display: flex;
       flex-direction: column;
       align-items: stretch;
+
       background: var(--bg-dark);
       position: relative;
-      scrollbar-width: thin;
-      scrollbar-color: #555 var(--bg-dark);
     }
 
     #pages {
+      flex: 1 1 auto;
+
       width: 100%;
       height: 100%;
+
+      min-width: 0;
       min-height: 0;
+
       margin: 0;
       padding: 0;
-      overflow: auto;
 
+      overflow: auto;
 
       display: flex;
       flex-direction: column;
       align-items: center;
+
+      position: relative;
 
       scrollbar-width: thin;
       scrollbar-color: #555 var(--bg-dark);
@@ -372,15 +402,15 @@
 
     .pg {
       position: relative;
-      margin: 0;
+      margin: 0 auto 24px;
       background: #fff;
-      box-shadow: none;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
       text-align: left;
       transition: transform 0.2s ease;
     }
 
     .pg:hover {
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
     }
 
     .pg canvas {
@@ -583,9 +613,10 @@
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
-      z-index: 10;
-      transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+      z-index: 1000;
+      transition: right 0.3s ease, background 0.3s ease, border-color 0.3s ease;
       overflow-y: auto;
+      position: relative;
     }
 
     .sidebar-right[hidden] {
@@ -677,7 +708,6 @@
     }
 
     input[type="range"] {
-
       width: 100%;
       height: 6px;
       border-radius: 3px;
@@ -747,73 +777,43 @@
       border-color: #ccc;
     }
 
-    /* =========================================================
-   GLASS PAGE NAVIGATION
-   ========================================================= */
-
+    /* Glass Page Navigation */
     .page-nav-floating {
       position: absolute;
       left: 50%;
       bottom: 18px;
       transform: translateX(-50%);
-
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-
       padding: 7px 10px;
-
-      /* Strong glass */
       background: rgba(30, 30, 40, 0.55);
-
       border: 1px solid rgba(255, 255, 255, 0.28);
       border-radius: 18px;
-
-      box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.35),
-        inset 0 1px 0 rgba(255, 255, 255, 0.20);
-
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.20);
       backdrop-filter: blur(18px) saturate(160%);
       -webkit-backdrop-filter: blur(18px) saturate(160%);
-
       z-index: 1000;
-
       user-select: none;
       pointer-events: auto;
-
-      /* Prevent text from becoming transparent */
       color: #ffffff;
     }
-
-
-    /* =========================================================
-   ARROW BUTTONS
-   ========================================================= */
 
     .page-nav-floating .nav-btn {
       width: 34px;
       height: 34px;
-
       border: 0;
       border-radius: 11px;
-
       background: rgba(255, 255, 255, 0.12);
       color: #ffffff;
-
       font-size: 18px;
       font-weight: 700;
-
       cursor: pointer;
-
       display: flex;
       align-items: center;
       justify-content: center;
-
-      transition:
-        background 0.18s ease,
-        transform 0.18s ease,
-        color 0.18s ease;
+      transition: background 0.18s ease, transform 0.18s ease, color 0.18s ease;
     }
 
     .page-nav-floating .nav-btn:hover:not(:disabled) {
@@ -832,104 +832,58 @@
       cursor: not-allowed;
     }
 
-
-    /* =========================================================
-   PAGE INDICATOR
-   ========================================================= */
-
     .page-indicator {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-
       min-width: 76px;
       height: 34px;
-
       padding: 0 8px;
-
       border-radius: 11px;
-
       background: rgba(255, 255, 255, 0.13);
-
       border: 1px solid rgba(255, 255, 255, 0.18);
-
       color: #ffffff !important;
-
       font-size: 13px;
       font-weight: 800;
-
       white-space: nowrap;
-
-      text-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.65);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
     }
-
-
-    /* =========================================================
-   CURRENT PAGE INPUT
-   ========================================================= */
 
     .page-indicator input {
       width: 42px;
       height: 28px;
-
       padding: 3px 5px;
-
       box-sizing: border-box;
-
       text-align: center;
-
       border: 1px solid rgba(255, 255, 255, 0.30);
       border-radius: 8px;
-
       background: rgba(255, 255, 255, 0.18);
-
       color: #ffffff !important;
-
       font-weight: 800;
       font-family: var(--font-ui);
       font-size: 13px;
-
       outline: none;
-
-      text-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.65);
-
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-
-      transition:
-        border-color 0.15s ease,
-        background 0.15s ease,
-        box-shadow 0.15s ease;
+      transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
     }
 
     .page-indicator input:focus {
       border-color: rgba(255, 255, 255, 0.65);
-
       background: rgba(255, 255, 255, 0.24);
-
-      box-shadow:
-        0 0 0 2px rgba(167, 139, 250, 0.22);
+      box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.22);
     }
 
-
-    /* The "/ 40" text */
     .page-indicator>span {
       color: #ffffff !important;
-
       font-weight: 800;
       font-size: 13px;
-
       opacity: 1 !important;
-
-      text-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.70);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.70);
     }
 
-
-    /* Remove number input spinners */
     .page-indicator input::-webkit-outer-spin-button,
     .page-indicator input::-webkit-inner-spin-button {
       -webkit-appearance: none;
@@ -940,20 +894,11 @@
       appearance: textfield;
     }
 
-
-    /* =========================================================
-   LIGHT MODE GLASS
-   ========================================================= */
-
+    /* Light Mode Glass */
     body:not(.dark-theme) .page-nav-floating {
       background: rgba(255, 255, 255, 0.72);
-
       border-color: rgba(255, 255, 255, 0.85);
-
-      box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.18),
-        inset 0 1px 0 rgba(255, 255, 255, 0.95);
-
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.95);
       color: #111827;
     }
 
@@ -969,33 +914,25 @@
 
     body:not(.dark-theme) .page-indicator {
       background: rgba(255, 255, 255, 0.55);
-
       border-color: rgba(255, 255, 255, 0.85);
-
       color: #111827 !important;
-
       text-shadow: none;
     }
 
     body:not(.dark-theme) .page-indicator>span {
       color: #111827 !important;
-
       text-shadow: none;
     }
 
     body:not(.dark-theme) .page-indicator input {
       background: rgba(255, 255, 255, 0.72);
-
       border-color: rgba(0, 0, 0, 0.15);
-
       color: #111827 !important;
-
       text-shadow: none;
     }
 
     body:not(.dark-theme) .page-indicator input:focus {
       background: rgba(255, 255, 255, 0.90);
-
       border-color: var(--primary);
     }
 
@@ -1076,7 +1013,7 @@
       box-shadow: var(--shadow-lg);
       opacity: 0;
       transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      z-index: 200;
+      z-index: 2000;
       pointer-events: none;
     }
 
@@ -1158,69 +1095,194 @@
       background: linear-gradient(135deg, #141418 0%, #1E1E24 100%);
     }
 
-    /* =========================================================
-   DARK MODE GLASS PAGE NAVIGATION
-   ========================================================= */
-
+    /* Dark Mode Glass Page Navigation */
     body.dark-theme .page-nav-floating {
       background: rgba(20, 20, 28, 0.62);
-
       border-color: rgba(255, 255, 255, 0.20);
-
-      box-shadow:
-        0 12px 35px rgba(0, 0, 0, 0.45),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
-
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
       color: #ffffff !important;
     }
 
     body.dark-theme .page-nav-floating .nav-btn {
       background: rgba(255, 255, 255, 0.10);
-
       color: #ffffff !important;
     }
 
     body.dark-theme .page-nav-floating .nav-btn:hover:not(:disabled) {
       background: rgba(167, 139, 250, 0.22);
-
       color: #ffffff !important;
     }
 
     body.dark-theme .page-indicator {
       background: rgba(255, 255, 255, 0.08);
-
       border-color: rgba(255, 255, 255, 0.16);
-
       color: #ffffff !important;
-
-      text-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.70);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.70);
     }
 
     body.dark-theme .page-indicator>span {
       color: #ffffff !important;
-
       opacity: 1 !important;
-
-      text-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.70);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.70);
     }
 
     body.dark-theme .page-indicator input {
       background: rgba(255, 255, 255, 0.10);
-
       border-color: rgba(255, 255, 255, 0.20);
-
       color: #ffffff !important;
-
-      text-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.70);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.70);
     }
 
     body.dark-theme .page-indicator input:focus {
       background: rgba(255, 255, 255, 0.18);
-
       border-color: rgba(167, 139, 250, 0.70);
+    }
+
+    /* =========================================================
+       RESPONSIVE DESIGN (TABLET & PHONE)
+       ========================================================= */
+    @media (max-width: 1024px) {
+      #menuToggle {
+        display: flex;
+      }
+
+      #closeSidebar {
+        display: flex;
+      }
+
+      .sidebar-left {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        bottom: 0;
+        width: 260px;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .sidebar-left.open {
+        left: 0;
+      }
+
+      .sidebar-right {
+        position: fixed;
+        right: -280px;
+        top: 0;
+        bottom: 0;
+        width: 260px;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+        transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .sidebar-right.open {
+        right: 0;
+      }
+
+      .sidebar-right[hidden] {
+        display: flex;
+      }
+
+      .top-bar-center {
+        display: flex;
+        padding: 2px 4px;
+        gap: 4px;
+      }
+
+      .top-bar-center .icon-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+      }
+
+      .zoom-label {
+        font-size: 11px;
+        min-width: 36px;
+      }
+
+      .workspace {
+        padding: 8px;
+      }
+
+      .pg {
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .top-bar {
+        padding: 0 8px;
+      }
+
+      .top-bar-left,
+      .top-bar-right {
+        gap: 4px;
+      }
+
+      /* Make Export Button an icon-only circle */
+      .btn-primary {
+        padding: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        justify-content: center;
+      }
+
+      .btn-primary .export-text {
+        display: none;
+      }
+
+      .btn-primary span {
+        display: block;
+        font-size: 16px;
+      }
+
+      .top-bar-center .icon-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 12px;
+      }
+
+      .zoom-label {
+        font-size: 10px;
+        min-width: 30px;
+      }
+
+      .page-nav-floating {
+        padding: 4px 6px;
+        bottom: 12px;
+        gap: 4px;
+      }
+
+      .page-nav-floating .nav-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+        border-radius: 8px;
+      }
+
+      .page-indicator {
+        min-width: 60px;
+        height: 28px;
+        font-size: 12px;
+        padding: 0 4px;
+        border-radius: 8px;
+      }
+
+      .page-indicator input {
+        width: 32px;
+        height: 22px;
+        font-size: 11px;
+        padding: 2px;
+        border-radius: 6px;
+      }
+
+      .page-indicator>span {
+        font-size: 12px;
+      }
+
+      .workspace {
+        padding: 4px;
+      }
     }
   </style>
 </head>
@@ -1235,7 +1297,7 @@
     </div>
   </div>
 
-  <!-- Hidden File Inputs (Using CSS opacity instead of hidden attribute) -->
+  <!-- Hidden File Inputs -->
   <input type="file" id="fileInput" accept="application/pdf,.pdf"
     style="position: absolute; width: 0; height: 0; opacity: 0; z-index: -1;" />
   <input type="file" id="imgInput" accept="image/*"
@@ -1243,17 +1305,24 @@
   <input type="file" id="addPdf" accept="application/pdf"
     style="position: absolute; width: 0; height: 0; opacity: 0; z-index: -1;" />
 
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
   <!-- Main App Container -->
   <div class="app-container" id="edSec" hidden>
 
     <!-- Left Sidebar: Tools -->
-    <aside class="sidebar-left">
+    <aside class="sidebar-left" id="sidebarLeft">
       <div class="sidebar-header">
         <span class="logo">✦</span>
         <div>
           <h2>PDFnest</h2>
           <small>Edit PDF</small>
         </div>
+        <!-- Moved Open PDF button to Sidebar Header -->
+        <button class="icon-btn" id="bOpen" title="Open PDF" style="margin-left:auto; font-size:16px;">📂</button>
+        <!-- Close button for mobile -->
+        <button class="icon-btn" id="closeSidebar" title="Close Menu">✕</button>
       </div>
       <div class="sidebar-content">
 
@@ -1323,7 +1392,7 @@
       <!-- Top Bar -->
       <header class="top-bar">
         <div class="top-bar-left">
-          <button class="icon-btn" id="bOpen" title="Open PDF">📂</button>
+          <button class="icon-btn" id="menuToggle" title="Menu">☰</button>
           <button class="icon-btn" id="bUndo" title="Undo (Ctrl+Z)">↶</button>
           <button class="icon-btn" id="bRedo" title="Redo (Ctrl+Y)">↷</button>
         </div>
@@ -1332,12 +1401,12 @@
           <button class="icon-btn" id="zo" title="Zoom Out">−</button>
           <span class="zoom-label" id="zl">100%</span>
           <button class="icon-btn" id="zi" title="Zoom In">+</button>
-          <button class="icon-btn" id="zf" title="Fit to Width" style="font-size: 14px;">Fit</button>
+          <button class="icon-btn" id="zf" title="Fit to Width" style="font-size: 12px;">Fit</button>
         </div>
 
         <div class="top-bar-right">
           <button class="btn-primary" id="bExport">
-            <span>⬇</span> Export PDF
+            <span>⬇</span> <span class="export-text">Export PDF</span>
           </button>
         </div>
       </header>
@@ -1453,7 +1522,6 @@
       const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
       const uid = () => Math.random().toString(36).slice(2, 9);
 
-      // Ensure pdfjsLib is loaded before setting worker
       if (window.pdfjsLib) {
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       }
@@ -1480,6 +1548,43 @@
       const get = id => S.objs.find(o => o.id === id);
       const pgEl = i => $('.pg[data-i="' + i + '"]');
       const elOf = id => $('.obj[data-id="' + id + '"]');
+
+      /* ---------- Mobile Sidebar Logic ---------- */
+      const menuToggle = $('#menuToggle');
+      const sidebarLeft = $('#sidebarLeft');
+      const sidebarRight = $('#props-sidebar');
+      const sidebarOverlay = $('#sidebarOverlay');
+      const closeSidebarBtn = $('#closeSidebar');
+
+      function openLeftSidebar() {
+        sidebarLeft.classList.add('open');
+        sidebarOverlay.classList.add('open');
+        sidebarRight.classList.remove('open');
+      }
+
+      function closeSidebars() {
+        sidebarLeft.classList.remove('open');
+        sidebarRight.classList.remove('open');
+        sidebarOverlay.classList.remove('open');
+      }
+
+      if (menuToggle) {
+        menuToggle.onclick = () => {
+          if (sidebarLeft.classList.contains('open')) {
+            closeSidebars();
+          } else {
+            openLeftSidebar();
+          }
+        };
+      }
+
+      if (closeSidebarBtn) {
+        closeSidebarBtn.onclick = closeSidebars;
+      }
+
+      if (sidebarOverlay) {
+        sidebarOverlay.onclick = closeSidebars;
+      }
 
       /* ---------- history ---------- */
       function commit() { S.hist.push(JSON.stringify(S.objs)); if (S.hist.length > 60) S.hist.shift(); S.redo = []; btns(); }
@@ -1509,7 +1614,10 @@
           syncProps();
           btns();
           updatePageNav();
-          const w = $('#ws').clientWidth;
+
+          // Auto-fit zoom to width
+          const w = $('#pages').clientWidth - 16;
+
           S.zoom = w / S.meta[0].w;
 
           $('#zl').textContent = Math.round(S.zoom * 100) + '%';
@@ -1585,7 +1693,6 @@
           el.appendChild(im);
         }
 
-        /* 8 RESIZE HANDLES */
         const handles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
         handles.forEach(dir => {
           const h = document.createElement('div');
@@ -1776,8 +1883,18 @@
 
       function syncProps(light) {
         const o = get(S.sel), p = $('#props-sidebar');
-        if (!o) { p.hidden = true; return; }
+        if (!o) {
+          p.hidden = true;
+          p.classList.remove('open');
+          return;
+        }
         p.hidden = false;
+
+        // Auto-open right sidebar on mobile
+        if (window.innerWidth <= 1024) {
+          p.classList.add('open');
+          sidebarOverlay.classList.add('open');
+        }
 
         $$('.tx-only', p).forEach(e => e.style.display = o.t === 'text' ? '' : 'none');
         $$('.rc-only', p).forEach(e => e.style.display = o.t === 'rect' ? '' : 'none');
@@ -1829,17 +1946,25 @@
       $('#fBack').onclick = () => reorder(false);
       $('#fDup').onclick = () => { const o = get(S.sel); if (o) add({ ...o, x: o.x + 12, y: o.y + 12 }); };
 
-      $$('[data-tool]').forEach(b => b.onclick = () => { setTool(b.dataset.tool); if (S.tool !== 'select') setEdit(false); });
+      $$('[data-tool]').forEach(b => b.onclick = () => {
+        setTool(b.dataset.tool);
+        if (S.tool !== 'select') setEdit(false);
+        if (window.innerWidth <= 1024) closeSidebars();
+      });
+
       $('#bEdit').onclick = () => setEdit(!S.edit);
       $('#bUndo').onclick = undo;
       $('#bRedo').onclick = redo;
       $('#bOpen').onclick = () => $('#fileInput').click();
       $('#bImg').onclick = () => $('#imgInput').click();
-      $('#closeProps').onclick = () => { select(null); };
+      $('#closeProps').onclick = () => {
+        select(null);
+        if (window.innerWidth <= 1024) closeSidebars();
+      };
 
       /* zoom */
       let zt;
-      function setZoom(z) { S.zoom = Math.max(.4, Math.min(3, z)); $('#zl').textContent = Math.round(S.zoom * 100) + '%'; clearTimeout(zt); zt = setTimeout(renderAll, 150); }
+      function setZoom(z) { S.zoom = Math.max(.1, Math.min(3, z)); $('#zl').textContent = Math.round(S.zoom * 100) + '%'; clearTimeout(zt); zt = setTimeout(renderAll, 150); }
       $('#zi').onclick = () => setZoom(S.zoom + .15);
       $('#zo').onclick = () => setZoom(S.zoom - .15);
       $('#zf').onclick = () => {
@@ -1914,7 +2039,7 @@
           e.preventDefault(); const o = get(S.sel), d = e.shiftKey ? 10 : 1;
           if (e.key === 'ArrowLeft') o.x -= d; if (e.key === 'ArrowRight') o.x += d; if (e.key === 'ArrowUp') o.y -= d; if (e.key === 'ArrowDown') o.y += d; refresh(o); commit();
         }
-        if (e.key === 'Escape') { select(null); setTool('select'); setEdit(false); }
+        if (e.key === 'Escape') { select(null); setTool('select'); setEdit(false); if (window.innerWidth <= 1024) closeSidebars(); }
       });
 
       /* ---------- build / export / page tools ---------- */
@@ -1964,7 +2089,7 @@
           a.href = url; a.download = S.name.replace(/\.pdf$/i, '') + '-edited.pdf'; document.body.appendChild(a); a.click(); a.remove();
           setTimeout(() => URL.revokeObjectURL(url), 4000); toast('Edited PDF downloaded 🎉');
         } catch (err) { console.error(err); toast('Export failed — ' + err.message); }
-        finally { btn.disabled = false; btn.innerHTML = '<span>⬇</span> Export PDF'; }
+        finally { btn.disabled = false; btn.innerHTML = '<span>⬇</span> <span class="export-text">Export PDF</span>'; }
       }
       $('#bExport').onclick = exportPdf;
 
@@ -2005,6 +2130,7 @@
 
       /* ---------- page navigation ---------- */
       let currentPage = 1;
+      let scrollTimeout;
 
       function updatePageNav() {
         const total = S.pdf ? S.pdf.numPages : 1;
@@ -2020,6 +2146,37 @@
           pg.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       }
+
+      // Listen for manual scrolling to update the page number
+      $('#pages').addEventListener('scroll', () => {
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const pages = $$('.pg');
+          if (!pages.length) return;
+
+          const containerRect = $('#pages').getBoundingClientRect();
+          let bestPage = currentPage;
+          let minDistance = Infinity;
+
+          pages.forEach((pg, index) => {
+            const rect = pg.getBoundingClientRect();
+            // Find the distance between the center of the viewport and the center of the page
+            const pageCenter = rect.top + rect.height / 2;
+            const containerCenter = containerRect.top + containerRect.height / 2;
+            const distance = Math.abs(pageCenter - containerCenter);
+
+            if (distance < minDistance) {
+              minDistance = distance;
+              bestPage = index + 1;
+            }
+          });
+
+          if (bestPage !== currentPage) {
+            currentPage = bestPage;
+            updatePageNav();
+          }
+        }, 100); // Wait 100ms after scrolling stops
+      });
 
       $('#prevPage').onclick = () => {
         if (currentPage > 1) {
@@ -2037,20 +2194,18 @@
         }
       };
 
-      // Handle manual input of page number
       $('#pageInput').onchange = (e) => {
         let v = parseInt(e.target.value);
         if (v >= 1 && S.pdf && v <= S.pdf.numPages) {
           currentPage = v;
           scrollToPage(currentPage);
         }
-        updatePageNav(); // Reset input to valid number if invalid was entered
+        updatePageNav();
       };
 
-      // Optional: Allow pressing Enter to trigger the change
       $('#pageInput').onkeydown = (e) => {
         if (e.key === 'Enter') {
-          e.target.blur(); // Triggers onchange
+          e.target.blur();
         }
       };
 
