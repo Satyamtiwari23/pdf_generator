@@ -373,7 +373,6 @@
     input[type="number"] { width: 60px; text-align: center; }
     
     input[type="color"] {
-      -webkit-appearance: none;
       border: none;
       width: 32px; height: 32px;
       border-radius: 50%;
@@ -385,7 +384,7 @@
     input[type="color"]::-webkit-color-swatch { border: 2px solid var(--border); border-radius: 50%; }
 
     input[type="range"] {
-      -webkit-appearance: none;
+
       width: 100%;
       height: 6px;
       border-radius: 3px;
@@ -501,9 +500,6 @@
       font-size: 14px;
       outline: none;
       transition: border-color 0.15s, background 0.15s;
-      
-      /* Hide default spinners */
-      -moz-appearance: textfield;
     }
     .page-indicator input::-webkit-outer-spin-button,
     .page-indicator input::-webkit-inner-spin-button {
