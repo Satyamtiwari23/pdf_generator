@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF to DOCX — PDFnest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="theme.js"></script>
+  <script src="auth-guard.js"></script>
+  
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- DOCX -->
+  <script src="https://unpkg.com/docx@8.2.3/build/index.umd.js"></script>
+  <!-- Mammoth for preview -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+  <style>
+    .preview-modal {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 12, 20, 0.85);
+      backdrop-filter: blur(5px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+    }
+    .preview-modal.show { opacity: 1; pointer-events: auto; }
+    .preview-modal-content {
+      background: #fff; border-radius: 16px;
+      width: 100%; max-width: 850px; max-height: 90vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 26px 60px -24px rgba(0,0,0,0.6);
+    }
+    body.dark-theme .preview-modal-content { background: #1b1624; color: #f5f2ff; }
+    .preview-header {
+      padding: 16px 24px; border-bottom: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .preview-header h3 { margin: 0; font-size: 1.1rem; }
+    .preview-close {
+      background: transparent; border: 0; font-size: 1.2rem;
+      cursor: pointer; color: var(--muted);
+    }
+    .preview-body {
+      padding: 30px; overflow-y: auto; background: #e8e8e8;
+    }
+    body.dark-theme .preview-body { background: #110d16; }
+    .docx-page {
+      background: #fff; color: #000;
+      padding: 50px; margin: 0 auto; max-width: 700px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      min-height: 900px; line-height: 1.6; 
+      font-family: 'Times New Roman', serif; font-size: 12pt;
+    }
+    .docx-page p { margin: 0 0 8px 0; }
+    .docx-page h1, .docx-page h2, .docx-page h3 { margin: 15px 0 10px 0; }
+    .preview-footer {
+      padding: 16px 24px; border-top: 1px solid var(--line);
+      display: flex; justify-content: flex-end; gap: 10px;
+    }
+    .preview-error {
+      color: #b91c1c; padding: 20px; text-align: center; font-family: monospace;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <span class="logo">✦</span>
+        <span>PDFnest<small>PDF to DOCX</small></span>
+      </a>
+      <a href="index.html" class="back-link">← All tools</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Convert <span class="grad">PDF to Word</span></h1>
+      <p>Upload a PDF and we'll extract the text, preserving layout, alignment, and styling as closely as possible.</p>
+    </section>
+
+    <section class="card">
+      <div class="field">
+        <label>Your PDF</label>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button">
+          <div class="dz-icon">📄</div>
+          <div class="dz-title">Drag &amp; drop a PDF here</div>
+          <div class="dz-sub">or <span class="link">browse files</span> · .pdf only</div>
+        </div>
+        <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden />
+      </div>
+
+      <div class="file-list" id="fileList"></div>
+
+      <div class="actions" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+        <button class="btn btn-ghost" id="previewBtn" disabled>👁 Preview DOCX</button>
+        <button class="btn btn-primary" id="convertBtn" disabled>📄 Convert &amp; download DOCX</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">Powered by pdf.js + docx · Files never leave your device.</footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Preview Modal -->
+  <div class="preview-modal" id="previewModal">
+    <div class="preview-modal-content">
+      <div class="preview-header">
+        <h3>DOCX Preview</h3>
+        <button class="preview-close" id="closePreviewBtn">✕</button>
+      </div>
+      <div class="preview-body">
+        <div class="docx-page" id="docxPreviewContainer">
+          <p style="color:#888;">Generating preview...</p>
+        </div>
+      </div>
+      <div class="preview-footer">
+        <button class="btn btn-ghost" id="cancelPreviewBtn">Cancel</button>
+        <button class="btn btn-primary" id="downloadFromPreviewBtn">⬇ Download DOCX</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+      const $ = (s, c = document) => c.querySelector(s);
+
+      if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+
+      let toastTimer = null;
+      function toast(m) {
+        const el = $('#toast'); el.textContent = m; el.classList.add('show');
+        clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+      }
+
+      const state = { file: null, docxBlob: null };
+
+      function fmtSize(b) {
+        if (b < 1024) return b + ' B';
+        if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+        return (b / 1048576).toFixed(2) + ' MB';
+      }
+
+      async function addFile(fileList) {
+        const f = Array.from(fileList).find(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+        if (!f) { toast('Please choose a PDF'); return; }
+        
+        try {
+          const buf = await f.arrayBuffer();
+          await pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
+          state.file = { name: f.name, size: f.size, bytes: buf };
+          state.docxBlob = null;
+          renderFile();
+        } catch (err) {
+          console.error(err);
+          toast('Could not read that PDF. Make sure it is valid.');
+        }
+      }
+
+      function renderFile() {
+        const list = $('#fileList'); list.innerHTML = '';
+        if (!state.file) { 
+          $('#convertBtn').disabled = true; 
+          $('#previewBtn').disabled = true;
+          return; 
+        }
+        
+        const f = state.file;
+        const el = document.createElement('div');
+        el.className = 'file-item';
+        el.innerHTML =
+          '<span class="file-icon">PDF</span>' +
+          '<div class="file-info">' +
+            '<div class="file-name">' + f.name + '</div>' +
+            '<div class="file-size">' + fmtSize(f.size) + '</div>' +
+          '</div>' +
+          '<button class="remove" aria-label="Remove">✕</button>';
+        list.appendChild(el);
+        
+        $('#convertBtn').disabled = false;
+        $('#previewBtn').disabled = false;
+      }
+
+      /* ============================================================
+         CORE PDF → DOCX CONVERSION ENGINE (v3 - Layout Aware)
+         ============================================================ */
+      async function generateDocxBlob() {
+        if (!state.file) throw new Error('No PDF file selected.');
+        if (typeof pdfjsLib === 'undefined' || typeof docx === 'undefined') {
+          throw new Error('Required libraries not loaded.');
+        }
+
+        const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(state.file.bytes) }).promise;
+        const { Document, Packer, Paragraph, TextRun, PageBreak, AlignmentType } = docx;
+
+        const doc = new Document({
+          sections: [{ properties: {}, children: [] }]
+        });
+
+        const paragraphs = [];
+        let totalTextLength = 0;
+
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const viewport = page.getViewport({ scale: 1.0 });
+          const textContent = await page.getTextContent();
+          const styles = textContent.styles;
+          const items = textContent.items.filter(it => it.str.trim() !== '');
+          
+          if (items.length === 0) continue;
+
+          // 1. Sort all text items by Y (top to bottom), then X (left to right)
+          items.sort((a, b) => {
+            if (Math.abs(a.transform[5] - b.transform[5]) > 5) {
+              return b.transform[5] - a.transform[5];
+            }
+            return a.transform[4] - b.transform[4];
+          });
+
+          // 2. Group items into lines based on Y coordinate
+          const lines = [];
+          let currentLine = null;
+          items.forEach(item => {
+            if (!currentLine || Math.abs(currentLine.y - item.transform[5]) > 5) {
+              currentLine = { y: item.transform[5], items: [item] };
+              lines.push(currentLine);
+            } else {
+              currentLine.items.push(item);
+            }
+          });
+
+          // 3. Find page boundaries (Min X, Max X) to detect alignment
+          let minX = Infinity, maxX = -Infinity;
+          lines.forEach(line => {
+            line.items.forEach(item => {
+              minX = Math.min(minX, item.transform[4]);
+              maxX = Math.max(maxX, item.transform[4] + item.width);
+            });
+          });
+          const pageWidth = viewport.width;
+          const pageCenter = pageWidth / 2;
+          const textCenter = (minX + maxX) / 2;
+          const textWidth = maxX - minX;
+
+          // 4. Convert lines into structured paragraphs
+          let currentParagraphRuns = [];
+          let currentParagraphAlignment = AlignmentType.LEFT;
+          let currentParagraphIndent = 0;
+          let lastY = null;
+          let lastFontSize = 12;
+
+          for (const line of lines) {
+            const firstItem = line.items[0];
+            const lastItem = line.items[line.items.length - 1];
+            const fontSize = Math.abs(firstItem.height) || Math.abs(firstItem.transform[3]) || 12;
+            const startX = firstItem.transform[4];
+            const endX = lastItem.transform[4] + lastItem.width;
+            const lineWidth = endX - startX;
+            const lineCenter = startX + lineWidth / 2;
+
+            // --- Detect Alignment ---
+            let alignment = AlignmentType.LEFT;
+            if (Math.abs(lineCenter - pageCenter) < 20 && lineWidth < textWidth * 0.8) {
+              alignment = AlignmentType.CENTER;
+            } else if (Math.abs(endX - maxX) < 20 && Math.abs(startX - minX) > 30) {
+              alignment = AlignmentType.RIGHT;
+            }
+
+            // --- Build Text Runs ---
+            const runs = [];
+            line.items.forEach((item, idx) => {
+              if (idx > 0) {
+                const prevItem = line.items[idx - 1];
+                const gap = item.transform[4] - (prevItem.transform[4] + prevItem.width);
+                if (gap > 2) {
+                  runs.push(new TextRun({ text: ' ', size: Math.round(fontSize * 2) }));
+                }
+              }
+
+              const style = styles[item.fontName] || {};
+              let fontFamily = style.fontFamily || 'Arial';
+              const lowerFont = fontFamily.toLowerCase();
+              const isBold = lowerFont.includes('bold') || lowerFont.includes('black') || lowerFont.includes('heavy');
+              const isItalic = lowerFont.includes('italic') || lowerFont.includes('oblique');
+              
+              let cleanFont = fontFamily.replace(/['"]/g, '').split(',')[0].trim();
+              if (cleanFont === 'sans-serif') cleanFont = 'Arial';
+              if (cleanFont === 'serif') cleanFont = 'Times New Roman';
+
+              runs.push(new TextRun({
+                text: item.str,
+                size: Math.round(fontSize * 2),
+                bold: isBold,
+                italics: isItalic,
+                font: cleanFont
+              }));
+              
+              totalTextLength += item.str.length;
+            });
+
+            // --- Determine Paragraph Grouping & Spacing ---
+            let isNewParagraph = true;
+            let spacingBefore = 0;
+
+            if (lastY !== null) {
+              const gap = lastY - line.y;
+              const expectedLineHeight = lastFontSize * 1.2;
+              
+              if (gap < expectedLineHeight + 4 && alignment === currentParagraphAlignment) {
+                isNewParagraph = false;
+              } else if (gap > expectedLineHeight + 2) {
+                spacingBefore = Math.round((gap - expectedLineHeight) * 20); // twips
+              }
+            }
+
+            if (isNewParagraph) {
+              if (currentParagraphRuns.length > 0) {
+                paragraphs.push(new Paragraph({
+                  children: currentParagraphRuns,
+                  alignment: currentParagraphAlignment,
+                  indent: { left: currentParagraphIndent },
+                  spacing: { line: Math.round(lastFontSize * 1.2 * 20), lineRule: 'auto', after: 100 }
+                }));
+              }
+              currentParagraphRuns = [];
+              currentParagraphAlignment = alignment;
+              currentParagraphIndent = Math.round((startX - minX) * 20);
+            } else {
+              currentParagraphRuns.push(new TextRun({ break: 1 }));
+            }
+
+            currentParagraphRuns.push(...runs);
+            
+            lastY = line.y;
+            lastFontSize = fontSize;
+          }
+
+          // Push the final paragraph
+          if (currentParagraphRuns.length > 0) {
+            paragraphs.push(new Paragraph({
+              children: currentParagraphRuns,
+              alignment: currentParagraphAlignment,
+              indent: { left: currentParagraphIndent },
+              spacing: { line: Math.round(lastFontSize * 1.2 * 20), lineRule: 'auto', after: 100 }
+            }));
+          }
+
+          // Add page break
+          if (i < pdf.numPages) {
+            paragraphs.push(new Paragraph({ children: [new PageBreak()] }));
+          }
+        }
+
+        if (totalTextLength === 0) {
+          throw new Error('No selectable text found. This might be a scanned PDF.');
+        }
+
+        doc.addSection({ properties: {}, children: paragraphs });
+        return await Packer.toBlob(doc);
+      }
+
+      /* ============================================================
+         PREVIEW & DOWNLOAD HANDLERS
+         ============================================================ */
+      async function handlePreview() {
+        if (!state.file) return;
+        const btn = $('#previewBtn');
+        btn.disabled = true; btn.textContent = 'Generating…';
+        $('#docxPreviewContainer').innerHTML = '<p style="color:#888;">Generating preview...</p>';
+
+        try {
+          state.docxBlob = await generateDocxBlob();
+          
+          // Convert the generated DOCX blob to HTML using mammoth for preview
+          const arrayBuffer = await state.docxBlob.arrayBuffer();
+          
+          if (typeof mammoth === 'undefined') {
+            throw new Error('Mammoth library not loaded. Cannot generate preview.');
+          }
+
+          const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+          
+          if (!result.value || result.value.trim() === '') {
+            throw new Error('Preview generated empty content. The PDF might only contain images.');
+          }
+
+          $('#docxPreviewContainer').innerHTML = result.value;
+          $('#previewModal').classList.add('show');
+          toast('Preview generated successfully!');
+        } catch (err) {
+          console.error('Preview error:', err);
+          $('#docxPreviewContainer').innerHTML = 
+            '<div class="preview-error">' +
+              '<p><strong>Preview Error:</strong> ' + err.message + '</p>' +
+              '<p style="font-size:0.85rem; color:#666; margin-top:10px;">' +
+              'This usually happens if the PDF is a scanned image or if the document is too complex. ' +
+              'You can still try downloading it directly.</p>' +
+            '</div>';
+          $('#previewModal').classList.add('show');
+        } finally {
+          btn.disabled = false; btn.textContent = '👁 Preview DOCX';
+        }
+      }
+
+      async function handleDownload() {
+        if (!state.file) return;
+        const btn = $('#convertBtn');
+        btn.disabled = true; btn.textContent = 'Converting…';
+
+        try {
+          if (!state.docxBlob) {
+            state.docxBlob = await generateDocxBlob();
+          }
+          
+          const url = URL.createObjectURL(state.docxBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'PDFnest-converted-' + new Date().toISOString().slice(0, 10) + '.docx';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+          toast('DOCX downloaded 🎉');
+        } catch (err) {
+          console.error('Conversion error:', err);
+          toast('Conversion failed: ' + err.message);
+        } finally {
+          btn.disabled = false; btn.textContent = '📄 Convert & download DOCX';
+        }
+      }
+
+      /* ============================================================
+         EVENT LISTENERS
+         ============================================================ */
+      const dz = $('#dropzone');
+      const fileInput = $('#fileInput');
+
+      dz.addEventListener('click', () => fileInput.click());
+      dz.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+      });
+
+      fileInput.addEventListener('change', () => { addFile(fileInput.files); fileInput.value = ''; });
+
+      ['dragenter', 'dragover'].forEach(evt => {
+        dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        dz.addEventListener(evt, e => {
+          e.preventDefault(); e.stopPropagation();
+          if (evt === 'dragleave' && dz.contains(e.relatedTarget)) return;
+          dz.classList.remove('dragover');
+        });
+      });
+      dz.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files.length) addFile(e.dataTransfer.files); });
+      ['dragover', 'drop'].forEach(evt => {
+        window.addEventListener(evt, e => { if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
+      });
+
+      $('#fileList').addEventListener('click', e => {
+        if (!e.target.closest('.remove')) return;
+        state.file = null; state.docxBlob = null; renderFile();
+      });
+
+      $('#previewBtn').addEventListener('click', handlePreview);
+      $('#convertBtn').addEventListener('click', handleDownload);
+      
+      $('#closePreviewBtn').addEventListener('click', () => $('#previewModal').classList.remove('show'));
+      $('#cancelPreviewBtn').addEventListener('click', () => $('#previewModal').classList.remove('show'));
+      $('#downloadFromPreviewBtn').addEventListener('click', () => {
+        $('#previewModal').classList.remove('show');
+        handleDownload();
+      });
+    })();
+  </script>
+</body>
+
+</html>
