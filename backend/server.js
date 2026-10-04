@@ -61,6 +61,12 @@ const userSchema = new mongoose.Schema(
       required: true
     },
 
+    // Last successful login
+    lastLoginAt: {
+      type: Date,
+      default: null
+    },
+
     resetPasswordToken: {
       type: String,
       default: null
@@ -71,6 +77,9 @@ const userSchema = new mongoose.Schema(
       default: null
     }
   },
+  {
+    timestamps: true
+  }
 );
 
 const User = mongoose.model('User', userSchema);
@@ -80,28 +89,28 @@ const User = mongoose.model('User', userSchema);
 // ============================================================
 
 const googleOAuth2Client = new google.auth.OAuth2(
-    process.env.GMAIL_CLIENT_ID,
-    process.env.GMAIL_CLIENT_SECRET,
-    process.env.GMAIL_REDIRECT_URI
+  process.env.GMAIL_CLIENT_ID,
+  process.env.GMAIL_CLIENT_SECRET,
+  process.env.GMAIL_REDIRECT_URI
 );
 
 googleOAuth2Client.setCredentials({
-    refresh_token: process.env.GMAIL_REFRESH_TOKEN
+  refresh_token: process.env.GMAIL_REFRESH_TOKEN
 });
 
 const gmail = google.gmail({
-    version: 'v1',
-    auth: googleOAuth2Client
+  version: 'v1',
+  auth: googleOAuth2Client
 });
 
 googleOAuth2Client.getAccessToken()
-    .then(() => {
-        console.log('GMAIL OAUTH INITIALIZED SUCCESSFULLY');
-    })
-    .catch((error) => {
-        console.error('GMAIL OAUTH INITIALIZATION FAILED:');
-        console.error(error.message);
-    });
+  .then(() => {
+    console.log('GMAIL OAUTH INITIALIZED SUCCESSFULLY');
+  })
+  .catch((error) => {
+    console.error('GMAIL OAUTH INITIALIZATION FAILED:');
+    console.error(error.message);
+  });
 
 
 // ============================================================
@@ -265,6 +274,10 @@ app.post('/api/auth/login', async (req, res) => {
         message: 'Invalid credentials'
       });
     }
+
+    // Update last successful login time
+    user.lastLoginAt = new Date();
+    await user.save();
 
     // Generate JWT
     const token = jwt.sign(
