@@ -14,7 +14,7 @@
   <script src="auth-guard.js"></script>
 </head>
 
-<body>
+<body class="has-custom-cursor">
 
   <header class="site-header">
     <div class="header-inner">
@@ -54,163 +54,194 @@
     <!-- ============================================================ -->
     <!-- SECTION 1: IMAGE TOOLS                                       -->
     <!-- ============================================================ -->
-    <section class="tool-section">
-      <div class="section-head">
-        <div>
-          <h2>🖼️ Image Tools</h2>
-          <p>Compress, resize, edit, and enhance your images.</p>
+    <section class="tool-section open" id="sec-images">
+      <button class="section-toggle" type="button" aria-expanded="true" aria-controls="sec-images-body">
+        <div class="section-toggle-inner">
+          <span class="section-icon">🖼️</span>
+          <div class="section-title">
+            <h2>Image Tools</h2>
+            <p>Compress, resize, edit, and enhance your images</p>
+          </div>
+          <span class="section-count">7 tools</span>
+          <span class="section-chevron">▾</span>
         </div>
-      </div>
+      </button>
+      <div class="section-body" id="sec-images-body">
+        <div class="section-body-inner">
+          <div class="tool-grid">
 
-      <div class="tool-grid">
-        <a class="tool-card" href="image_section/image-compressor.html">
-          <span class="tool-icon">🗜️</span>
-          <h3>Image Compressor</h3>
-          <p>Compress images to a target size in KB or MB.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
+            <a class="tool-card" href="image_section/image-compressor.html">
+              <span class="tool-icon">🗜️</span>
+              <h3>Image Compressor</h3>
+              <p>Compress images to a target size in KB or MB.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
 
-        <a class="tool-card" href="image_section/image-resizer.html">
-          <span class="tool-icon">📐</span>
-          <h3>Image Resizer</h3>
-          <p>Resize to exact dimensions in px, cm, mm, inches, or pt.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
+            <a class="tool-card" href="image_section/image-resizer.html">
+              <span class="tool-icon">📐</span>
+              <h3>Image Resizer</h3>
+              <p>Resize to exact dimensions in px, cm, mm, inches, or pt.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
 
-        <a class="tool-card" href="image_section/image-to-text.html">
-          <span class="tool-icon">🔍</span>
-          <h3>Image to Text (OCR)</h3>
-          <p>Extract editable text from any image using OCR.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
+            <a class="tool-card" href="image_section/image-to-text.html">
+              <span class="tool-icon">🔍</span>
+              <h3>Image to Text (OCR)</h3>
+              <p>Extract editable text from any image using OCR.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
 
-        <a class="tool-card" href="image_section/remove-background.html">
-          <span class="tool-icon">✂️</span>
-          <h3>Remove Background</h3>
-          <p>Automatically remove the background from photos.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
+            <a class="tool-card" href="image_section/remove-background.html">
+              <span class="tool-icon">✂️</span>
+              <h3>Remove Background</h3>
+              <p>Automatically remove the background from photos.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
 
-        <a class="tool-card" href="image_section/remove-watermark.html">
-          <span class="tool-icon">💧</span>
-          <h3>Remove Watermark</h3>
-          <p>Erase watermarks and stamps with content-aware fill.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
+            <a class="tool-card" href="image_section/remove-watermark.html">
+              <span class="tool-icon">💧</span>
+              <h3>Remove Watermark</h3>
+              <p>Erase watermarks and stamps with content-aware fill.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
 
-        <a class="tool-card" href="image_section/photo-editor.html">
-          <span class="tool-icon">🎨</span>
-          <h3>Photo Editor</h3>
-          <p>Adjust brightness, contrast, saturation, rotate, and more.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
+            <a class="tool-card" href="image_section/photo-editor.html">
+              <span class="tool-icon">🎨</span>
+              <h3>Photo Editor</h3>
+              <p>Adjust brightness, contrast, saturation, and add doodles.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
 
-        <a class="tool-card" href="image_section/image-upscale.html">
-          <span class="tool-icon">✨</span>
-          <h3>Image Upscale</h3>
-          <p>Upscale images up to 8K resolution with smart scaling.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
+            <a class="tool-card" href="image_section/image-upscale.html">
+              <span class="tool-icon">✨</span>
+              <h3>Image Upscale</h3>
+              <p>Upscale images up to 8K resolution with smart scaling.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
+
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- ============================================================ -->
     <!-- SECTION 2: CONVERTERS                                        -->
     <!-- ============================================================ -->
-    <section class="tool-section">
-      <div class="section-head">
-        <div>
-          <h2>🔄 Converters</h2>
-          <p>Convert between image formats and documents.</p>
+    <section class="tool-section" id="sec-converters">
+      <button class="section-toggle" type="button" aria-expanded="false" aria-controls="sec-converters-body">
+        <div class="section-toggle-inner">
+          <span class="section-icon">🔄</span>
+          <div class="section-title">
+            <h2>Converters</h2>
+            <p>Convert between any format — images, documents, PDFs</p>
+          </div>
+          <span class="section-count">6 tools</span>
+          <span class="section-chevron">▾</span>
         </div>
-      </div>
+      </button>
+      <div class="section-body" id="sec-converters-body">
+        <div class="section-body-inner">
+          <div class="tool-grid">
 
-      <div class="tool-grid">
-        <a class="tool-card" href="image_section/image-converter.html">
-          <span class="tool-icon">🔄</span>
-          <h3>Image Type Converter</h3>
-          <p>Convert between JPG, PNG, WEBP, AVIF, HEIC, BMP, GIF, and PDF.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
+            <a class="tool-card" href="image_section/image-converter.html">
+              <span class="tool-icon">🔄</span>
+              <h3>Image Type Converter</h3>
+              <p>Convert between JPG, PNG, WEBP, AVIF, HEIC, BMP, GIF, and PDF.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
 
-        <a class="tool-card" href="pdf_section/word-to-pdf.html">
-          <span class="tool-icon">📄</span>
-          <h3>Word to PDF</h3>
-          <p>Convert .docx files to PDF while keeping formatting.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
+            <a class="tool-card" href="pdf_section/images-to-pdf.html">
+              <span class="tool-icon">🖼️</span>
+              <h3>Images to PDF</h3>
+              <p>Turn photos into a beautiful PDF document.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
 
-        <a class="tool-card" href="pdf_section/pdf-to-docx.html">
-          <span class="tool-icon">📝</span>
-          <h3>PDF to DOCX</h3>
-          <p>Extract PDF text into an editable Word document.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
+            <a class="tool-card" href="pdf_section/text-to-pdf.html">
+              <span class="tool-icon">✍️</span>
+              <h3>Text to PDF</h3>
+              <p>Write or paste text and turn it into a clean PDF.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
+
+            <a class="tool-card" href="pdf_section/word-to-pdf.html">
+              <span class="tool-icon">📄</span>
+              <h3>Word to PDF</h3>
+              <p>Convert .docx files to PDF while keeping formatting.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
+
+            <a class="tool-card" href="pdf_section/pdf-to-docx.html">
+              <span class="tool-icon">📝</span>
+              <h3>PDF to DOCX</h3>
+              <p>Extract PDF text into an editable Word document.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
+
+            <a class="tool-card" href="pdf_section/extract-images.html">
+              <span class="tool-icon">🖼️</span>
+              <h3>Extract Images</h3>
+              <p>Extract every PDF page as JPEG, PNG, or WEBP.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
+
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- ============================================================ -->
     <!-- SECTION 3: PDF TOOLS                                         -->
     <!-- ============================================================ -->
-    <section class="tool-section">
-      <div class="section-head">
-        <div>
-          <h2>📕 PDF Tools</h2>
-          <p>Create, merge, compress, and edit PDF documents.</p>
+    <section class="tool-section" id="sec-pdf">
+      <button class="section-toggle" type="button" aria-expanded="false" aria-controls="sec-pdf-body">
+        <div class="section-toggle-inner">
+          <span class="section-icon">📕</span>
+          <div class="section-title">
+            <h2>PDF Tools</h2>
+            <p>Merge, compress, and edit PDF documents</p>
+          </div>
+          <span class="section-count">4 tools</span>
+          <span class="section-chevron">▾</span>
+        </div>
+      </button>
+      <div class="section-body" id="sec-pdf-body">
+        <div class="section-body-inner">
+          <div class="tool-grid">
+
+            <a class="tool-card" href="pdf_section/merge-pdf.html">
+              <span class="tool-icon">🔗</span>
+              <h3>Merge PDFs</h3>
+              <p>Combine multiple PDFs with drag-and-drop reordering.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
+
+            <a class="tool-card" href="pdf_section/merge-pdf-images.html">
+              <span class="tool-icon">🧩</span>
+              <h3>Merge PDF + Images</h3>
+              <p>Merge one PDF with multiple images in any order.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
+
+            <a class="tool-card" href="pdf_section/compress-pdf.html">
+              <span class="tool-icon">🗜️</span>
+              <h3>Compress PDF</h3>
+              <p>Shrink large PDFs by re-encoding pages.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
+
+            <a class="tool-card" href="pdf_section/edit-pdf.html">
+              <span class="tool-icon">✏️</span>
+              <h3>Edit PDF</h3>
+              <p>Click any page to add text, then export.</p>
+              <span class="tool-cta">Open tool →</span>
+            </a>
+
+          </div>
         </div>
       </div>
-
-      <div class="tool-grid">
-        <a class="tool-card" href="pdf_section/text-to-pdf.html">
-          <span class="tool-icon">✍️</span>
-          <h3>Content to PDF</h3>
-          <p>Write or paste text and turn it into a clean PDF.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
-
-        <a class="tool-card" href="pdf_section/images-to-pdf.html">
-          <span class="tool-icon">🖼️</span>
-          <h3>Pics to PDF</h3>
-          <p>Turn photos into a beautiful PDF document.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
-
-        <a class="tool-card" href="pdf_section/merge-pdf.html">
-          <span class="tool-icon">🔗</span>
-          <h3>Merge PDFs</h3>
-          <p>Combine multiple PDFs with drag-and-drop reordering.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
-
-        <a class="tool-card" href="pdf_section/merge-pdf-images.html">
-          <span class="tool-icon">🧩</span>
-          <h3>Merge PDF + Images</h3>
-          <p>Merge one PDF with multiple images in any order.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
-
-        <a class="tool-card" href="pdf_section/compress-pdf.html">
-          <span class="tool-icon">🗜️</span>
-          <h3>Compress PDF</h3>
-          <p>Shrink large PDFs by re-encoding pages.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
-
-        <a class="tool-card" href="pdf_section/extract-images.html">
-          <span class="tool-icon">🖼️</span>
-          <h3>Extract Images</h3>
-          <p>Extract every PDF page as JPEG, PNG, or WEBP.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
-
-        <a class="tool-card" href="pdf_section/edit-pdf.html">
-          <span class="tool-icon">✏️</span>
-          <h3>Edit PDF</h3>
-          <p>Click any page to add text, then export.</p>
-          <span class="tool-cta">Open tool →</span>
-        </a>
-      </div>
     </section>
+
   </main>
 
   <footer class="site-footer">
@@ -219,6 +250,9 @@
 
   <script>
     (function () {
+      /* ==========================================================
+         PROFILE DROPDOWN
+         ========================================================== */
       const profileBtn = document.getElementById('profileBtn');
       const profileDropdown = document.getElementById('profileDropdown');
       const profileInitial = document.getElementById('profileInitial');
@@ -251,7 +285,227 @@
         localStorage.removeItem('user');
         window.location.replace('login.html');
       });
+
+      /* ==========================================================
+         FLOATING BACKGROUND ORBS
+         ========================================================== */
+      (function initOrbs() {
+        if (document.querySelector('.bg-orbs')) return;
+        const wrap = document.createElement('div');
+        wrap.className = 'bg-orbs';
+        wrap.setAttribute('aria-hidden', 'true');
+        wrap.innerHTML =
+          '<div class="bg-orb o1"></div>' +
+          '<div class="bg-orb o2"></div>' +
+          '<div class="bg-orb o3"></div>';
+        document.body.appendChild(wrap);
+      })();
+
+      /* ==========================================================
+         COLLAPSIBLE SECTIONS
+         ========================================================== */
+      document.querySelectorAll('.section-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const section = btn.closest('.tool-section');
+          const willOpen = !section.classList.contains('open');
+
+          // Close all others (accordion behaviour)
+          document.querySelectorAll('.tool-section.open').forEach(function (open) {
+            if (open !== section) {
+              open.classList.remove('open');
+              const ob = open.querySelector('.section-toggle');
+              if (ob) ob.setAttribute('aria-expanded', 'false');
+            }
+          });
+
+          section.classList.toggle('open', willOpen);
+          btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        });
+      });
+
+      /* ==========================================================
+         3D TILT ON TOOL CARDS
+         ========================================================== */
+      const isTouch = window.matchMedia('(hover: none)').matches;
+
+      if (!isTouch) {
+        document.querySelectorAll('.tool-card').forEach(function (card) {
+          let raf = null;
+
+          card.addEventListener('mousemove', function (e) {
+            if (raf) return;
+            raf = requestAnimationFrame(function () {
+              const rect = card.getBoundingClientRect();
+              const x = (e.clientX - rect.left) / rect.width;   // 0..1
+              const y = (e.clientY - rect.top) / rect.height;   // 0..1
+
+              const rx = (0.5 - y) * 8;   // rotate X: -4° to +4°
+              const ry = (x - 0.5) * 8;   // rotate Y: -4° to +4°
+
+              card.style.setProperty('--rx', rx.toFixed(2) + 'deg');
+              card.style.setProperty('--ry', ry.toFixed(2) + 'deg');
+              card.style.setProperty('--mx', (x * 100).toFixed(1) + '%');
+              card.style.setProperty('--my', (y * 100).toFixed(1) + '%');
+              raf = null;
+            });
+          });
+
+          card.addEventListener('mouseleave', function () {
+            card.style.setProperty('--rx', '0deg');
+            card.style.setProperty('--ry', '0deg');
+          });
+        });
+      }
+
+      /* ==========================================================
+         SCROLL REVEAL
+         ========================================================== */
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('in');
+              io.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.tool-card').forEach(function (card, i) {
+          card.classList.add('reveal');
+          card.style.transitionDelay = Math.min(i * 40, 320) + 'ms';
+          io.observe(card);
+        });
+      }
+
+      /* ==========================================================
+         HERO PARALLAX (subtle)
+         ========================================================== */
+      if (!isTouch) {
+        let raf2 = null;
+        document.addEventListener('mousemove', function (e) {
+          if (raf2) return;
+          raf2 = requestAnimationFrame(function () {
+            const x = (e.clientX / window.innerWidth - 0.5) * 2;
+            const y = (e.clientY / window.innerHeight - 0.5) * 2;
+
+            const grad = document.querySelector('.hero h1 .grad');
+            if (grad) {
+              grad.style.transform =
+                'translate3d(' + (x * 5).toFixed(1) + 'px,' + (y * 5).toFixed(1) + 'px,0)';
+            }
+
+            const orbs = document.querySelector('.bg-orbs');
+            if (orbs) {
+              orbs.style.transform =
+                'translate3d(' + (x * 18).toFixed(1) + 'px,' + (y * 18).toFixed(1) + 'px,0)';
+            }
+            raf2 = null;
+          });
+        });
+      }
+    })();
+
+    /* ==========================================================
+   CUSTOM CURSOR — user initial badge that follows the mouse
+   ========================================================== */
+    (function initCustomCursor() {
+      // Don't run on touch devices
+      if (window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
+
+      // Read user initial from localStorage
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const initial = (user && user.name && user.name.trim())
+        ? user.name.trim().charAt(0).toUpperCase()
+        : '✦';
+
+      // Create the cursor elements
+      const cursor = document.createElement('div');
+      cursor.className = 'custom-cursor';
+      cursor.innerHTML = '<div class="cursor-avatar">' + initial + '</div>';
+      document.body.appendChild(cursor);
+
+      const ring = document.createElement('div');
+      ring.className = 'cursor-ring';
+      document.body.appendChild(ring);
+
+      let mx = -5, my = -5;
+      let rx = mx, ry = my;
+      let moved = false;
+
+      // Move the main cursor immediately
+      document.addEventListener('mousemove', function (e) {
+        mx = e.clientX;
+        my = e.clientY;
+
+        if (!moved) {
+          moved = true;
+          cursor.classList.add('visible');
+          ring.classList.add('visible');
+        }
+
+        cursor.style.transform =
+          'translate3d(' + mx + 'px, ' + my + 'px, 0) translate(-50%, -50%)';
+      }, { passive: true });
+
+      // Hide when the mouse leaves the window
+      document.addEventListener('mouseleave', function () {
+        cursor.classList.remove('visible');
+        ring.classList.remove('visible');
+      });
+      document.addEventListener('mouseenter', function () {
+        if (moved) {
+          cursor.classList.add('visible');
+          ring.classList.add('visible');
+        }
+      });
+
+      // Trailing ring — lerp toward the mouse position
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!prefersReduced) {
+        (function tick() {
+          rx += (mx - rx) * 0.2;
+          ry += (my - ry) * 0.2;
+          ring.style.transform =
+            'translate3d(' + rx + 'px, ' + ry + 'px, 0) translate(-50%, -50%)';
+          requestAnimationFrame(tick);
+        })();
+      } else {
+        document.addEventListener('mousemove', function () {
+          ring.style.transform =
+            'translate3d(' + mx + 'px, ' + my + 'px, 0) translate(-50%, -50%)';
+        }, { passive: true });
+      }
+
+      // Hover state — glow on interactive elements
+      const INTERACTIVE = 'a, button, [role="button"], .tool-card, .section-toggle, .theme-toggle, .profile-btn, .stat';
+      const TEXT_INPUTS = 'input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="search"], input[type="tel"], input[type="url"], textarea';
+
+      document.addEventListener('mouseover', function (e) {
+        const t = e.target;
+        if (!t || !t.closest) return;
+        if (t.closest(INTERACTIVE)) cursor.classList.add('hovering');
+        if (t.closest(TEXT_INPUTS)) cursor.classList.add('text-mode');
+      });
+
+      document.addEventListener('mouseout', function (e) {
+        const to = e.relatedTarget;
+        if (!to || !to.closest) {
+          cursor.classList.remove('hovering', 'text-mode');
+          return;
+        }
+        if (!to.closest(INTERACTIVE)) cursor.classList.remove('hovering');
+        if (!to.closest(TEXT_INPUTS)) cursor.classList.remove('text-mode');
+      });
+
+      // Click feedback
+      document.addEventListener('mousedown', function () {
+        cursor.classList.add('clicking');
+      });
+      document.addEventListener('mouseup', function () {
+        cursor.classList.remove('clicking');
+      });
     })();
   </script>
 </body>
+
 </html>

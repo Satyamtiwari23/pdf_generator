@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Advanced OCR — PDFnest</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
@@ -34,11 +36,13 @@
       outline: none;
       transition: border-color .2s, box-shadow .2s, background .2s;
     }
+
     .ocr-input:focus,
     .ocr-select:focus {
       border-color: var(--p-400);
       box-shadow: 0 0 0 4px rgba(139, 92, 246, .15);
     }
+
     body.dark-theme .ocr-input,
     body.dark-theme .ocr-select {
       background: #1b1624;
@@ -54,7 +58,10 @@
       cursor: pointer;
     }
 
-    .sel-wrap { position: relative; }
+    .sel-wrap {
+      position: relative;
+    }
+
     .sel-wrap::after {
       content: "▾";
       position: absolute;
@@ -67,12 +74,17 @@
       font-weight: 800;
       line-height: 1;
     }
-    body.dark-theme .sel-wrap::after { color: #b58cff; }
+
+    body.dark-theme .sel-wrap::after {
+      color: #b58cff;
+    }
 
     /* ============================================================
        DROPZONE
        ============================================================ */
-    .dropzone { padding: 26px 18px; }
+    .dropzone {
+      padding: 26px 18px;
+    }
 
     /* ============================================================
        IMAGE STRIP
@@ -83,6 +95,7 @@
       gap: 12px;
       margin-top: 16px;
     }
+
     .ocr-img {
       position: relative;
       border-radius: 12px;
@@ -93,8 +106,19 @@
       box-shadow: var(--shadow-sm);
       animation: pop .25s ease both;
     }
-    body.dark-theme .ocr-img { background: #1b1624; border-color: #3b2c50; }
-    .ocr-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    body.dark-theme .ocr-img {
+      background: #1b1624;
+      border-color: #3b2c50;
+    }
+
+    .ocr-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
     .ocr-img .idx {
       position: absolute;
       left: 6px;
@@ -107,6 +131,7 @@
       border-radius: 6px;
       letter-spacing: .04em;
     }
+
     .ocr-img .rm {
       position: absolute;
       top: 6px;
@@ -123,7 +148,11 @@
       place-items: center;
       transition: background .18s;
     }
-    .ocr-img .rm:hover { background: #b91c1c; }
+
+    .ocr-img .rm:hover {
+      background: #b91c1c;
+    }
+
     .ocr-img .badge-ok {
       position: absolute;
       top: 6px;
@@ -153,6 +182,7 @@
       gap: 8px;
       margin-top: 8px;
     }
+
     .toggle {
       display: flex;
       align-items: center;
@@ -167,7 +197,11 @@
       font-weight: 700;
       color: var(--ink);
     }
-    .toggle:hover { border-color: var(--p-300); }
+
+    .toggle:hover {
+      border-color: var(--p-300);
+    }
+
     .toggle input[type="checkbox"] {
       width: 17px;
       height: 17px;
@@ -175,15 +209,18 @@
       accent-color: var(--p-600);
       cursor: pointer;
     }
+
     .toggle.checked {
       border-color: var(--p-400);
       background: rgba(139, 92, 246, .06);
     }
+
     body.dark-theme .toggle {
       background: #1b1624;
       border-color: #3b2c50;
       color: var(--ink);
     }
+
     body.dark-theme .toggle.checked {
       background: rgba(139, 92, 246, .12);
       border-color: #6d4ca5;
@@ -199,10 +236,12 @@
       background: rgba(139, 92, 246, .06);
       border: 1.5px solid rgba(139, 92, 246, .18);
     }
+
     body.dark-theme .prog-wrap {
       background: rgba(139, 92, 246, .1);
       border-color: rgba(139, 92, 246, .25);
     }
+
     .prog-head {
       display: flex;
       justify-content: space-between;
@@ -211,24 +250,34 @@
       gap: 12px;
       flex-wrap: wrap;
     }
+
     .prog-status {
       font-size: .82rem;
       font-weight: 800;
       color: var(--p-800);
     }
-    body.dark-theme .prog-status { color: #d7c4ff; }
+
+    body.dark-theme .prog-status {
+      color: #d7c4ff;
+    }
+
     .prog-pct {
       font-size: .78rem;
       font-weight: 800;
       color: var(--p-700);
     }
+
     .prog-bar {
       height: 8px;
       background: var(--p-100);
       border-radius: 999px;
       overflow: hidden;
     }
-    body.dark-theme .prog-bar { background: rgba(139, 92, 246, .15); }
+
+    body.dark-theme .prog-bar {
+      background: rgba(139, 92, 246, .15);
+    }
+
     .prog-fill {
       height: 100%;
       width: 0%;
@@ -254,10 +303,12 @@
       border: 1px solid var(--p-200);
       grid-template-columns: none;
     }
+
     body.dark-theme .tabs {
       background: rgba(139, 92, 246, .12);
       border-color: #4b3864;
     }
+
     .tabs .tab {
       flex: 1;
       border: 0;
@@ -271,23 +322,32 @@
       font-size: .82rem;
       transition: background .18s, color .18s, box-shadow .18s;
     }
-    body.dark-theme .tabs .tab { color: #d7c4ff; }
+
+    body.dark-theme .tabs .tab {
+      color: #d7c4ff;
+    }
+
     .tabs .tab.active {
       background: linear-gradient(135deg, var(--p-600), var(--p-800));
       color: #fff;
       box-shadow: 0 6px 14px -8px var(--p-700);
     }
+
     .tabs .tab:hover:not(.active) {
-      background: rgba(255,255,255,.6);
+      background: rgba(255, 255, 255, .6);
     }
+
     body.dark-theme .tabs .tab:hover:not(.active) {
-      background: rgba(255,255,255,.08);
+      background: rgba(255, 255, 255, .08);
     }
 
     .output-panel {
       display: none;
     }
-    .output-panel.active { display: block; }
+
+    .output-panel.active {
+      display: block;
+    }
 
     #resultText {
       width: 100%;
@@ -303,10 +363,12 @@
       resize: vertical;
       outline: none;
     }
+
     #resultText:focus {
       border-color: var(--p-400);
       box-shadow: 0 0 0 4px rgba(139, 92, 246, .15);
     }
+
     body.dark-theme #resultText {
       background: #1b1624;
       border-color: #3b2c50;
@@ -327,6 +389,7 @@
       resize: vertical;
       outline: none;
     }
+
     body.dark-theme #resultJson {
       background: #1b1624;
       border-color: #3b2c50;
@@ -345,6 +408,7 @@
       color: var(--muted);
       margin-top: 10px;
     }
+
     .conf-legend .dot {
       display: inline-block;
       width: 10px;
@@ -353,9 +417,18 @@
       margin-right: 6px;
       vertical-align: middle;
     }
-    .conf-legend .dot.good { background: #10b981; }
-    .conf-legend .dot.mid { background: #f59e0b; }
-    .conf-legend .dot.bad { background: #ef4444; }
+
+    .conf-legend .dot.good {
+      background: #10b981;
+    }
+
+    .conf-legend .dot.mid {
+      background: #f59e0b;
+    }
+
+    .conf-legend .dot.bad {
+      background: #ef4444;
+    }
 
     /* ============================================================
        BOUNDING BOX OVERLAY
@@ -369,15 +442,18 @@
       border: 1.5px solid var(--line);
       background: #fff;
     }
+
     body.dark-theme .overlay-wrap {
       background: #1b1624;
       border-color: #3b2c50;
     }
+
     .overlay-wrap img {
       display: block;
       max-width: 100%;
       height: auto;
     }
+
     .overlay-wrap canvas {
       position: absolute;
       top: 0;
@@ -396,10 +472,19 @@
       flex-wrap: wrap;
       margin-top: 14px;
     }
-    .act-row .btn { flex: 1; min-width: 130px; }
+
+    .act-row .btn {
+      flex: 1;
+      min-width: 130px;
+    }
 
     /* Download dropdown */
-    .dl-wrap { position: relative; flex: 1; min-width: 130px; }
+    .dl-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 130px;
+    }
+
     .dl-menu {
       position: absolute;
       right: 0;
@@ -416,16 +501,19 @@
       transition: opacity .18s ease, transform .18s ease, visibility .18s;
       z-index: 100;
     }
+
     body.dark-theme .dl-menu {
       background: #181321;
       border-color: #3b2c50;
       box-shadow: 0 20px 50px rgba(0, 0, 0, .45);
     }
+
     .dl-menu.show {
       opacity: 1;
       visibility: visible;
       transform: translateY(0);
     }
+
     .dl-menu button {
       width: 100%;
       text-align: left;
@@ -443,9 +531,18 @@
       align-items: center;
       gap: 8px;
     }
-    body.dark-theme .dl-menu button { color: #f5f2ff; }
-    .dl-menu button:hover { background: var(--p-100); }
-    body.dark-theme .dl-menu button:hover { background: rgba(139, 92, 246, .15); }
+
+    body.dark-theme .dl-menu button {
+      color: #f5f2ff;
+    }
+
+    .dl-menu button:hover {
+      background: var(--p-100);
+    }
+
+    body.dark-theme .dl-menu button:hover {
+      background: rgba(139, 92, 246, .15);
+    }
 
     /* ============================================================
        DETECTED LANGUAGE CHIP
@@ -463,6 +560,7 @@
       border: 1px solid rgba(16, 185, 129, .3);
       margin-top: 8px;
     }
+
     body.dark-theme .lang-chip {
       background: linear-gradient(135deg, rgba(16, 185, 129, .18), rgba(52, 211, 153, .12));
       color: #34d399;
@@ -478,6 +576,7 @@
       gap: 10px;
       margin-bottom: 12px;
     }
+
     .meta-chip {
       display: inline-flex;
       align-items: center;
@@ -490,950 +589,1075 @@
       font-weight: 800;
       color: var(--p-800);
     }
+
     body.dark-theme .meta-chip {
       background: rgba(139, 92, 246, .12);
       border-color: #4b3864;
       color: #d7c4ff;
     }
-    .meta-chip .ok { color: #10b981; }
-    .meta-chip .warn { color: #f59e0b; }
-    .meta-chip .bad { color: #ef4444; }
+
+    .meta-chip .ok {
+      color: #10b981;
+    }
+
+    .meta-chip .warn {
+      color: #f59e0b;
+    }
+
+    .meta-chip .bad {
+      color: #ef4444;
+    }
 
     @media (max-width: 639px) {
-      .act-row .btn { width: 100%; }
-      .dl-wrap { width: 100%; }
-      .tabs { max-width: 100%; }
+      .act-row .btn {
+        width: 100%;
+      }
+
+      .dl-wrap {
+        width: 100%;
+      }
+
+      .tabs {
+        max-width: 100%;
+      }
     }
   </style>
 </head>
-<body>
 
-<header class="site-header">
-  <div class="header-inner">
-    <a href="../index.html" class="brand">
-      <span class="logo">✦</span>
-      <span>PDFnest<small>Advanced OCR</small></span>
-    </a>
-    <a href="../index.html" class="back-link">← All tools</a>
-  </div>
-</header>
+<body class="has-custom-cursor">
 
-<main>
-  <section class="hero">
-    <h1>Extract <span class="grad">text from images</span></h1>
-    <p>Auto-detects language · Smart preprocessing · Multi-image · Bounding-box overlay</p>
-  </section>
-
-  <section class="card">
-    <!-- Dropzone -->
-    <div class="field">
-      <label>Your images</label>
-      <div class="dropzone" id="dropzone" tabindex="0" role="button">
-        <div class="dz-icon">🔍</div>
-        <div class="dz-title">Drag &amp; drop images here</div>
-        <div class="dz-sub">or <span class="link">browse files</span> · multiple allowed · JPG, PNG, WEBP</div>
-      </div>
-      <input type="file" id="fileInput" accept="image/*" multiple hidden />
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="brand">
+        <span class="logo">✦</span>
+        <span>PDFnest<small>Advanced OCR</small></span>
+      </a>
+      <a href="../index.html" class="back-link">← All tools</a>
     </div>
+  </header>
 
-    <!-- Image strip -->
-    <div class="ocr-imgs" id="ocrImgs"></div>
+  <main>
+    <section class="hero">
+      <h1>Extract <span class="grad">text from images</span></h1>
+      <p>Auto-detects language · Smart preprocessing · Multi-image · Bounding-box overlay</p>
+    </section>
 
-    <!-- Options -->
-    <div class="ocr-opts" id="optionsBlock" hidden>
-
-      <!-- Language -->
-      <div class="field" style="grid-column: 1 / -1;">
-        <label for="lang">Language</label>
-        <div class="sel-wrap">
-          <select id="lang" class="ocr-select">
-            <option value="auto" selected>✨ Auto-detect (smart)</option>
-            <option value="eng">English</option>
-            <option value="eng+spa+fra+deu+ita+por">Western multi (EN+ES+FR+DE+IT+PT)</option>
-            <option value="spa">Spanish</option>
-            <option value="fra">French</option>
-            <option value="deu">German</option>
-            <option value="ita">Italian</option>
-            <option value="por">Portuguese</option>
-            <option value="nld">Dutch</option>
-            <option value="rus">Russian</option>
-            <option value="ukr">Ukrainian</option>
-            <option value="pol">Polish</option>
-            <option value="tur">Turkish</option>
-            <option value="ara">Arabic</option>
-            <option value="heb">Hebrew</option>
-            <option value="hin">Hindi</option>
-            <option value="ben">Bengali</option>
-            <option value="tam">Tamil</option>
-            <option value="tel">Telugu</option>
-            <option value="tha">Thai</option>
-            <option value="vie">Vietnamese</option>
-            <option value="chi_sim">Chinese (Simplified)</option>
-            <option value="chi_tra">Chinese (Traditional)</option>
-            <option value="jpn">Japanese</option>
-            <option value="kor">Korean</option>
-          </select>
-        </div>
-        <div class="lang-chip" id="langChip" hidden>
-          <span>🎯</span>
-          <span>Detected: <strong id="langDetected">—</strong></span>
-        </div>
-      </div>
-
-      <!-- Mode -->
+    <section class="card">
+      <!-- Dropzone -->
       <div class="field">
-        <label for="mode">Detection mode</label>
-        <div class="sel-wrap">
-          <select id="mode" class="ocr-select">
-            <option value="auto" selected>Auto (recommended)</option>
-            <option value="document">Document — dense text</option>
-            <option value="sparse">Sparse text — labels, captions</option>
-            <option value="single_line">Single line of text</option>
-            <option value="single_word">Single word</option>
-            <option value="single_char">Single character</option>
-          </select>
+        <label>Your images</label>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button">
+          <div class="dz-icon">🔍</div>
+          <div class="dz-title">Drag &amp; drop images here</div>
+          <div class="dz-sub">or <span class="link">browse files</span> · multiple allowed · JPG, PNG, WEBP</div>
         </div>
+        <input type="file" id="fileInput" accept="image/*" multiple hidden />
       </div>
 
-      <!-- PSM + OEM -->
-      <div class="field">
-        <label for="oem">Engine mode</label>
-        <div class="sel-wrap">
-          <select id="oem" class="ocr-select">
-            <option value="1" selected>LSTM only (fastest)</option>
-            <option value="0">Legacy only</option>
-            <option value="3">Default (best quality)</option>
-          </select>
+      <!-- Image strip -->
+      <div class="ocr-imgs" id="ocrImgs"></div>
+
+      <!-- Options -->
+      <div class="ocr-opts" id="optionsBlock" hidden>
+
+        <!-- Language -->
+        <div class="field" style="grid-column: 1 / -1;">
+          <label for="lang">Language</label>
+          <div class="sel-wrap">
+            <select id="lang" class="ocr-select">
+              <option value="auto" selected>✨ Auto-detect (smart)</option>
+              <option value="eng">English</option>
+              <option value="eng+spa+fra+deu+ita+por">Western multi (EN+ES+FR+DE+IT+PT)</option>
+              <option value="spa">Spanish</option>
+              <option value="fra">French</option>
+              <option value="deu">German</option>
+              <option value="ita">Italian</option>
+              <option value="por">Portuguese</option>
+              <option value="nld">Dutch</option>
+              <option value="rus">Russian</option>
+              <option value="ukr">Ukrainian</option>
+              <option value="pol">Polish</option>
+              <option value="tur">Turkish</option>
+              <option value="ara">Arabic</option>
+              <option value="heb">Hebrew</option>
+              <option value="hin">Hindi</option>
+              <option value="ben">Bengali</option>
+              <option value="tam">Tamil</option>
+              <option value="tel">Telugu</option>
+              <option value="tha">Thai</option>
+              <option value="vie">Vietnamese</option>
+              <option value="chi_sim">Chinese (Simplified)</option>
+              <option value="chi_tra">Chinese (Traditional)</option>
+              <option value="jpn">Japanese</option>
+              <option value="kor">Korean</option>
+            </select>
+          </div>
+          <div class="lang-chip" id="langChip" hidden>
+            <span>🎯</span>
+            <span>Detected: <strong id="langDetected">—</strong></span>
+          </div>
         </div>
-      </div>
 
-      <!-- Preprocessing -->
-      <div class="field" style="grid-column: 1 / -1;">
-        <label>Preprocessing — improves accuracy on hard images</label>
-        <div class="toggle-grid">
-          <label class="toggle checked">
-            <input type="checkbox" id="ppGrayscale" checked />
-            <span>Grayscale</span>
-          </label>
-          <label class="toggle checked">
-            <input type="checkbox" id="ppContrast" checked />
-            <span>Auto-contrast</span>
-          </label>
-          <label class="toggle">
-            <input type="checkbox" id="ppBinarize" />
-            <span>Binarize (B/W)</span>
-          </label>
-          <label class="toggle">
-            <input type="checkbox" id="ppDenoise" />
-            <span>Denoise</span>
-          </label>
-          <label class="toggle checked">
-            <input type="checkbox" id="ppUpscale" checked />
-            <span>Smart upscale</span>
-          </label>
-          <label class="toggle">
-            <input type="checkbox" id="ppRotate" />
-            <span>Auto-rotate</span>
-          </label>
+        <!-- Mode -->
+        <div class="field">
+          <label for="mode">Detection mode</label>
+          <div class="sel-wrap">
+            <select id="mode" class="ocr-select">
+              <option value="auto" selected>Auto (recommended)</option>
+              <option value="document">Document — dense text</option>
+              <option value="sparse">Sparse text — labels, captions</option>
+              <option value="single_line">Single line of text</option>
+              <option value="single_word">Single word</option>
+              <option value="single_char">Single character</option>
+            </select>
+          </div>
         </div>
-      </div>
 
-    </div>
-
-    <!-- Actions -->
-    <div class="actions" style="margin-top:22px;">
-      <button class="btn btn-primary" id="ocrBtn" disabled>🔍 Extract Text</button>
-      <button class="btn btn-ghost" id="clearBtn" hidden>🗑 Clear all</button>
-    </div>
-
-    <!-- Progress -->
-    <div class="prog-wrap" id="progWrap" hidden>
-      <div class="prog-head">
-        <div class="prog-status" id="progStatus">Preparing…</div>
-        <div class="prog-pct" id="progPct">0%</div>
-      </div>
-      <div class="prog-bar">
-        <div class="prog-fill" id="progFill"></div>
-      </div>
-    </div>
-
-    <!-- Results -->
-    <div class="results" id="results" hidden>
-      <label style="display:block; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.09em; color:var(--p-800); margin-bottom:10px;">
-        Extracted text
-      </label>
-
-      <!-- Meta row -->
-      <div class="result-meta" id="resultMeta"></div>
-
-      <!-- Tabs -->
-      <div class="tabs" style="display:flex;">
-        <button class="tab active" data-tab="text">📝 Text</button>
-        <button class="tab" data-tab="markdown">📄 Markdown</button>
-        <button class="tab" data-tab="json">📊 JSON</button>
-        <button class="tab" data-tab="overlay">🔎 Overlay</button>
-      </div>
-
-      <!-- Text panel -->
-      <div class="output-panel active" data-panel="text">
-        <textarea id="resultText" spellcheck="false"></textarea>
-      </div>
-
-      <!-- Markdown panel -->
-      <div class="output-panel" data-panel="markdown">
-        <textarea id="resultMd" spellcheck="false"></textarea>
-      </div>
-
-      <!-- JSON panel -->
-      <div class="output-panel" data-panel="json">
-        <textarea id="resultJson" spellcheck="false"></textarea>
-      </div>
-
-      <!-- Overlay panel -->
-      <div class="output-panel" data-panel="overlay">
-        <div id="overlayContainer" style="text-align:center;"></div>
-        <div class="conf-legend" style="justify-content:center;">
-          <span><span class="dot good"></span>High confidence (&gt;85%)</span>
-          <span><span class="dot mid"></span>Medium (60–85%)</span>
-          <span><span class="dot bad"></span>Low (&lt;60%)</span>
+        <!-- PSM + OEM -->
+        <div class="field">
+          <label for="oem">Engine mode</label>
+          <div class="sel-wrap">
+            <select id="oem" class="ocr-select">
+              <option value="1" selected>LSTM only (fastest)</option>
+              <option value="0">Legacy only</option>
+              <option value="3">Default (best quality)</option>
+            </select>
+          </div>
         </div>
+
+        <!-- Preprocessing -->
+        <div class="field" style="grid-column: 1 / -1;">
+          <label>Preprocessing — improves accuracy on hard images</label>
+          <div class="toggle-grid">
+            <label class="toggle checked">
+              <input type="checkbox" id="ppGrayscale" checked />
+              <span>Grayscale</span>
+            </label>
+            <label class="toggle checked">
+              <input type="checkbox" id="ppContrast" checked />
+              <span>Auto-contrast</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="ppBinarize" />
+              <span>Binarize (B/W)</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="ppDenoise" />
+              <span>Denoise</span>
+            </label>
+            <label class="toggle checked">
+              <input type="checkbox" id="ppUpscale" checked />
+              <span>Smart upscale</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="ppRotate" />
+              <span>Auto-rotate</span>
+            </label>
+          </div>
+        </div>
+
       </div>
 
       <!-- Actions -->
-      <div class="act-row">
-        <button class="btn btn-ghost" id="copyBtn">📋 Copy text</button>
-        <div class="dl-wrap">
-          <button class="btn btn-primary" id="downloadToggle" style="width:100%">⬇ Download</button>
-          <div class="dl-menu" id="dlMenu">
-            <button data-dl="txt">📄 Text (.txt)</button>
-            <button data-dl="md">📝 Markdown (.md)</button>
-            <button data-dl="json">📊 JSON (.json)</button>
-            <button data-dl="pdf">📕 PDF (.pdf)</button>
-            <button data-dl="docx">📘 Word (.docx)</button>
-            <button data-dl="zip">🗜 All pages (.zip)</button>
+      <div class="actions" style="margin-top:22px;">
+        <button class="btn btn-primary" id="ocrBtn" disabled>🔍 Extract Text</button>
+        <button class="btn btn-ghost" id="clearBtn" hidden>🗑 Clear all</button>
+      </div>
+
+      <!-- Progress -->
+      <div class="prog-wrap" id="progWrap" hidden>
+        <div class="prog-head">
+          <div class="prog-status" id="progStatus">Preparing…</div>
+          <div class="prog-pct" id="progPct">0%</div>
+        </div>
+        <div class="prog-bar">
+          <div class="prog-fill" id="progFill"></div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="results" id="results" hidden>
+        <label
+          style="display:block; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.09em; color:var(--p-800); margin-bottom:10px;">
+          Extracted text
+        </label>
+
+        <!-- Meta row -->
+        <div class="result-meta" id="resultMeta"></div>
+
+        <!-- Tabs -->
+        <div class="tabs" style="display:flex;">
+          <button class="tab active" data-tab="text">📝 Text</button>
+          <button class="tab" data-tab="markdown">📄 Markdown</button>
+          <button class="tab" data-tab="json">📊 JSON</button>
+          <button class="tab" data-tab="overlay">🔎 Overlay</button>
+        </div>
+
+        <!-- Text panel -->
+        <div class="output-panel active" data-panel="text">
+          <textarea id="resultText" spellcheck="false"></textarea>
+        </div>
+
+        <!-- Markdown panel -->
+        <div class="output-panel" data-panel="markdown">
+          <textarea id="resultMd" spellcheck="false"></textarea>
+        </div>
+
+        <!-- JSON panel -->
+        <div class="output-panel" data-panel="json">
+          <textarea id="resultJson" spellcheck="false"></textarea>
+        </div>
+
+        <!-- Overlay panel -->
+        <div class="output-panel" data-panel="overlay">
+          <div id="overlayContainer" style="text-align:center;"></div>
+          <div class="conf-legend" style="justify-content:center;">
+            <span><span class="dot good"></span>High confidence (&gt;85%)</span>
+            <span><span class="dot mid"></span>Medium (60–85%)</span>
+            <span><span class="dot bad"></span>Low (&lt;60%)</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="act-row">
+          <button class="btn btn-ghost" id="copyBtn">📋 Copy text</button>
+          <div class="dl-wrap">
+            <button class="btn btn-primary" id="downloadToggle" style="width:100%">⬇ Download</button>
+            <div class="dl-menu" id="dlMenu">
+              <button data-dl="txt">📄 Text (.txt)</button>
+              <button data-dl="md">📝 Markdown (.md)</button>
+              <button data-dl="json">📊 JSON (.json)</button>
+              <button data-dl="pdf">📕 PDF (.pdf)</button>
+              <button data-dl="docx">📘 Word (.docx)</button>
+              <button data-dl="zip">🗜 All pages (.zip)</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
-</main>
+    </section>
+  </main>
 
-<footer class="site-footer">Powered by Tesseract.js · Files never leave your device.</footer>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <footer class="site-footer">Powered by Tesseract.js · Files never leave your device.</footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script>
-(function(){
-  'use strict';
-  const $ = (s, c = document) => c.querySelector(s);
-  const $$ = (s, c = document) => Array.prototype.slice.call(c.querySelectorAll(s));
+  <script>
+    (function () {
+      'use strict';
+      const $ = (s, c = document) => c.querySelector(s);
+      const $$ = (s, c = document) => Array.prototype.slice.call(c.querySelectorAll(s));
 
-  let toastTimer = null;
-  function toast(m){
-    const el = $('#toast');
-    el.textContent = m;
-    el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
-  }
-
-  /* ============================================================
-     STATE
-     ============================================================ */
-  const state = {
-    images: [],      // { id, name, dataUrl, file }
-    results: [],     // { imageId, imageName, imageUrl, processedUrl, text, markdown, json, confidence, words, lines, paragraphs }
-    detectedLang: null
-  };
-
-  /* ============================================================
-     LANGUAGE MAP (for auto-detect)
-     ============================================================ */
-  const SCRIPT_TO_LANG = {
-    'Latin':       { code: 'eng',             label: 'English (Latin)' },
-    'Cyrillic':    { code: 'rus',             label: 'Russian (Cyrillic)' },
-    'Arabic':      { code: 'ara',             label: 'Arabic' },
-    'Hebrew':      { code: 'heb',             label: 'Hebrew' },
-    'Han':         { code: 'chi_sim',         label: 'Chinese (Han)' },
-    'Japanese':    { code: 'jpn',             label: 'Japanese' },
-    'Hangul':      { code: 'kor',             label: 'Korean' },
-    'Devanagari':  { code: 'hin',             label: 'Hindi (Devanagari)' },
-    'Bengali':     { code: 'ben',             label: 'Bengali' },
-    'Tamil':       { code: 'tam',             label: 'Tamil' },
-    'Telugu':      { code: 'tel',             label: 'Telugu' },
-    'Thai':        { code: 'tha',             label: 'Thai' },
-    'Greek':       { code: 'ell',             label: 'Greek' },
-    'Georgian':    { code: 'kat',             label: 'Georgian' },
-    'Armenian':    { code: 'hye',             label: 'Armenian' }
-  };
-
-  /* ============================================================
-     MODE → TESSERACT PSM
-     ============================================================ */
-  const MODE_PSM = {
-    auto:         '3',  // fully automatic
-    document:     '1',  // auto with OSD
-    sparse:       '11', // sparse text
-    single_line:  '7',  // single text line
-    single_word:  '8',  // single word
-    single_char:  '10'  // single character
-  };
-
-  /* ============================================================
-     FILE HANDLING
-     ============================================================ */
-  async function addFiles(list){
-    const files = Array.from(list).filter(f => f.type.startsWith('image/'));
-    if (!files.length) { toast('Please choose image files'); return; }
-
-    for (const f of files){
-      const url = await new Promise(r => {
-        const fr = new FileReader();
-        fr.onload = e => r(e.target.result);
-        fr.readAsDataURL(f);
-      });
-      state.images.push({
-        id: Math.random().toString(36).slice(2),
-        name: f.name,
-        dataUrl: url,
-        file: f
-      });
-    }
-    renderImages();
-    $('#optionsBlock').hidden = false;
-    $('#ocrBtn').disabled = false;
-    $('#clearBtn').hidden = false;
-    toast(files.length + ' image(s) added');
-  }
-
-  function renderImages(){
-    const grid = $('#ocrImgs');
-    grid.innerHTML = '';
-    state.images.forEach((img, i) => {
-      const el = document.createElement('div');
-      el.className = 'ocr-img';
-      const hasResult = state.results.some(r => r.imageId === img.id);
-      el.innerHTML =
-        (hasResult ? '<span class="badge-ok">✓</span>' : '') +
-        '<img src="' + img.dataUrl + '" alt="" />' +
-        '<span class="idx">' + (i + 1) + '</span>' +
-        '<button class="rm" data-id="' + img.id + '" aria-label="Remove">✕</button>';
-      grid.appendChild(el);
-    });
-  }
-
-  /* ============================================================
-     IMAGE PREPROCESSING
-     ============================================================ */
-  function preprocessImage(dataUrl, opts){
-    return new Promise(resolve => {
-      const img = new Image();
-      img.onload = () => {
-        let w = img.naturalWidth;
-        let h = img.naturalHeight;
-
-        // Smart upscale — improves recognition of small text
-        let scale = 1;
-        if (opts.upscale && w < 1600){
-          scale = Math.min(2.5, 1600 / w);
-          if (scale < 1.1) scale = 1;
-        }
-
-        const c = document.createElement('canvas');
-        c.width = Math.round(w * scale);
-        c.height = Math.round(h * scale);
-        const ctx = c.getContext('2d');
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, 0, 0, c.width, c.height);
-
-        let pixels = ctx.getImageData(0, 0, c.width, c.height);
-
-        if (opts.grayscale || opts.contrast || opts.binarize){
-          pixels = toGrayscale(pixels);
-        }
-        if (opts.contrast){
-          pixels = autoContrast(pixels);
-        }
-        if (opts.binarize){
-          pixels = otsuThreshold(pixels);
-        }
-        if (opts.denoise){
-          pixels = medianDenoise(pixels);
-        }
-
-        ctx.putImageData(pixels, 0, 0);
-        resolve({ canvas: c, dataUrl: c.toDataURL('image/png') });
-      };
-      img.onerror = () => resolve({ canvas: null, dataUrl });
-      img.src = dataUrl;
-    });
-  }
-
-  function toGrayscale(imgData){
-    const d = imgData.data;
-    for (let i = 0; i < d.length; i += 4){
-      const g = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
-      d[i] = d[i + 1] = d[i + 2] = g;
-    }
-    return imgData;
-  }
-
-  function autoContrast(imgData){
-    const d = imgData.data;
-    let min = 255, max = 0;
-    for (let i = 0; i < d.length; i += 4){
-      if (d[i] < min) min = d[i];
-      if (d[i] > max) max = d[i];
-    }
-    if (max === min) return imgData;
-    const range = max - min;
-    const lut = new Uint8Array(256);
-    for (let v = 0; v < 256; v++){
-      lut[v] = Math.max(0, Math.min(255, Math.round(((v - min) * 255) / range)));
-    }
-    for (let i = 0; i < d.length; i += 4){
-      d[i] = d[i + 1] = d[i + 2] = lut[d[i]];
-    }
-    return imgData;
-  }
-
-  function otsuThreshold(imgData){
-    const d = imgData.data;
-    const hist = new Array(256).fill(0);
-    const total = d.length / 4;
-    for (let i = 0; i < d.length; i += 4) hist[d[i]]++;
-
-    let sum = 0;
-    for (let v = 0; v < 256; v++) sum += v * hist[v];
-    let sumB = 0, wB = 0, maxVar = 0, threshold = 128;
-    for (let v = 0; v < 256; v++){
-      wB += hist[v];
-      if (wB === 0) continue;
-      const wF = total - wB;
-      if (wF === 0) break;
-      sumB += v * hist[v];
-      const mB = sumB / wB;
-      const mF = (sum - sumB) / wF;
-      const between = wB * wF * (mB - mF) * (mB - mF);
-      if (between > maxVar){
-        maxVar = between;
-        threshold = v;
+      let toastTimer = null;
+      function toast(m) {
+        const el = $('#toast');
+        el.textContent = m;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
       }
-    }
-    for (let i = 0; i < d.length; i += 4){
-      const v = d[i] > threshold ? 255 : 0;
-      d[i] = d[i + 1] = d[i + 2] = v;
-    }
-    return imgData;
-  }
 
-  function medianDenoise(imgData){
-    const w = imgData.width, h = imgData.height;
-    const d = imgData.data;
-    const copy = new Uint8ClampedArray(d);
-    const k = 1; // 3x3 neighborhood
-    for (let y = 1; y < h - 1; y++){
-      for (let x = 1; x < w - 1; x++){
-        const vals = [];
-        for (let dy = -k; dy <= k; dy++){
-          for (let dx = -k; dx <= k; dx++){
-            const idx = ((y + dy) * w + (x + dx)) * 4;
-            vals.push(copy[idx]);
-          }
-        }
-        vals.sort((a, b) => a - b);
-        const med = vals[Math.floor(vals.length / 2)];
-        const i = (y * w + x) * 4;
-        d[i] = d[i + 1] = d[i + 2] = med;
-      }
-    }
-    return imgData;
-  }
-
-  /* ============================================================
-     OCR PIPELINE
-     ============================================================ */
-  async function runOCR(){
-    if (!state.images.length) return;
-
-    const btn = $('#ocrBtn');
-    btn.disabled = true;
-    btn.textContent = 'Extracting…';
-    $('#progWrap').hidden = false;
-    $('#results').hidden = true;
-
-    state.results = [];
-    state.detectedLang = null;
-
-    const total = state.images.length;
-    let done = 0;
-
-    try {
-      // Read options
-      const langSel = $('#lang').value;
-      const psm = MODE_PSM[$('#mode').value] || '3';
-      const oem = parseInt($('#oem').value, 10);
-
-      const ppOpts = {
-        grayscale: $('#ppGrayscale').checked,
-        contrast:  $('#ppContrast').checked,
-        binarize:  $('#ppBinarize').checked,
-        denoise:   $('#ppDenoise').checked,
-        upscale:   $('#ppUpscale').checked,
-        rotate:    $('#ppRotate').checked
+      /* ============================================================
+         STATE
+         ============================================================ */
+      const state = {
+        images: [],      // { id, name, dataUrl, file }
+        results: [],     // { imageId, imageName, imageUrl, processedUrl, text, markdown, json, confidence, words, lines, paragraphs }
+        detectedLang: null
       };
 
-      for (const img of state.images){
-        // ---- Stage 1: Preprocess ----
-        updateProgress(done / total, 'Preprocessing image ' + (done + 1) + ' of ' + total + '…');
-        const pre = await preprocessImage(img.dataUrl, ppOpts);
+      /* ============================================================
+         LANGUAGE MAP (for auto-detect)
+         ============================================================ */
+      const SCRIPT_TO_LANG = {
+        'Latin': { code: 'eng', label: 'English (Latin)' },
+        'Cyrillic': { code: 'rus', label: 'Russian (Cyrillic)' },
+        'Arabic': { code: 'ara', label: 'Arabic' },
+        'Hebrew': { code: 'heb', label: 'Hebrew' },
+        'Han': { code: 'chi_sim', label: 'Chinese (Han)' },
+        'Japanese': { code: 'jpn', label: 'Japanese' },
+        'Hangul': { code: 'kor', label: 'Korean' },
+        'Devanagari': { code: 'hin', label: 'Hindi (Devanagari)' },
+        'Bengali': { code: 'ben', label: 'Bengali' },
+        'Tamil': { code: 'tam', label: 'Tamil' },
+        'Telugu': { code: 'tel', label: 'Telugu' },
+        'Thai': { code: 'tha', label: 'Thai' },
+        'Greek': { code: 'ell', label: 'Greek' },
+        'Georgian': { code: 'kat', label: 'Georgian' },
+        'Armenian': { code: 'hye', label: 'Armenian' }
+      };
 
-        // ---- Stage 2: Detect language (if auto) ----
-        let lang = langSel;
-        if (langSel === 'auto'){
-          updateProgress((done + 0.2) / total, 'Detecting language…');
-          try {
-            const detectResult = await Tesseract.detect(pre.dataUrl);
-            const script = detectResult?.data?.script || 'Latin';
-            const mapped = SCRIPT_TO_LANG[script] || SCRIPT_TO_LANG['Latin'];
-            lang = mapped.code;
-            state.detectedLang = mapped.label;
-          } catch (e){
-            console.warn('Detect failed, falling back to English', e);
-            lang = 'eng';
-            state.detectedLang = 'English (fallback)';
-          }
+      /* ============================================================
+         MODE → TESSERACT PSM
+         ============================================================ */
+      const MODE_PSM = {
+        auto: '3',  // fully automatic
+        document: '1',  // auto with OSD
+        sparse: '11', // sparse text
+        single_line: '7',  // single text line
+        single_word: '8',  // single word
+        single_char: '10'  // single character
+      };
+
+      /* ============================================================
+         FILE HANDLING
+         ============================================================ */
+      async function addFiles(list) {
+        const files = Array.from(list).filter(f => f.type.startsWith('image/'));
+        if (!files.length) { toast('Please choose image files'); return; }
+
+        for (const f of files) {
+          const url = await new Promise(r => {
+            const fr = new FileReader();
+            fr.onload = e => r(e.target.result);
+            fr.readAsDataURL(f);
+          });
+          state.images.push({
+            id: Math.random().toString(36).slice(2),
+            name: f.name,
+            dataUrl: url,
+            file: f
+          });
         }
+        renderImages();
+        $('#optionsBlock').hidden = false;
+        $('#ocrBtn').disabled = false;
+        $('#clearBtn').hidden = false;
+        toast(files.length + ' image(s) added');
+      }
 
-        // ---- Stage 3: OCR ----
-        updateProgress((done + 0.3) / total, 'Recognizing text ' + (done + 1) + ' of ' + total + '…');
+      function renderImages() {
+        const grid = $('#ocrImgs');
+        grid.innerHTML = '';
+        state.images.forEach((img, i) => {
+          const el = document.createElement('div');
+          el.className = 'ocr-img';
+          const hasResult = state.results.some(r => r.imageId === img.id);
+          el.innerHTML =
+            (hasResult ? '<span class="badge-ok">✓</span>' : '') +
+            '<img src="' + img.dataUrl + '" alt="" />' +
+            '<span class="idx">' + (i + 1) + '</span>' +
+            '<button class="rm" data-id="' + img.id + '" aria-label="Remove">✕</button>';
+          grid.appendChild(el);
+        });
+      }
 
-        const result = await Tesseract.recognize(pre.dataUrl, lang, {
-          logger: (m) => {
-            if (m.status === 'recognizing text'){
-              const p = (done + 0.3 + m.progress * 0.7) / total;
-              updateProgress(p, 'Recognizing text ' + (done + 1) + ' of ' + total + '…');
-            } else if (m.status && m.status.includes('loading')){
-              updateProgress((done + 0.25) / total, m.status + '…');
+      /* ============================================================
+         IMAGE PREPROCESSING
+         ============================================================ */
+      function preprocessImage(dataUrl, opts) {
+        return new Promise(resolve => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.naturalWidth;
+            let h = img.naturalHeight;
+
+            // Smart upscale — improves recognition of small text
+            let scale = 1;
+            if (opts.upscale && w < 1600) {
+              scale = Math.min(2.5, 1600 / w);
+              if (scale < 1.1) scale = 1;
             }
-          },
-          // PSM and OEM settings
-          tessedit_pageseg_mode: psm,
-          tessedit_ocr_engine_mode: oem
+
+            const c = document.createElement('canvas');
+            c.width = Math.round(w * scale);
+            c.height = Math.round(h * scale);
+            const ctx = c.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, c.width, c.height);
+
+            let pixels = ctx.getImageData(0, 0, c.width, c.height);
+
+            if (opts.grayscale || opts.contrast || opts.binarize) {
+              pixels = toGrayscale(pixels);
+            }
+            if (opts.contrast) {
+              pixels = autoContrast(pixels);
+            }
+            if (opts.binarize) {
+              pixels = otsuThreshold(pixels);
+            }
+            if (opts.denoise) {
+              pixels = medianDenoise(pixels);
+            }
+
+            ctx.putImageData(pixels, 0, 0);
+            resolve({ canvas: c, dataUrl: c.toDataURL('image/png') });
+          };
+          img.onerror = () => resolve({ canvas: null, dataUrl });
+          img.src = dataUrl;
         });
-
-        const d = result.data;
-        const words = (d.words || []).map(w => ({
-          text: w.text,
-          confidence: w.confidence,
-          bbox: w.bbox
-        }));
-        const lines = (d.lines || []).map(l => ({
-          text: l.text,
-          confidence: l.confidence
-        }));
-        const paragraphs = (d.paragraphs || []).map(p => ({
-          text: p.text,
-          confidence: p.confidence
-        }));
-
-        const text = d.text || '';
-        const markdown = convertToMarkdown(text);
-        const json = {
-          image: img.name,
-          confidence: d.confidence,
-          language: lang,
-          text,
-          lines: lines,
-          paragraphs: paragraphs,
-          words: words
-        };
-
-        state.results.push({
-          imageId: img.id,
-          imageName: img.name,
-          imageUrl: img.dataUrl,
-          processedUrl: pre.dataUrl,
-          text,
-          markdown,
-          json,
-          confidence: d.confidence,
-          wordCount: words.length,
-          words
-        });
-
-        done++;
-        updateProgress(done / total, 'Finished ' + done + ' of ' + total);
       }
 
-      // Show results
-      state.results.sort((a, b) => {
-        const ai = state.images.findIndex(x => x.id === a.imageId);
-        const bi = state.images.findIndex(x => x.id === b.imageId);
-        return ai - bi;
-      });
-
-      renderResults();
-      $('#results').hidden = false;
-      renderImages();
-      toast('OCR complete 🎉');
-    } catch (e){
-      console.error(e);
-      toast('OCR failed: ' + (e.message || 'unknown error'));
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '🔍 Extract Text';
-      setTimeout(() => { $('#progWrap').hidden = true; }, 1000);
-    }
-  }
-
-  function updateProgress(pct, status){
-    pct = Math.max(0, Math.min(1, pct));
-    $('#progFill').style.width = Math.round(pct * 100) + '%';
-    $('#progPct').textContent = Math.round(pct * 100) + '%';
-    if (status) $('#progStatus').textContent = status;
-  }
-
-  /* ============================================================
-     MARKDOWN CONVERSION (heuristic)
-     ============================================================ */
-  function convertToMarkdown(text){
-    const lines = text.split('\n');
-    const out = [];
-    for (let i = 0; i < lines.length; i++){
-      const line = lines[i].replace(/\s+$/, '');
-      if (!line.trim()) { out.push(''); continue; }
-
-      // Detect bullets (•, ·, -, *, ●)
-      if (/^[\u2022\u00b7\u25cf\u25e6\u2023\u2043]\s+/.test(line)){
-        out.push('- ' + line.replace(/^[\u2022\u00b7\u25cf\u25e6\u2023\u2043]\s+/, ''));
-        continue;
+      function toGrayscale(imgData) {
+        const d = imgData.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const g = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+          d[i] = d[i + 1] = d[i + 2] = g;
+        }
+        return imgData;
       }
 
-      // Detect numbered lists
-      const numMatch = line.match(/^(\d+)[\.\)]\s+(.*)/);
-      if (numMatch){
-        out.push(numMatch[1] + '. ' + numMatch[2]);
-        continue;
+      function autoContrast(imgData) {
+        const d = imgData.data;
+        let min = 255, max = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          if (d[i] < min) min = d[i];
+          if (d[i] > max) max = d[i];
+        }
+        if (max === min) return imgData;
+        const range = max - min;
+        const lut = new Uint8Array(256);
+        for (let v = 0; v < 256; v++) {
+          lut[v] = Math.max(0, Math.min(255, Math.round(((v - min) * 255) / range)));
+        }
+        for (let i = 0; i < d.length; i += 4) {
+          d[i] = d[i + 1] = d[i + 2] = lut[d[i]];
+        }
+        return imgData;
       }
 
-      // Detect all-caps short lines → heading
-      const trimmed = line.trim();
-      if (trimmed.length < 80 && trimmed === trimmed.toUpperCase() && /[A-Z]/.test(trimmed)){
-        out.push('## ' + trimmed);
-        continue;
+      function otsuThreshold(imgData) {
+        const d = imgData.data;
+        const hist = new Array(256).fill(0);
+        const total = d.length / 4;
+        for (let i = 0; i < d.length; i += 4) hist[d[i]]++;
+
+        let sum = 0;
+        for (let v = 0; v < 256; v++) sum += v * hist[v];
+        let sumB = 0, wB = 0, maxVar = 0, threshold = 128;
+        for (let v = 0; v < 256; v++) {
+          wB += hist[v];
+          if (wB === 0) continue;
+          const wF = total - wB;
+          if (wF === 0) break;
+          sumB += v * hist[v];
+          const mB = sumB / wB;
+          const mF = (sum - sumB) / wF;
+          const between = wB * wF * (mB - mF) * (mB - mF);
+          if (between > maxVar) {
+            maxVar = between;
+            threshold = v;
+          }
+        }
+        for (let i = 0; i < d.length; i += 4) {
+          const v = d[i] > threshold ? 255 : 0;
+          d[i] = d[i + 1] = d[i + 2] = v;
+        }
+        return imgData;
       }
 
-      out.push(line);
-    }
-    return out.join('\n');
-  }
-
-  /* ============================================================
-     RENDER RESULTS
-     ============================================================ */
-  function renderResults(){
-    // Combined text (multi-image)
-    const combinedText = state.results.map(r => r.text).join('\n\n---\n\n');
-    const combinedMd = state.results.map(r => r.markdown).join('\n\n---\n\n');
-    const combinedJson = {
-      language: state.detectedLang || $('#lang').value,
-      images: state.results.map(r => r.json)
-    };
-
-    $('#resultText').value = combinedText;
-    $('#resultMd').value = combinedMd;
-    $('#resultJson').value = JSON.stringify(combinedJson, null, 2);
-
-    // Meta chips
-    const avgConf = state.results.length
-      ? Math.round(state.results.reduce((s, r) => s + (r.confidence || 0), 0) / state.results.length)
-      : 0;
-    const totalWords = state.results.reduce((s, r) => s + r.wordCount, 0);
-    const totalChars = state.results.reduce((s, r) => s + r.text.length, 0);
-
-    const confClass = avgConf >= 85 ? 'ok' : avgConf >= 60 ? 'warn' : 'bad';
-
-    $('#resultMeta').innerHTML =
-      '<span class="meta-chip">📄 ' + state.results.length + ' image' + (state.results.length === 1 ? '' : 's') + '</span>' +
-      '<span class="meta-chip">🔤 ' + totalWords + ' words</span>' +
-      '<span class="meta-chip">📝 ' + totalChars + ' characters</span>' +
-      '<span class="meta-chip">🎯 Avg confidence: <span class="' + confClass + '">' + avgConf + '%</span></span>' +
-      (state.detectedLang ? '<span class="meta-chip">🌍 ' + state.detectedLang + '</span>' : '');
-
-    // Build overlay canvases
-    const overlayC = $('#overlayContainer');
-    overlayC.innerHTML = '';
-    state.results.forEach((r, i) => {
-      const wrap = document.createElement('div');
-      wrap.style.marginBottom = '18px';
-
-      const label = document.createElement('div');
-      label.style.cssText = 'font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--p-700);margin-bottom:6px;';
-      label.textContent = 'Image ' + (i + 1) + ' — ' + r.imageName;
-      wrap.appendChild(label);
-
-      const container = document.createElement('div');
-      container.className = 'overlay-wrap';
-      container.style.display = 'inline-block';
-
-      const img = document.createElement('img');
-      img.src = r.imageUrl;
-      img.onload = () => drawOverlay(container, r);
-      container.appendChild(img);
-
-      wrap.appendChild(container);
-      overlayC.appendChild(wrap);
-    });
-  }
-
-  function drawOverlay(container, result){
-    const img = container.querySelector('img');
-    const c = document.createElement('canvas');
-    c.width = img.naturalWidth;
-    c.height = img.naturalHeight;
-    container.appendChild(c);
-
-    const ctx = c.getContext('2d');
-    ctx.lineWidth = Math.max(2, Math.round(img.naturalWidth / 500));
-    ctx.font = Math.round(img.naturalWidth / 80) + 'px sans-serif';
-
-    result.words.forEach(w => {
-      if (!w.bbox) return;
-      const conf = w.confidence;
-      const color = conf >= 85 ? 'rgba(16, 185, 129, .9)'
-                  : conf >= 60 ? 'rgba(245, 158, 11, .9)'
-                  : 'rgba(239, 68, 68, .9)';
-
-      ctx.strokeStyle = color;
-      ctx.strokeRect(
-        w.bbox.x0, w.bbox.y0,
-        w.bbox.x1 - w.bbox.x0,
-        w.bbox.y1 - w.bbox.y0
-      );
-    });
-  }
-
-  /* ============================================================
-     TABS
-     ============================================================ */
-  $$('.tabs .tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      const name = tab.dataset.tab;
-      $$('.tabs .tab').forEach(t => t.classList.toggle('active', t === tab));
-      $$('.output-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === name));
-    });
-  });
-
-  /* ============================================================
-     COPY
-     ============================================================ */
-  $('#copyBtn').addEventListener('click', () => {
-    const activeTab = $('.tabs .tab.active').dataset.tab;
-    let text = '';
-    if (activeTab === 'json') text = $('#resultJson').value;
-    else if (activeTab === 'markdown') text = $('#resultMd').value;
-    else text = $('#resultText').value;
-    navigator.clipboard.writeText(text).then(
-      () => toast('Copied to clipboard'),
-      () => toast('Copy failed')
-    );
-  });
-
-  /* ============================================================
-     DOWNLOAD MENU
-     ============================================================ */
-  $('#downloadToggle').addEventListener('click', e => {
-    e.stopPropagation();
-    $('#dlMenu').classList.toggle('show');
-  });
-  document.addEventListener('click', e => {
-    if (!e.target.closest('.dl-wrap')) $('#dlMenu').classList.remove('show');
-  });
-
-  $$('#dlMenu button').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      $('#dlMenu').classList.remove('show');
-      await downloadFormat(btn.dataset.dl);
-    });
-  });
-
-  async function downloadFormat(fmt){
-    if (!state.results.length){ toast('Nothing to download'); return; }
-    const stamp = new Date().toISOString().slice(0, 10);
-
-    try {
-      if (fmt === 'txt'){
-        const text = state.results.map(r => r.text).join('\n\n--- Page Break ---\n\n');
-        downloadBlob(new Blob([text], { type: 'text/plain' }), 'PDFnest-ocr-' + stamp + '.txt');
+      function medianDenoise(imgData) {
+        const w = imgData.width, h = imgData.height;
+        const d = imgData.data;
+        const copy = new Uint8ClampedArray(d);
+        const k = 1; // 3x3 neighborhood
+        for (let y = 1; y < h - 1; y++) {
+          for (let x = 1; x < w - 1; x++) {
+            const vals = [];
+            for (let dy = -k; dy <= k; dy++) {
+              for (let dx = -k; dx <= k; dx++) {
+                const idx = ((y + dy) * w + (x + dx)) * 4;
+                vals.push(copy[idx]);
+              }
+            }
+            vals.sort((a, b) => a - b);
+            const med = vals[Math.floor(vals.length / 2)];
+            const i = (y * w + x) * 4;
+            d[i] = d[i + 1] = d[i + 2] = med;
+          }
+        }
+        return imgData;
       }
 
-      else if (fmt === 'md'){
-        const md = state.results.map(r => r.markdown).join('\n\n---\n\n');
-        downloadBlob(new Blob([md], { type: 'text/markdown' }), 'PDFnest-ocr-' + stamp + '.md');
+      /* ============================================================
+         OCR PIPELINE
+         ============================================================ */
+      async function runOCR() {
+        if (!state.images.length) return;
+
+        const btn = $('#ocrBtn');
+        btn.disabled = true;
+        btn.textContent = 'Extracting…';
+        $('#progWrap').hidden = false;
+        $('#results').hidden = true;
+
+        state.results = [];
+        state.detectedLang = null;
+
+        const total = state.images.length;
+        let done = 0;
+
+        try {
+          // Read options
+          const langSel = $('#lang').value;
+          const psm = MODE_PSM[$('#mode').value] || '3';
+          const oem = parseInt($('#oem').value, 10);
+
+          const ppOpts = {
+            grayscale: $('#ppGrayscale').checked,
+            contrast: $('#ppContrast').checked,
+            binarize: $('#ppBinarize').checked,
+            denoise: $('#ppDenoise').checked,
+            upscale: $('#ppUpscale').checked,
+            rotate: $('#ppRotate').checked
+          };
+
+          for (const img of state.images) {
+            // ---- Stage 1: Preprocess ----
+            updateProgress(done / total, 'Preprocessing image ' + (done + 1) + ' of ' + total + '…');
+            const pre = await preprocessImage(img.dataUrl, ppOpts);
+
+            // ---- Stage 2: Detect language (if auto) ----
+            let lang = langSel;
+            if (langSel === 'auto') {
+              updateProgress((done + 0.2) / total, 'Detecting language…');
+              try {
+                const detectResult = await Tesseract.detect(pre.dataUrl);
+                const script = detectResult?.data?.script || 'Latin';
+                const mapped = SCRIPT_TO_LANG[script] || SCRIPT_TO_LANG['Latin'];
+                lang = mapped.code;
+                state.detectedLang = mapped.label;
+              } catch (e) {
+                console.warn('Detect failed, falling back to English', e);
+                lang = 'eng';
+                state.detectedLang = 'English (fallback)';
+              }
+            }
+
+            // ---- Stage 3: OCR ----
+            updateProgress((done + 0.3) / total, 'Recognizing text ' + (done + 1) + ' of ' + total + '…');
+
+            const result = await Tesseract.recognize(pre.dataUrl, lang, {
+              logger: (m) => {
+                if (m.status === 'recognizing text') {
+                  const p = (done + 0.3 + m.progress * 0.7) / total;
+                  updateProgress(p, 'Recognizing text ' + (done + 1) + ' of ' + total + '…');
+                } else if (m.status && m.status.includes('loading')) {
+                  updateProgress((done + 0.25) / total, m.status + '…');
+                }
+              },
+              // PSM and OEM settings
+              tessedit_pageseg_mode: psm,
+              tessedit_ocr_engine_mode: oem
+            });
+
+            const d = result.data;
+            const words = (d.words || []).map(w => ({
+              text: w.text,
+              confidence: w.confidence,
+              bbox: w.bbox
+            }));
+            const lines = (d.lines || []).map(l => ({
+              text: l.text,
+              confidence: l.confidence
+            }));
+            const paragraphs = (d.paragraphs || []).map(p => ({
+              text: p.text,
+              confidence: p.confidence
+            }));
+
+            const text = d.text || '';
+            const markdown = convertToMarkdown(text);
+            const json = {
+              image: img.name,
+              confidence: d.confidence,
+              language: lang,
+              text,
+              lines: lines,
+              paragraphs: paragraphs,
+              words: words
+            };
+
+            state.results.push({
+              imageId: img.id,
+              imageName: img.name,
+              imageUrl: img.dataUrl,
+              processedUrl: pre.dataUrl,
+              text,
+              markdown,
+              json,
+              confidence: d.confidence,
+              wordCount: words.length,
+              words
+            });
+
+            done++;
+            updateProgress(done / total, 'Finished ' + done + ' of ' + total);
+          }
+
+          // Show results
+          state.results.sort((a, b) => {
+            const ai = state.images.findIndex(x => x.id === a.imageId);
+            const bi = state.images.findIndex(x => x.id === b.imageId);
+            return ai - bi;
+          });
+
+          renderResults();
+          $('#results').hidden = false;
+          renderImages();
+          toast('OCR complete 🎉');
+        } catch (e) {
+          console.error(e);
+          toast('OCR failed: ' + (e.message || 'unknown error'));
+        } finally {
+          btn.disabled = false;
+          btn.textContent = '🔍 Extract Text';
+          setTimeout(() => { $('#progWrap').hidden = true; }, 1000);
+        }
       }
 
-      else if (fmt === 'json'){
-        const json = {
+      function updateProgress(pct, status) {
+        pct = Math.max(0, Math.min(1, pct));
+        $('#progFill').style.width = Math.round(pct * 100) + '%';
+        $('#progPct').textContent = Math.round(pct * 100) + '%';
+        if (status) $('#progStatus').textContent = status;
+      }
+
+      /* ============================================================
+         MARKDOWN CONVERSION (heuristic)
+         ============================================================ */
+      function convertToMarkdown(text) {
+        const lines = text.split('\n');
+        const out = [];
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].replace(/\s+$/, '');
+          if (!line.trim()) { out.push(''); continue; }
+
+          // Detect bullets (•, ·, -, *, ●)
+          if (/^[\u2022\u00b7\u25cf\u25e6\u2023\u2043]\s+/.test(line)) {
+            out.push('- ' + line.replace(/^[\u2022\u00b7\u25cf\u25e6\u2023\u2043]\s+/, ''));
+            continue;
+          }
+
+          // Detect numbered lists
+          const numMatch = line.match(/^(\d+)[\.\)]\s+(.*)/);
+          if (numMatch) {
+            out.push(numMatch[1] + '. ' + numMatch[2]);
+            continue;
+          }
+
+          // Detect all-caps short lines → heading
+          const trimmed = line.trim();
+          if (trimmed.length < 80 && trimmed === trimmed.toUpperCase() && /[A-Z]/.test(trimmed)) {
+            out.push('## ' + trimmed);
+            continue;
+          }
+
+          out.push(line);
+        }
+        return out.join('\n');
+      }
+
+      /* ============================================================
+         RENDER RESULTS
+         ============================================================ */
+      function renderResults() {
+        // Combined text (multi-image)
+        const combinedText = state.results.map(r => r.text).join('\n\n---\n\n');
+        const combinedMd = state.results.map(r => r.markdown).join('\n\n---\n\n');
+        const combinedJson = {
           language: state.detectedLang || $('#lang').value,
-          generatedAt: new Date().toISOString(),
           images: state.results.map(r => r.json)
         };
-        downloadBlob(new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' }), 'PDFnest-ocr-' + stamp + '.json');
-      }
 
-      else if (fmt === 'pdf'){
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-        const margin = 50;
-        const maxWidth = doc.internal.pageSize.getWidth() - margin * 2;
-        const lineHeight = 16;
-        let y = margin;
+        $('#resultText').value = combinedText;
+        $('#resultMd').value = combinedMd;
+        $('#resultJson').value = JSON.stringify(combinedJson, null, 2);
 
-        state.results.forEach((r, idx) => {
-          if (idx > 0) { doc.addPage(); y = margin; }
-          doc.setFontSize(10);
-          doc.setTextColor(150);
-          doc.text('Image: ' + r.imageName, margin, y);
-          y += lineHeight;
-          doc.setTextColor(0);
+        // Meta chips
+        const avgConf = state.results.length
+          ? Math.round(state.results.reduce((s, r) => s + (r.confidence || 0), 0) / state.results.length)
+          : 0;
+        const totalWords = state.results.reduce((s, r) => s + r.wordCount, 0);
+        const totalChars = state.results.reduce((s, r) => s + r.text.length, 0);
 
-          doc.setFontSize(12);
-          const lines = doc.splitTextToSize(r.text, maxWidth);
-          for (const line of lines){
-            if (y > doc.internal.pageSize.getHeight() - margin){
-              doc.addPage();
-              y = margin;
-            }
-            doc.text(line, margin, y);
-            y += lineHeight;
-          }
-        });
+        const confClass = avgConf >= 85 ? 'ok' : avgConf >= 60 ? 'warn' : 'bad';
 
-        doc.save('PDFnest-ocr-' + stamp + '.pdf');
-      }
+        $('#resultMeta').innerHTML =
+          '<span class="meta-chip">📄 ' + state.results.length + ' image' + (state.results.length === 1 ? '' : 's') + '</span>' +
+          '<span class="meta-chip">🔤 ' + totalWords + ' words</span>' +
+          '<span class="meta-chip">📝 ' + totalChars + ' characters</span>' +
+          '<span class="meta-chip">🎯 Avg confidence: <span class="' + confClass + '">' + avgConf + '%</span></span>' +
+          (state.detectedLang ? '<span class="meta-chip">🌍 ' + state.detectedLang + '</span>' : '');
 
-      else if (fmt === 'docx'){
-        const { Document, Packer, Paragraph, TextRun } = docx;
-        const children = [];
-        state.results.forEach((r, idx) => {
-          if (idx > 0) children.push(new Paragraph({ children: [new TextRun({ text: '', break: 1 })], pageBreakBefore: true }));
-          children.push(new Paragraph({
-            children: [new TextRun({ text: 'Image: ' + r.imageName, italics: true, color: '888888', size: 20 })]
-          }));
-          r.text.split('\n').forEach(line => {
-            children.push(new Paragraph({ children: [new TextRun({ text: line || ' ' })] }));
-          });
-        });
-        const doc = new Document({ sections: [{ properties: {}, children }] });
-        const blob = await Packer.toBlob(doc);
-        downloadBlob(blob, 'PDFnest-ocr-' + stamp + '.docx');
-      }
-
-      else if (fmt === 'zip'){
-        const zip = new JSZip();
+        // Build overlay canvases
+        const overlayC = $('#overlayContainer');
+        overlayC.innerHTML = '';
         state.results.forEach((r, i) => {
-          zip.file('image-' + (i + 1) + '-' + sanitize(r.imageName) + '.txt', r.text);
-          zip.file('image-' + (i + 1) + '-' + sanitize(r.imageName) + '.json', JSON.stringify(r.json, null, 2));
+          const wrap = document.createElement('div');
+          wrap.style.marginBottom = '18px';
+
+          const label = document.createElement('div');
+          label.style.cssText = 'font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--p-700);margin-bottom:6px;';
+          label.textContent = 'Image ' + (i + 1) + ' — ' + r.imageName;
+          wrap.appendChild(label);
+
+          const container = document.createElement('div');
+          container.className = 'overlay-wrap';
+          container.style.display = 'inline-block';
+
+          const img = document.createElement('img');
+          img.src = r.imageUrl;
+          img.onload = () => drawOverlay(container, r);
+          container.appendChild(img);
+
+          wrap.appendChild(container);
+          overlayC.appendChild(wrap);
         });
-        const blob = await zip.generateAsync({ type: 'blob' });
-        downloadBlob(blob, 'PDFnest-ocr-' + stamp + '.zip');
       }
-    } catch (e){
-      console.error(e);
-      toast('Download failed: ' + e.message);
-    }
-  }
 
-  function sanitize(name){
-    return name.replace(/\.[^.]+$/, '').replace(/[^\w\-]+/g, '_').slice(0, 40);
-  }
+      function drawOverlay(container, result) {
+        const img = container.querySelector('img');
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        container.appendChild(c);
 
-  function downloadBlob(blob, filename){
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 3000);
-    toast('Downloaded 🎉');
-  }
+        const ctx = c.getContext('2d');
+        ctx.lineWidth = Math.max(2, Math.round(img.naturalWidth / 500));
+        ctx.font = Math.round(img.naturalWidth / 80) + 'px sans-serif';
 
-  /* ============================================================
-     CLEAR
-     ============================================================ */
-  $('#clearBtn').addEventListener('click', () => {
-    state.images = [];
-    state.results = [];
-    state.detectedLang = null;
-    renderImages();
-    $('#optionsBlock').hidden = true;
-    $('#results').hidden = true;
-    $('#ocrBtn').disabled = true;
-    $('#clearBtn').hidden = true;
-  });
+        result.words.forEach(w => {
+          if (!w.bbox) return;
+          const conf = w.confidence;
+          const color = conf >= 85 ? 'rgba(16, 185, 129, .9)'
+            : conf >= 60 ? 'rgba(245, 158, 11, .9)'
+              : 'rgba(239, 68, 68, .9)';
 
-  /* ============================================================
-     TOGGLE CHECKED STYLING
-     ============================================================ */
-  $$('.toggle input[type="checkbox"]').forEach(cb => {
-    const sync = () => cb.closest('.toggle').classList.toggle('checked', cb.checked);
-    cb.addEventListener('change', sync);
-    sync();
-  });
+          ctx.strokeStyle = color;
+          ctx.strokeRect(
+            w.bbox.x0, w.bbox.y0,
+            w.bbox.x1 - w.bbox.x0,
+            w.bbox.y1 - w.bbox.y0
+          );
+        });
+      }
 
-  /* ============================================================
-     DROPZONE
-     ============================================================ */
-  const dz = $('#dropzone');
-  const fi = $('#fileInput');
+      /* ============================================================
+         TABS
+         ============================================================ */
+      $$('.tabs .tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const name = tab.dataset.tab;
+          $$('.tabs .tab').forEach(t => t.classList.toggle('active', t === tab));
+          $$('.output-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === name));
+        });
+      });
 
-  dz.addEventListener('click', () => fi.click());
-  dz.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fi.click(); }
-  });
-  fi.addEventListener('change', () => { addFiles(fi.files); fi.value = ''; });
+      /* ============================================================
+         COPY
+         ============================================================ */
+      $('#copyBtn').addEventListener('click', () => {
+        const activeTab = $('.tabs .tab.active').dataset.tab;
+        let text = '';
+        if (activeTab === 'json') text = $('#resultJson').value;
+        else if (activeTab === 'markdown') text = $('#resultMd').value;
+        else text = $('#resultText').value;
+        navigator.clipboard.writeText(text).then(
+          () => toast('Copied to clipboard'),
+          () => toast('Copy failed')
+        );
+      });
 
-  ['dragenter','dragover'].forEach(evt =>
-    dz.addEventListener(evt, e => {
-      e.preventDefault(); e.stopPropagation();
-      dz.classList.add('dragover');
-    })
-  );
-  ['dragleave','drop'].forEach(evt =>
-    dz.addEventListener(evt, e => {
-      e.preventDefault(); e.stopPropagation();
-      if (evt === 'dragleave' && dz.contains(e.relatedTarget)) return;
-      dz.classList.remove('dragover');
-      if (evt === 'drop' && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
-    })
-  );
+      /* ============================================================
+         DOWNLOAD MENU
+         ============================================================ */
+      $('#downloadToggle').addEventListener('click', e => {
+        e.stopPropagation();
+        $('#dlMenu').classList.toggle('show');
+      });
+      document.addEventListener('click', e => {
+        if (!e.target.closest('.dl-wrap')) $('#dlMenu').classList.remove('show');
+      });
 
-  window.addEventListener('dragover', e => {
-    if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
-  });
-  window.addEventListener('drop', e => {
-    if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
-  });
+      $$('#dlMenu button').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          $('#dlMenu').classList.remove('show');
+          await downloadFormat(btn.dataset.dl);
+        });
+      });
 
-  $('#ocrImgs').addEventListener('click', e => {
-    const rm = e.target.closest('.rm');
-    if (!rm) return;
-    state.images = state.images.filter(i => i.id !== rm.dataset.id);
-    state.results = state.results.filter(r => r.imageId !== rm.dataset.id);
-    renderImages();
-    if (!state.images.length){
-      $('#optionsBlock').hidden = true;
-      $('#results').hidden = true;
-      $('#ocrBtn').disabled = true;
-      $('#clearBtn').hidden = true;
-    }
-  });
+      async function downloadFormat(fmt) {
+        if (!state.results.length) { toast('Nothing to download'); return; }
+        const stamp = new Date().toISOString().slice(0, 10);
 
-  $('#ocrBtn').addEventListener('click', runOCR);
-})();
-</script>
+        try {
+          if (fmt === 'txt') {
+            const text = state.results.map(r => r.text).join('\n\n--- Page Break ---\n\n');
+            downloadBlob(new Blob([text], { type: 'text/plain' }), 'PDFnest-ocr-' + stamp + '.txt');
+          }
+
+          else if (fmt === 'md') {
+            const md = state.results.map(r => r.markdown).join('\n\n---\n\n');
+            downloadBlob(new Blob([md], { type: 'text/markdown' }), 'PDFnest-ocr-' + stamp + '.md');
+          }
+
+          else if (fmt === 'json') {
+            const json = {
+              language: state.detectedLang || $('#lang').value,
+              generatedAt: new Date().toISOString(),
+              images: state.results.map(r => r.json)
+            };
+            downloadBlob(new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' }), 'PDFnest-ocr-' + stamp + '.json');
+          }
+
+          else if (fmt === 'pdf') {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+            const margin = 50;
+            const maxWidth = doc.internal.pageSize.getWidth() - margin * 2;
+            const lineHeight = 16;
+            let y = margin;
+
+            state.results.forEach((r, idx) => {
+              if (idx > 0) { doc.addPage(); y = margin; }
+              doc.setFontSize(10);
+              doc.setTextColor(150);
+              doc.text('Image: ' + r.imageName, margin, y);
+              y += lineHeight;
+              doc.setTextColor(0);
+
+              doc.setFontSize(12);
+              const lines = doc.splitTextToSize(r.text, maxWidth);
+              for (const line of lines) {
+                if (y > doc.internal.pageSize.getHeight() - margin) {
+                  doc.addPage();
+                  y = margin;
+                }
+                doc.text(line, margin, y);
+                y += lineHeight;
+              }
+            });
+
+            doc.save('PDFnest-ocr-' + stamp + '.pdf');
+          }
+
+          else if (fmt === 'docx') {
+            const { Document, Packer, Paragraph, TextRun } = docx;
+            const children = [];
+            state.results.forEach((r, idx) => {
+              if (idx > 0) children.push(new Paragraph({ children: [new TextRun({ text: '', break: 1 })], pageBreakBefore: true }));
+              children.push(new Paragraph({
+                children: [new TextRun({ text: 'Image: ' + r.imageName, italics: true, color: '888888', size: 20 })]
+              }));
+              r.text.split('\n').forEach(line => {
+                children.push(new Paragraph({ children: [new TextRun({ text: line || ' ' })] }));
+              });
+            });
+            const doc = new Document({ sections: [{ properties: {}, children }] });
+            const blob = await Packer.toBlob(doc);
+            downloadBlob(blob, 'PDFnest-ocr-' + stamp + '.docx');
+          }
+
+          else if (fmt === 'zip') {
+            const zip = new JSZip();
+            state.results.forEach((r, i) => {
+              zip.file('image-' + (i + 1) + '-' + sanitize(r.imageName) + '.txt', r.text);
+              zip.file('image-' + (i + 1) + '-' + sanitize(r.imageName) + '.json', JSON.stringify(r.json, null, 2));
+            });
+            const blob = await zip.generateAsync({ type: 'blob' });
+            downloadBlob(blob, 'PDFnest-ocr-' + stamp + '.zip');
+          }
+        } catch (e) {
+          console.error(e);
+          toast('Download failed: ' + e.message);
+        }
+      }
+
+      function sanitize(name) {
+        return name.replace(/\.[^.]+$/, '').replace(/[^\w\-]+/g, '_').slice(0, 40);
+      }
+
+      function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+        toast('Downloaded 🎉');
+      }
+
+      /* ============================================================
+         CLEAR
+         ============================================================ */
+      $('#clearBtn').addEventListener('click', () => {
+        state.images = [];
+        state.results = [];
+        state.detectedLang = null;
+        renderImages();
+        $('#optionsBlock').hidden = true;
+        $('#results').hidden = true;
+        $('#ocrBtn').disabled = true;
+        $('#clearBtn').hidden = true;
+      });
+
+      /* ============================================================
+         TOGGLE CHECKED STYLING
+         ============================================================ */
+      $$('.toggle input[type="checkbox"]').forEach(cb => {
+        const sync = () => cb.closest('.toggle').classList.toggle('checked', cb.checked);
+        cb.addEventListener('change', sync);
+        sync();
+      });
+
+      /* ============================================================
+         DROPZONE
+         ============================================================ */
+      const dz = $('#dropzone');
+      const fi = $('#fileInput');
+
+      dz.addEventListener('click', () => fi.click());
+      dz.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); }
+      });
+      fi.addEventListener('change', () => { addFiles(fi.files); fi.value = ''; });
+
+      ['dragenter', 'dragover'].forEach(evt =>
+        dz.addEventListener(evt, e => {
+          e.preventDefault(); e.stopPropagation();
+          dz.classList.add('dragover');
+        })
+      );
+      ['dragleave', 'drop'].forEach(evt =>
+        dz.addEventListener(evt, e => {
+          e.preventDefault(); e.stopPropagation();
+          if (evt === 'dragleave' && dz.contains(e.relatedTarget)) return;
+          dz.classList.remove('dragover');
+          if (evt === 'drop' && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+        })
+      );
+
+      window.addEventListener('dragover', e => {
+        if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
+      });
+      window.addEventListener('drop', e => {
+        if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
+      });
+
+      $('#ocrImgs').addEventListener('click', e => {
+        const rm = e.target.closest('.rm');
+        if (!rm) return;
+        state.images = state.images.filter(i => i.id !== rm.dataset.id);
+        state.results = state.results.filter(r => r.imageId !== rm.dataset.id);
+        renderImages();
+        if (!state.images.length) {
+          $('#optionsBlock').hidden = true;
+          $('#results').hidden = true;
+          $('#ocrBtn').disabled = true;
+          $('#clearBtn').hidden = true;
+        }
+      });
+
+      $('#ocrBtn').addEventListener('click', runOCR);
+    })();
+
+    /* ==========================================================
+       CUSTOM CURSOR — user initial badge that follows the mouse
+       ========================================================== */
+    (function initCustomCursor() {
+      // Don't run on touch devices
+      if (window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
+
+      // Read user initial from localStorage
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const initial = (user && user.name && user.name.trim())
+        ? user.name.trim().charAt(0).toUpperCase()
+        : '✦';
+
+      // Create the cursor elements
+      const cursor = document.createElement('div');
+      cursor.className = 'custom-cursor';
+      cursor.innerHTML = '<div class="cursor-avatar">' + initial + '</div>';
+      document.body.appendChild(cursor);
+
+      const ring = document.createElement('div');
+      ring.className = 'cursor-ring';
+      document.body.appendChild(ring);
+
+      let mx = -100, my = -100;
+      let rx = mx, ry = my;
+      let moved = false;
+
+      // Move the main cursor immediately
+      document.addEventListener('mousemove', function (e) {
+        mx = e.clientX;
+        my = e.clientY;
+
+        if (!moved) {
+          moved = true;
+          cursor.classList.add('visible');
+          ring.classList.add('visible');
+        }
+
+        cursor.style.transform =
+          'translate3d(' + mx + 'px, ' + my + 'px, 0) translate(-50%, -50%)';
+      }, { passive: true });
+
+      // Hide when the mouse leaves the window
+      document.addEventListener('mouseleave', function () {
+        cursor.classList.remove('visible');
+        ring.classList.remove('visible');
+      });
+      document.addEventListener('mouseenter', function () {
+        if (moved) {
+          cursor.classList.add('visible');
+          ring.classList.add('visible');
+        }
+      });
+
+      // Trailing ring — lerp toward the mouse position
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!prefersReduced) {
+        (function tick() {
+          rx += (mx - rx) * 0.18;
+          ry += (my - ry) * 0.18;
+          ring.style.transform =
+            'translate3d(' + rx + 'px, ' + ry + 'px, 0) translate(-50%, -50%)';
+          requestAnimationFrame(tick);
+        })();
+      } else {
+        document.addEventListener('mousemove', function () {
+          ring.style.transform =
+            'translate3d(' + mx + 'px, ' + my + 'px, 0) translate(-50%, -50%)';
+        }, { passive: true });
+      }
+
+      // Hover state — glow on interactive elements
+      const INTERACTIVE = 'a, button, [role="button"], .tool-card, .section-toggle, .theme-toggle, .profile-btn, .stat';
+      const TEXT_INPUTS = 'input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="search"], input[type="tel"], input[type="url"], textarea';
+
+      document.addEventListener('mouseover', function (e) {
+        const t = e.target;
+        if (!t || !t.closest) return;
+        if (t.closest(INTERACTIVE)) cursor.classList.add('hovering');
+        if (t.closest(TEXT_INPUTS)) cursor.classList.add('text-mode');
+      });
+
+      document.addEventListener('mouseout', function (e) {
+        const to = e.relatedTarget;
+        if (!to || !to.closest) {
+          cursor.classList.remove('hovering', 'text-mode');
+          return;
+        }
+        if (!to.closest(INTERACTIVE)) cursor.classList.remove('hovering');
+        if (!to.closest(TEXT_INPUTS)) cursor.classList.remove('text-mode');
+      });
+
+      // Click feedback
+      document.addEventListener('mousedown', function () {
+        cursor.classList.add('clicking');
+      });
+      document.addEventListener('mouseup', function () {
+        cursor.classList.remove('clicking');
+      });
+
+      // Also handle the case where the user opens the profile dropdown
+      // so the cursor stays on top of it (z-index 99999 handles it anyway)
+    })();
+  </script>
 </body>
+
 </html>

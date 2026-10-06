@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Remove Watermark — PDFnest</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
@@ -21,9 +23,12 @@
       gap: 10px;
       margin-top: 18px;
     }
+
     .mode-card {
       position: relative;
-      display: flex; flex-direction: column; gap: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
       padding: 14px 16px;
       border-radius: 14px;
       border: 1.5px solid var(--line);
@@ -33,36 +38,63 @@
       font-family: inherit;
       text-align: left;
     }
-    body.dark-theme .mode-card { background: #1b1624; border-color: #3b2c50; color: var(--ink); }
-    .mode-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+    body.dark-theme .mode-card {
+      background: #1b1624;
+      border-color: #3b2c50;
+      color: var(--ink);
+    }
+
+    .mode-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
     .mode-card.active {
       border-color: var(--p-500);
-      background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(192,38,211,.05));
-      box-shadow: 0 0 0 3px rgba(139,92,246,.15);
+      background: linear-gradient(135deg, rgba(139, 92, 246, .08), rgba(192, 38, 211, .05));
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, .15);
     }
+
     body.dark-theme .mode-card.active {
-      background: linear-gradient(135deg, rgba(139,92,246,.15), rgba(192,38,211,.1));
+      background: linear-gradient(135deg, rgba(139, 92, 246, .15), rgba(192, 38, 211, .1));
       border-color: #a78bfa;
     }
+
     .mode-card .mode-head {
-      display: flex; align-items: center; gap: 8px;
-      font-weight: 800; font-size: .9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: .9rem;
     }
+
     .mode-card .mode-icon {
-      width: 28px; height: 28px; flex: none;
+      width: 28px;
+      height: 28px;
+      flex: none;
       border-radius: 9px;
-      display: grid; place-items: center;
+      display: grid;
+      place-items: center;
       background: linear-gradient(140deg, var(--p-500), var(--p-800));
-      color: #fff; font-size: .9rem;
+      color: #fff;
+      font-size: .9rem;
       box-shadow: 0 6px 14px -6px var(--p-700);
     }
+
     .mode-card .mode-sub {
       font-size: .74rem;
       color: var(--muted);
       line-height: 1.4;
     }
-    .mode-card.active .mode-sub { color: var(--p-800); }
-    body.dark-theme .mode-card.active .mode-sub { color: #d7c4ff; }
+
+    .mode-card.active .mode-sub {
+      color: var(--p-800);
+    }
+
+    body.dark-theme .mode-card.active .mode-sub {
+      color: #d7c4ff;
+    }
 
     /* ============================================================
        CANVAS STAGE
@@ -77,14 +109,29 @@
       border: 1.5px solid var(--line);
       background: repeating-conic-gradient(#f0f0f0 0% 25%, #fff 0% 50%) 50% / 20px 20px;
     }
+
     body.dark-theme .stage-wrap {
       border-color: #3b2c50;
       background: repeating-conic-gradient(#1b1624 0% 25%, #241c31 0% 50%) 50% / 20px 20px;
     }
-    #wmCanvas { display: block; max-width: 100%; touch-action: none; }
-    .stage-wrap.mode-box #wmCanvas { cursor: crosshair; }
-    .stage-wrap.mode-brush #wmCanvas { cursor: crosshair; }
-    .stage-wrap.mode-auto #wmCanvas { cursor: default; }
+
+    #wmCanvas {
+      display: block;
+      max-width: 100%;
+      touch-action: none;
+    }
+
+    .stage-wrap.mode-box #wmCanvas {
+      cursor: crosshair;
+    }
+
+    .stage-wrap.mode-brush #wmCanvas {
+      cursor: crosshair;
+    }
+
+    .stage-wrap.mode-auto #wmCanvas {
+      cursor: default;
+    }
 
     /* ============================================================
        TOOLBAR
@@ -100,10 +147,12 @@
       border: 1.5px solid var(--p-200);
       margin-top: 14px;
     }
+
     body.dark-theme .toolbar {
-      background: rgba(139,92,246,.1);
+      background: rgba(139, 92, 246, .1);
       border-color: #4b3864;
     }
+
     .tool-label {
       font-size: .72rem;
       font-weight: 800;
@@ -112,19 +161,31 @@
       color: var(--p-800);
       margin-right: 4px;
     }
-    body.dark-theme .tool-label { color: #d7c4ff; }
+
+    body.dark-theme .tool-label {
+      color: #d7c4ff;
+    }
+
     .brush-size {
-      display: flex; align-items: center; gap: 8px;
-      font-size: .78rem; font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .78rem;
+      font-weight: 700;
       color: var(--p-800);
       flex: 1;
       min-width: 200px;
     }
-    body.dark-theme .brush-size { color: #d7c4ff; }
+
+    body.dark-theme .brush-size {
+      color: #d7c4ff;
+    }
+
     .brush-size input[type="range"] {
       flex: 1;
       accent-color: var(--p-600);
     }
+
     .tool-btn {
       border: 1.5px solid var(--p-200);
       background: #fff;
@@ -137,13 +198,25 @@
       cursor: pointer;
       transition: background .18s, border-color .18s, transform .16s;
     }
-    .tool-btn:hover { background: var(--p-100); border-color: var(--p-400); transform: translateY(-1px); }
-    .tool-btn.danger:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+
+    .tool-btn:hover {
+      background: var(--p-100);
+      border-color: var(--p-400);
+      transform: translateY(-1px);
+    }
+
+    .tool-btn.danger:hover {
+      background: #fee2e2;
+      border-color: #fca5a5;
+      color: #b91c1c;
+    }
+
     body.dark-theme .tool-btn {
       background: #211a2d;
       color: #d7c4ff;
       border-color: #4b3864;
     }
+
     body.dark-theme .tool-btn:hover {
       background: #2b2040;
       border-color: #8b5cf6;
@@ -153,11 +226,16 @@
        DETECTED REGIONS LIST
        ============================================================ */
     .regions-list {
-      display: flex; flex-wrap: wrap; gap: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       margin-top: 12px;
     }
+
     .region-chip {
-      display: inline-flex; align-items: center; gap: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       padding: 6px 12px;
       border-radius: 999px;
       background: var(--p-100);
@@ -167,43 +245,75 @@
       color: var(--p-800);
       animation: pop .22s ease both;
     }
+
     body.dark-theme .region-chip {
-      background: rgba(139,92,246,.15);
+      background: rgba(139, 92, 246, .15);
       border-color: #4b3864;
       color: #d7c4ff;
     }
+
     .region-chip button {
-      border: 0; background: transparent; color: inherit;
-      cursor: pointer; font-weight: 800; padding: 0 2px;
-      opacity: .7; transition: opacity .18s;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-weight: 800;
+      padding: 0 2px;
+      opacity: .7;
+      transition: opacity .18s;
     }
-    .region-chip button:hover { opacity: 1; color: #b91c1c; }
-    .region-chip.conf-high { border-color: #10b981; }
-    .region-chip.conf-mid { border-color: #f59e0b; }
-    .region-chip.conf-low { border-color: #94a3b8; }
+
+    .region-chip button:hover {
+      opacity: 1;
+      color: #b91c1c;
+    }
+
+    .region-chip.conf-high {
+      border-color: #10b981;
+    }
+
+    .region-chip.conf-mid {
+      border-color: #f59e0b;
+    }
+
+    .region-chip.conf-low {
+      border-color: #94a3b8;
+    }
 
     /* ============================================================
        HINT
        ============================================================ */
     .hint {
-      display: flex; align-items: flex-start; gap: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
       padding: 10px 12px;
       border-radius: 11px;
-      background: rgba(139,92,246,.08);
-      border: 1.5px solid rgba(139,92,246,.2);
+      background: rgba(139, 92, 246, .08);
+      border: 1.5px solid rgba(139, 92, 246, .2);
       font-size: .78rem;
       color: var(--p-800);
       line-height: 1.45;
       margin-top: 14px;
     }
+
     body.dark-theme .hint {
-      background: rgba(139,92,246,.12);
-      border-color: rgba(139,92,246,.3);
+      background: rgba(139, 92, 246, .12);
+      border-color: rgba(139, 92, 246, .3);
       color: #d7c4ff;
     }
-    .hint .icon { flex: none; }
-    .hint strong { color: var(--p-900); }
-    body.dark-theme .hint strong { color: #fff; }
+
+    .hint .icon {
+      flex: none;
+    }
+
+    .hint strong {
+      color: var(--p-900);
+    }
+
+    body.dark-theme .hint strong {
+      color: #fff;
+    }
 
     /* ============================================================
        PROGRESS
@@ -212,24 +322,54 @@
       margin-top: 18px;
       padding: 16px;
       border-radius: 12px;
-      background: rgba(139,92,246,.06);
-      border: 1.5px solid rgba(139,92,246,.18);
+      background: rgba(139, 92, 246, .06);
+      border: 1.5px solid rgba(139, 92, 246, .18);
     }
+
     body.dark-theme .prog-wrap {
-      background: rgba(139,92,246,.1);
-      border-color: rgba(139,92,246,.25);
+      background: rgba(139, 92, 246, .1);
+      border-color: rgba(139, 92, 246, .25);
     }
+
     .prog-head {
-      display: flex; justify-content: space-between; align-items: center;
-      gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
     }
-    .prog-status { font-size: .82rem; font-weight: 800; color: var(--p-800); }
-    body.dark-theme .prog-status { color: #d7c4ff; }
-    .prog-pct { font-size: .78rem; font-weight: 800; color: var(--p-700); }
-    .prog-bar { height: 8px; background: var(--p-100); border-radius: 999px; overflow: hidden; }
-    body.dark-theme .prog-bar { background: rgba(139,92,246,.15); }
+
+    .prog-status {
+      font-size: .82rem;
+      font-weight: 800;
+      color: var(--p-800);
+    }
+
+    body.dark-theme .prog-status {
+      color: #d7c4ff;
+    }
+
+    .prog-pct {
+      font-size: .78rem;
+      font-weight: 800;
+      color: var(--p-700);
+    }
+
+    .prog-bar {
+      height: 8px;
+      background: var(--p-100);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    body.dark-theme .prog-bar {
+      background: rgba(139, 92, 246, .15);
+    }
+
     .prog-fill {
-      height: 100%; width: 0%;
+      height: 100%;
+      width: 0%;
       background: linear-gradient(90deg, var(--p-500), var(--p-700));
       transition: width .35s ease;
     }
@@ -238,49 +378,94 @@
        COMPARISON MODAL
        ============================================================ */
     .cmp-modal {
-      position: fixed; inset: 0;
+      position: fixed;
+      inset: 0;
       background: rgba(15, 12, 20, .88);
       backdrop-filter: blur(6px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 1000; padding: 20px;
-      opacity: 0; pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
       transition: opacity .22s ease;
     }
-    .cmp-modal.show { opacity: 1; pointer-events: auto; }
+
+    .cmp-modal.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
     .cmp-content {
       background: #fff;
       border-radius: 18px;
-      width: 100%; max-width: 960px; max-height: 92vh;
-      display: flex; flex-direction: column; overflow: hidden;
-      box-shadow: 0 26px 60px -24px rgba(0,0,0,.55);
+      width: 100%;
+      max-width: 960px;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 26px 60px -24px rgba(0, 0, 0, .55);
     }
-    body.dark-theme .cmp-content { background: #1b1624; }
+
+    body.dark-theme .cmp-content {
+      background: #1b1624;
+    }
+
     .cmp-header {
       padding: 16px 22px;
       border-bottom: 1px solid var(--line);
-      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
     }
+
     .cmp-header h3 {
-      margin: 0; font-size: 1rem; font-weight: 800;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
     }
+
     .cmp-close {
-      background: transparent; border: 0; font-size: 1.2rem;
-      cursor: pointer; color: var(--muted);
-      width: 32px; height: 32px; border-radius: 8px;
-      display: grid; place-items: center;
+      background: transparent;
+      border: 0;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
       transition: background .18s, color .18s;
       flex: none;
     }
-    .cmp-close:hover { background: var(--p-100); color: var(--p-800); }
-    body.dark-theme .cmp-close:hover { background: #2b2040; color: #f5f2ff; }
+
+    .cmp-close:hover {
+      background: var(--p-100);
+      color: var(--p-800);
+    }
+
+    body.dark-theme .cmp-close:hover {
+      background: #2b2040;
+      color: #f5f2ff;
+    }
 
     .cmp-body {
       padding: 22px;
       overflow-y: auto;
       background: #f4f2fa;
     }
-    body.dark-theme .cmp-body { background: #110d16; }
+
+    body.dark-theme .cmp-body {
+      background: #110d16;
+    }
 
     /* Comparison slider */
     .compare {
@@ -293,55 +478,107 @@
       user-select: none;
       touch-action: none;
     }
+
     body.dark-theme .compare {
       border-color: #3b2c50;
       background: repeating-conic-gradient(#1b1624 0% 25%, #241c31 0% 50%) 50% / 20px 20px;
     }
-    .compare img { display: block; max-width: 100%; height: auto; -webkit-user-drag: none; }
-    .compare .after-wrap {
-      position: absolute; inset: 0; overflow: hidden;
+
+    .compare img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      -webkit-user-drag: none;
     }
+
+    .compare .after-wrap {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
     .compare .after-wrap img {
-      position: absolute; top: 0; left: 0;
-      max-width: none; width: 100%; height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      max-width: none;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
     }
+
     .compare .divider {
-      position: absolute; top: 0; bottom: 0;
-      width: 3px; background: #fff;
-      box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 0 12px rgba(139,92,246,.6);
-      cursor: ew-resize; z-index: 3;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: #fff;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, .15), 0 0 12px rgba(139, 92, 246, .6);
+      cursor: ew-resize;
+      z-index: 3;
     }
+
     .compare .divider::before,
     .compare .divider::after {
       content: '';
-      position: absolute; left: 50%; transform: translateX(-50%);
-      width: 34px; height: 34px; border-radius: 50%;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
       background: linear-gradient(135deg, var(--p-500), var(--p-700));
       box-shadow: 0 6px 14px -4px var(--p-700);
     }
-    .compare .divider::before { top: -17px; }
-    .compare .divider::after { bottom: -17px; }
+
+    .compare .divider::before {
+      top: -17px;
+    }
+
+    .compare .divider::after {
+      bottom: -17px;
+    }
+
     .compare .divider .knob {
-      position: absolute; top: 50%; left: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%);
-      width: 40px; height: 40px; border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       background: #fff;
-      box-shadow: 0 4px 12px rgba(0,0,0,.3);
-      display: grid; place-items: center;
-      color: var(--p-700); font-size: 1.05rem; font-weight: 800;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
+      display: grid;
+      place-items: center;
+      color: var(--p-700);
+      font-size: 1.05rem;
+      font-weight: 800;
       pointer-events: none;
     }
+
     .compare .lbl {
-      position: absolute; top: 12px;
-      padding: 4px 10px; border-radius: 999px;
-      font-size: .68rem; font-weight: 800;
-      letter-spacing: .06em; text-transform: uppercase;
-      background: rgba(255,255,255,.92); color: var(--p-800);
-      box-shadow: 0 4px 10px rgba(0,0,0,.1); z-index: 4;
+      position: absolute;
+      top: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, .92);
+      color: var(--p-800);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, .1);
+      z-index: 4;
     }
-    .compare .lbl.left { left: 12px; }
-    .compare .lbl.right { right: 12px; }
+
+    .compare .lbl.left {
+      left: 12px;
+    }
+
+    .compare .lbl.right {
+      right: 12px;
+    }
 
     /* Details grid */
     .details {
@@ -350,37 +587,59 @@
       gap: 12px;
       margin-top: 18px;
     }
+
     .detail-card {
       padding: 14px 16px;
       border-radius: 12px;
       border: 1.5px solid var(--line);
       background: #fff;
     }
-    body.dark-theme .detail-card { background: #1b1624; border-color: #3b2c50; }
+
+    body.dark-theme .detail-card {
+      background: #1b1624;
+      border-color: #3b2c50;
+    }
+
     .detail-card .d-label {
-      font-size: .68rem; font-weight: 800;
-      text-transform: uppercase; letter-spacing: .08em;
-      color: var(--muted); margin-bottom: 6px;
+      font-size: .68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 6px;
     }
+
     .detail-card .d-value {
-      font-size: .95rem; font-weight: 800;
-      color: var(--p-800); letter-spacing: -.01em;
+      font-size: .95rem;
+      font-weight: 800;
+      color: var(--p-800);
+      letter-spacing: -.01em;
     }
-    body.dark-theme .detail-card .d-value { color: #d7c4ff; }
+
+    body.dark-theme .detail-card .d-value {
+      color: #d7c4ff;
+    }
+
     .detail-card .d-sub {
-      font-size: .72rem; color: var(--muted);
-      margin-top: 3px; font-weight: 600;
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: 3px;
+      font-weight: 600;
     }
+
     .detail-card.good .d-value {
       background: linear-gradient(135deg, #10b981, #059669);
-      -webkit-background-clip: text; background-clip: text;
+      -webkit-background-clip: text;
+      background-clip: text;
       color: transparent;
     }
 
     .cmp-footer {
       padding: 14px 22px;
       border-top: 1px solid var(--line);
-      display: flex; justify-content: flex-end; gap: 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
       flex-wrap: wrap;
     }
 
@@ -388,1145 +647,1305 @@
        FILE CHIP
        ============================================================ */
     .file-chip {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 14px; border-radius: 12px;
-      background: #fff; border: 1.5px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1.5px solid var(--line);
       margin-top: 14px;
     }
-    body.dark-theme .file-chip { background: #1b1624; border-color: #3b2c50; }
+
+    body.dark-theme .file-chip {
+      background: #1b1624;
+      border-color: #3b2c50;
+    }
+
     .file-chip .thumb {
-      width: 40px; height: 40px; border-radius: 8px;
-      object-fit: cover; flex: none; border: 1px solid var(--line);
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex: none;
+      border: 1px solid var(--line);
     }
-    .file-chip .info { flex: 1; min-width: 0; }
+
+    .file-chip .info {
+      flex: 1;
+      min-width: 0;
+    }
+
     .file-chip .nm {
-      font-weight: 700; font-size: .88rem;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-weight: 700;
+      font-size: .88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .file-chip .sz { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+
+    .file-chip .sz {
+      font-size: .74rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
     .file-chip .rm {
-      border: 0; background: transparent; cursor: pointer;
-      width: 28px; height: 28px; border-radius: 8px;
-      color: var(--muted); font-weight: 800;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      color: var(--muted);
+      font-weight: 800;
       transition: background .18s, color .18s;
     }
-    .file-chip .rm:hover { background: #fee2e2; color: #b91c1c; }
-    body.dark-theme .file-chip .rm:hover { background: rgba(214,69,69,.15); color: #f87171; }
+
+    .file-chip .rm:hover {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    body.dark-theme .file-chip .rm:hover {
+      background: rgba(214, 69, 69, .15);
+      color: #f87171;
+    }
 
     /* ============================================================
        ACTION ROW
        ============================================================ */
     .act-row {
-      display: flex; gap: 10px; flex-wrap: wrap;
-      margin-top: 20px; justify-content: center;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      justify-content: center;
     }
-    .act-row .btn { flex: 1; min-width: 150px; max-width: 260px; }
-    @media (max-width: 500px) { .act-row .btn { max-width: none; } }
+
+    .act-row .btn {
+      flex: 1;
+      min-width: 150px;
+      max-width: 260px;
+    }
+
+    @media (max-width: 500px) {
+      .act-row .btn {
+        max-width: none;
+      }
+    }
   </style>
 </head>
-<body>
 
-<header class="site-header">
-  <div class="header-inner">
-    <a href="../index.html" class="brand">
-      <span class="logo">✦</span>
-      <span>PDFnest<small>Remove Watermark</small></span>
-    </a>
-    <a href="../index.html" class="back-link">← All tools</a>
-  </div>
-</header>
+<body class="has-custom-cursor">
 
-<main>
-  <section class="hero">
-    <h1>Erase <span class="grad">watermarks</span></h1>
-    <p>Auto-detect · Box select · Brush · Smart inpainting · Before/after preview</p>
-  </section>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="brand">
+        <span class="logo">✦</span>
+        <span>PDFnest<small>Remove Watermark</small></span>
+      </a>
+      <a href="../index.html" class="back-link">← All tools</a>
+    </div>
+  </header>
 
-  <section class="card">
+  <main>
+    <section class="hero">
+      <h1>Erase <span class="grad">watermarks</span></h1>
+      <p>Auto-detect · Box select · Brush · Smart inpainting · Before/after preview</p>
+    </section>
 
-    <!-- ============================================================
+    <section class="card">
+
+      <!-- ============================================================
          STAGE 1 — UPLOAD
          ============================================================ -->
-    <div id="uploadStage">
-      <div class="field">
-        <label>Your image</label>
-        <div class="dropzone" id="dropzone" tabindex="0" role="button">
-          <div class="dz-icon">💧</div>
-          <div class="dz-title">Drag &amp; drop an image here</div>
-          <div class="dz-sub">or <span class="link">browse files</span> · JPG, PNG, WEBP</div>
+      <div id="uploadStage">
+        <div class="field">
+          <label>Your image</label>
+          <div class="dropzone" id="dropzone" tabindex="0" role="button">
+            <div class="dz-icon">💧</div>
+            <div class="dz-title">Drag &amp; drop an image here</div>
+            <div class="dz-sub">or <span class="link">browse files</span> · JPG, PNG, WEBP</div>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" hidden />
         </div>
-        <input type="file" id="fileInput" accept="image/*" hidden />
       </div>
-    </div>
 
-    <!-- ============================================================
+      <!-- ============================================================
          STAGE 2 — EDIT
          ============================================================ -->
-    <div id="editStage" hidden>
+      <div id="editStage" hidden>
 
-      <div class="file-chip">
-        <img class="thumb" id="thumbImg" alt="" />
-        <div class="info">
-          <div class="nm" id="fileNm">—</div>
-          <div class="sz" id="fileSz">—</div>
-        </div>
-        <button class="rm" id="resetBtn" aria-label="Remove">✕</button>
-      </div>
-
-      <!-- Mode cards -->
-      <div class="mode-grid" id="modeGrid">
-        <button type="button" class="mode-card active" data-mode="auto">
-          <div class="mode-head">
-            <span class="mode-icon">🔍</span>
-            <span>Auto-detect</span>
+        <div class="file-chip">
+          <img class="thumb" id="thumbImg" alt="" />
+          <div class="info">
+            <div class="nm" id="fileNm">—</div>
+            <div class="sz" id="fileSz">—</div>
           </div>
-          <div class="mode-sub">Scans for watermark-like regions in corners &amp; center.</div>
-        </button>
-        <button type="button" class="mode-card" data-mode="box">
-          <div class="mode-head">
-            <span class="mode-icon">⬚</span>
-            <span>Box select</span>
+          <button class="rm" id="resetBtn" aria-label="Remove">✕</button>
+        </div>
+
+        <!-- Mode cards -->
+        <div class="mode-grid" id="modeGrid">
+          <button type="button" class="mode-card active" data-mode="auto">
+            <div class="mode-head">
+              <span class="mode-icon">🔍</span>
+              <span>Auto-detect</span>
+            </div>
+            <div class="mode-sub">Scans for watermark-like regions in corners &amp; center.</div>
+          </button>
+          <button type="button" class="mode-card" data-mode="box">
+            <div class="mode-head">
+              <span class="mode-icon">⬚</span>
+              <span>Box select</span>
+            </div>
+            <div class="mode-sub">Drag rectangles over watermark areas.</div>
+          </button>
+          <button type="button" class="mode-card" data-mode="brush">
+            <div class="mode-head">
+              <span class="mode-icon">🖌</span>
+              <span>Brush</span>
+            </div>
+            <div class="mode-sub">Paint over the watermark freehand.</div>
+          </button>
+        </div>
+
+        <!-- Hint -->
+        <div class="hint" id="modeHint">
+          <span class="icon">✨</span>
+          <div id="hintText">
+            <strong>Auto mode:</strong> click "Detect watermark" below. Suggestions will appear
+            as dashed boxes — accept, remove, or switch to Box/Brush to fine-tune.
           </div>
-          <div class="mode-sub">Drag rectangles over watermark areas.</div>
-        </button>
-        <button type="button" class="mode-card" data-mode="brush">
-          <div class="mode-head">
-            <span class="mode-icon">🖌</span>
-            <span>Brush</span>
+        </div>
+
+        <!-- Image stage -->
+        <div style="text-align:center;">
+          <div class="stage-wrap mode-auto" id="stageWrap">
+            <canvas id="wmCanvas"></canvas>
           </div>
-          <div class="mode-sub">Paint over the watermark freehand.</div>
-        </button>
-      </div>
-
-      <!-- Hint -->
-      <div class="hint" id="modeHint">
-        <span class="icon">✨</span>
-        <div id="hintText">
-          <strong>Auto mode:</strong> click "Detect watermark" below. Suggestions will appear
-          as dashed boxes — accept, remove, or switch to Box/Brush to fine-tune.
-        </div>
-      </div>
-
-      <!-- Image stage -->
-      <div style="text-align:center;">
-        <div class="stage-wrap mode-auto" id="stageWrap">
-          <canvas id="wmCanvas"></canvas>
-        </div>
-      </div>
-
-      <!-- Toolbar -->
-      <div class="toolbar" id="toolbar">
-        <span class="tool-label" id="toolLabel">Tools</span>
-
-        <button type="button" class="tool-btn" id="detectBtn">🔍 Detect watermark</button>
-
-        <div class="brush-size" id="brushSizeWrap" hidden>
-          <span>Brush size</span>
-          <input type="range" id="brushSize" min="5" max="80" value="24" />
-          <span id="brushSizeVal">24</span>
         </div>
 
-        <button type="button" class="tool-btn" id="undoBtn" title="Undo last selection" hidden>↶ Undo</button>
-        <button type="button" class="tool-btn danger" id="clearBtn" title="Clear all selections" hidden>🗑 Clear</button>
-      </div>
+        <!-- Toolbar -->
+        <div class="toolbar" id="toolbar">
+          <span class="tool-label" id="toolLabel">Tools</span>
 
-      <!-- Detected regions list -->
-      <div class="regions-list" id="regionsList"></div>
+          <button type="button" class="tool-btn" id="detectBtn">🔍 Detect watermark</button>
 
-      <!-- Progress -->
-      <div class="prog-wrap" id="progWrap" hidden>
-        <div class="prog-head">
-          <div class="prog-status" id="progStatus">Preparing…</div>
-          <div class="prog-pct" id="progPct">0%</div>
+          <div class="brush-size" id="brushSizeWrap" hidden>
+            <span>Brush size</span>
+            <input type="range" id="brushSize" min="5" max="80" value="24" />
+            <span id="brushSizeVal">24</span>
+          </div>
+
+          <button type="button" class="tool-btn" id="undoBtn" title="Undo last selection" hidden>↶ Undo</button>
+          <button type="button" class="tool-btn danger" id="clearBtn" title="Clear all selections" hidden>🗑
+            Clear</button>
         </div>
-        <div class="prog-bar">
-          <div class="prog-fill" id="progFill"></div>
+
+        <!-- Detected regions list -->
+        <div class="regions-list" id="regionsList"></div>
+
+        <!-- Progress -->
+        <div class="prog-wrap" id="progWrap" hidden>
+          <div class="prog-head">
+            <div class="prog-status" id="progStatus">Preparing…</div>
+            <div class="prog-pct" id="progPct">0%</div>
+          </div>
+          <div class="prog-bar">
+            <div class="prog-fill" id="progFill"></div>
+          </div>
         </div>
+
+        <!-- Actions -->
+        <div class="act-row">
+          <button class="btn btn-ghost" id="previewBtn" hidden>👁 Preview &amp; details</button>
+          <button class="btn btn-primary" id="applyBtn" disabled>💧 Remove Watermark</button>
+        </div>
+
       </div>
 
-      <!-- Actions -->
-      <div class="act-row">
-        <button class="btn btn-ghost" id="previewBtn" hidden>👁 Preview &amp; details</button>
-        <button class="btn btn-primary" id="applyBtn" disabled>💧 Remove Watermark</button>
-      </div>
+    </section>
+  </main>
 
-    </div>
+  <footer class="site-footer">Smart inpainting · 100% client-side · Files never leave your device.</footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  </section>
-</main>
-
-<footer class="site-footer">Smart inpainting · 100% client-side · Files never leave your device.</footer>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-<!-- ============================================================
+  <!-- ============================================================
      COMPARISON MODAL
      ============================================================ -->
-<div class="cmp-modal" id="cmpModal">
-  <div class="cmp-content">
-    <div class="cmp-header">
-      <h3 id="cmpTitle">Before / After</h3>
-      <button class="cmp-close" id="cmpClose" aria-label="Close">✕</button>
-    </div>
-
-    <div class="cmp-body">
-      <div class="compare" id="compare">
-        <img id="cmpBefore" alt="Before" />
-        <div class="after-wrap" id="afterWrap">
-          <img id="cmpAfter" alt="After" />
-        </div>
-        <div class="divider" id="divider">
-          <div class="knob">⇄</div>
-        </div>
-        <div class="lbl left">Original</div>
-        <div class="lbl right">Cleaned</div>
+  <div class="cmp-modal" id="cmpModal">
+    <div class="cmp-content">
+      <div class="cmp-header">
+        <h3 id="cmpTitle">Before / After</h3>
+        <button class="cmp-close" id="cmpClose" aria-label="Close">✕</button>
       </div>
 
-      <div class="details">
-        <div class="detail-card">
-          <div class="d-label">Original size</div>
-          <div class="d-value" id="dOrigSize">—</div>
-          <div class="d-sub" id="dOrigDim">—</div>
+      <div class="cmp-body">
+        <div class="compare" id="compare">
+          <img id="cmpBefore" alt="Before" />
+          <div class="after-wrap" id="afterWrap">
+            <img id="cmpAfter" alt="After" />
+          </div>
+          <div class="divider" id="divider">
+            <div class="knob">⇄</div>
+          </div>
+          <div class="lbl left">Original</div>
+          <div class="lbl right">Cleaned</div>
         </div>
-        <div class="detail-card good">
-          <div class="d-label">Result size</div>
-          <div class="d-value" id="dNewSize">—</div>
-          <div class="d-sub" id="dNewDim">—</div>
-        </div>
-        <div class="detail-card">
-          <div class="d-label">Regions removed</div>
-          <div class="d-value" id="dRegions">—</div>
-          <div class="d-sub" id="dMethod">—</div>
-        </div>
-        <div class="detail-card">
-          <div class="d-label">Processing time</div>
-          <div class="d-value" id="dTime">—</div>
-          <div class="d-sub" id="dCoverage">—</div>
+
+        <div class="details">
+          <div class="detail-card">
+            <div class="d-label">Original size</div>
+            <div class="d-value" id="dOrigSize">—</div>
+            <div class="d-sub" id="dOrigDim">—</div>
+          </div>
+          <div class="detail-card good">
+            <div class="d-label">Result size</div>
+            <div class="d-value" id="dNewSize">—</div>
+            <div class="d-sub" id="dNewDim">—</div>
+          </div>
+          <div class="detail-card">
+            <div class="d-label">Regions removed</div>
+            <div class="d-value" id="dRegions">—</div>
+            <div class="d-sub" id="dMethod">—</div>
+          </div>
+          <div class="detail-card">
+            <div class="d-label">Processing time</div>
+            <div class="d-value" id="dTime">—</div>
+            <div class="d-sub" id="dCoverage">—</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="cmp-footer">
-      <button class="btn btn-ghost" id="cmpCancel">Close</button>
-      <button class="btn btn-primary" id="cmpDownload">⬇ Download cleaned image</button>
+      <div class="cmp-footer">
+        <button class="btn btn-ghost" id="cmpCancel">Close</button>
+        <button class="btn btn-primary" id="cmpDownload">⬇ Download cleaned image</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-(function(){
-  'use strict';
-  const $ = (s, c = document) => c.querySelector(s);
-  const $$ = (s, c = document) => Array.prototype.slice.call(c.querySelectorAll(s));
+  <script>
+    (function () {
+      'use strict';
+      const $ = (s, c = document) => c.querySelector(s);
+      const $$ = (s, c = document) => Array.prototype.slice.call(c.querySelectorAll(s));
 
-  let toastTimer = null;
-  function toast(m){
-    const el = $('#toast');
-    el.textContent = m;
-    el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
-  }
-
-  function fmtSize(b){
-    if (b < 1024) return b + ' B';
-    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
-    return (b / 1048576).toFixed(2) + ' MB';
-  }
-
-  /* ============================================================
-     STATE
-     ============================================================ */
-  const state = {
-    file: null,
-    fileName: '',
-    originalUrl: '',
-    img: null,              // HTMLImageElement of the working image
-    naturalW: 0,
-    naturalH: 0,
-    displayScale: 1,
-    mode: 'auto',           // 'auto' | 'box' | 'brush'
-    // Regions: { x, y, w, h, source: 'auto'|'box', confidence?: number }
-    regions: [],
-    // Brush mask (parallel to natural image): 0 or 1 per pixel
-    brushMask: null,
-    brushSize: 24,
-    // Drawing state
-    drawing: false,
-    drawStart: null,
-    // Result
-    resultBlob: null,
-    resultUrl: '',
-    processedAt: 0,
-    coverage: 0
-  };
-
-  const canvas = $('#wmCanvas');
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-  /* ============================================================
-     STAGE 1 — LOAD FILE
-     ============================================================ */
-  async function addFile(list){
-    const f = Array.from(list).find(f => f.type.startsWith('image/'));
-    if (!f){ toast('Please choose an image'); return; }
-
-    state.file = f;
-    state.fileName = f.name;
-    state.regions = [];
-    state.resultBlob = null;
-
-    const url = await new Promise(r => {
-      const fr = new FileReader();
-      fr.onload = e => r(e.target.result);
-      fr.readAsDataURL(f);
-    });
-    state.originalUrl = url;
-
-    const img = await new Promise(r => {
-      const i = new Image();
-      i.onload = () => r(i);
-      i.src = url;
-    });
-    state.img = img;
-    state.naturalW = img.naturalWidth;
-    state.naturalH = img.naturalHeight;
-
-    // Brush mask (size = natural)
-    state.brushMask = new Uint8Array(state.naturalW * state.naturalH);
-
-    // Fit canvas to display
-    const maxW = Math.min(880, window.innerWidth - 60);
-    state.displayScale = Math.min(1, maxW / state.naturalW);
-    canvas.width = Math.round(state.naturalW * state.displayScale);
-    canvas.height = Math.round(state.naturalH * state.displayScale);
-
-    // Chip
-    $('#thumbImg').src = url;
-    $('#fileNm').textContent = f.name;
-    $('#fileSz').textContent = state.naturalW + ' × ' + state.naturalH + ' px · ' + fmtSize(f.size);
-
-    // UI
-    $('#uploadStage').hidden = true;
-    $('#editStage').hidden = false;
-    $('#previewBtn').hidden = true;
-    $('#applyBtn').disabled = true;
-
-    setMode('auto');
-    redraw();
-  }
-
-  /* ============================================================
-     MODE SWITCHING
-     ============================================================ */
-  function setMode(mode){
-    state.mode = mode;
-    $$('.mode-card').forEach(c => c.classList.toggle('active', c.dataset.mode === mode));
-    const wrap = $('#stageWrap');
-    wrap.classList.remove('mode-auto', 'mode-box', 'mode-brush');
-    wrap.classList.add('mode-' + mode);
-
-    const detectBtn = $('#detectBtn');
-    const brushWrap = $('#brushSizeWrap');
-    const toolLabel = $('#toolLabel');
-
-    if (mode === 'auto'){
-      detectBtn.hidden = false;
-      brushWrap.hidden = true;
-      toolLabel.textContent = 'Auto-detect tools';
-      $('#hintText').innerHTML =
-        '<strong>Auto mode:</strong> click "Detect watermark" below. Suggestions appear as dashed boxes — ' +
-        'accept, remove, or switch to Box/Brush to fine-tune.';
-    }
-    else if (mode === 'box'){
-      detectBtn.hidden = true;
-      brushWrap.hidden = true;
-      toolLabel.textContent = 'Box select tools';
-      $('#hintText').innerHTML =
-        '<strong>Box mode:</strong> click &amp; drag on the image to draw a rectangle around the watermark. ' +
-        'You can draw multiple boxes.';
-    }
-    else if (mode === 'brush'){
-      detectBtn.hidden = true;
-      brushWrap.hidden = false;
-      toolLabel.textContent = 'Brush tools';
-      $('#hintText').innerHTML =
-        '<strong>Brush mode:</strong> click &amp; drag on the image to paint over the watermark. ' +
-        'Adjust the brush size below.';
-    }
-    updateToolbarVisibility();
-  }
-
-  $$('.mode-card').forEach(card => {
-    card.addEventListener('click', () => setMode(card.dataset.mode));
-  });
-
-  function updateToolbarVisibility(){
-    const hasRegions = state.regions.length > 0 || hasBrushMask();
-    $('#undoBtn').hidden = !hasRegions;
-    $('#clearBtn').hidden = !hasRegions;
-    $('#applyBtn').disabled = !hasRegions;
-  }
-
-  function hasBrushMask(){
-    if (!state.brushMask) return false;
-    // Check a sample of the mask (avoid full scan for perf)
-    for (let i = 0; i < state.brushMask.length; i += 97){
-      if (state.brushMask[i]) return true;
-    }
-    return false;
-  }
-
-  /* ============================================================
-     CANVAS DRAWING
-     ============================================================ */
-  function redraw(){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(state.img, 0, 0, canvas.width, canvas.height);
-
-    // Draw regions as dashed boxes
-    state.regions.forEach((r, i) => {
-      const x = r.x * state.displayScale;
-      const y = r.y * state.displayScale;
-      const w = r.w * state.displayScale;
-      const h = r.h * state.displayScale;
-
-      // Color by confidence
-      let stroke = '#8b5cf6';
-      if (r.source === 'auto'){
-        if (r.confidence >= 0.7) stroke = '#10b981';
-        else if (r.confidence >= 0.4) stroke = '#f59e0b';
-        else stroke = '#94a3b8';
-      } else {
-        stroke = '#8b5cf6';
+      let toastTimer = null;
+      function toast(m) {
+        const el = $('#toast');
+        el.textContent = m;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
       }
 
-      ctx.strokeStyle = stroke;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([6, 4]);
-      ctx.strokeRect(x, y, w, h);
-      ctx.setLineDash([]);
+      function fmtSize(b) {
+        if (b < 1024) return b + ' B';
+        if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+        return (b / 1048576).toFixed(2) + ' MB';
+      }
 
-      // Fill tint
-      ctx.fillStyle = hexToRgba(stroke, 0.18);
-      ctx.fillRect(x, y, w, h);
+      /* ============================================================
+         STATE
+         ============================================================ */
+      const state = {
+        file: null,
+        fileName: '',
+        originalUrl: '',
+        img: null,              // HTMLImageElement of the working image
+        naturalW: 0,
+        naturalH: 0,
+        displayScale: 1,
+        mode: 'auto',           // 'auto' | 'box' | 'brush'
+        // Regions: { x, y, w, h, source: 'auto'|'box', confidence?: number }
+        regions: [],
+        // Brush mask (parallel to natural image): 0 or 1 per pixel
+        brushMask: null,
+        brushSize: 24,
+        // Drawing state
+        drawing: false,
+        drawStart: null,
+        // Result
+        resultBlob: null,
+        resultUrl: '',
+        processedAt: 0,
+        coverage: 0
+      };
 
-      // Number label
-      ctx.font = 'bold 13px "Plus Jakarta Sans", sans-serif';
-      ctx.fillStyle = stroke;
-      ctx.fillText('#' + (i + 1), x + 4, y - 4);
-    });
+      const canvas = $('#wmCanvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-    // Draw brush overlay from mask (downsampled for speed)
-    if (state.brushMask && hasBrushMask()){
-      const off = document.createElement('canvas');
-      off.width = state.naturalW;
-      off.height = state.naturalH;
-      const offCtx = off.getContext('2d');
-      const id = offCtx.createImageData(state.naturalW, state.naturalH);
-      const d = id.data;
-      for (let i = 0; i < state.brushMask.length; i++){
-        if (state.brushMask[i]){
-          d[i * 4]     = 139;
-          d[i * 4 + 1] = 92;
-          d[i * 4 + 2] = 246;
-          d[i * 4 + 3] = 80;
+      /* ============================================================
+         STAGE 1 — LOAD FILE
+         ============================================================ */
+      async function addFile(list) {
+        const f = Array.from(list).find(f => f.type.startsWith('image/'));
+        if (!f) { toast('Please choose an image'); return; }
+
+        state.file = f;
+        state.fileName = f.name;
+        state.regions = [];
+        state.resultBlob = null;
+
+        const url = await new Promise(r => {
+          const fr = new FileReader();
+          fr.onload = e => r(e.target.result);
+          fr.readAsDataURL(f);
+        });
+        state.originalUrl = url;
+
+        const img = await new Promise(r => {
+          const i = new Image();
+          i.onload = () => r(i);
+          i.src = url;
+        });
+        state.img = img;
+        state.naturalW = img.naturalWidth;
+        state.naturalH = img.naturalHeight;
+
+        // Brush mask (size = natural)
+        state.brushMask = new Uint8Array(state.naturalW * state.naturalH);
+
+        // Fit canvas to display
+        const maxW = Math.min(880, window.innerWidth - 60);
+        state.displayScale = Math.min(1, maxW / state.naturalW);
+        canvas.width = Math.round(state.naturalW * state.displayScale);
+        canvas.height = Math.round(state.naturalH * state.displayScale);
+
+        // Chip
+        $('#thumbImg').src = url;
+        $('#fileNm').textContent = f.name;
+        $('#fileSz').textContent = state.naturalW + ' × ' + state.naturalH + ' px · ' + fmtSize(f.size);
+
+        // UI
+        $('#uploadStage').hidden = true;
+        $('#editStage').hidden = false;
+        $('#previewBtn').hidden = true;
+        $('#applyBtn').disabled = true;
+
+        setMode('auto');
+        redraw();
+      }
+
+      /* ============================================================
+         MODE SWITCHING
+         ============================================================ */
+      function setMode(mode) {
+        state.mode = mode;
+        $$('.mode-card').forEach(c => c.classList.toggle('active', c.dataset.mode === mode));
+        const wrap = $('#stageWrap');
+        wrap.classList.remove('mode-auto', 'mode-box', 'mode-brush');
+        wrap.classList.add('mode-' + mode);
+
+        const detectBtn = $('#detectBtn');
+        const brushWrap = $('#brushSizeWrap');
+        const toolLabel = $('#toolLabel');
+
+        if (mode === 'auto') {
+          detectBtn.hidden = false;
+          brushWrap.hidden = true;
+          toolLabel.textContent = 'Auto-detect tools';
+          $('#hintText').innerHTML =
+            '<strong>Auto mode:</strong> click "Detect watermark" below. Suggestions appear as dashed boxes — ' +
+            'accept, remove, or switch to Box/Brush to fine-tune.';
         }
-      }
-      offCtx.putImageData(id, 0, 0);
-      ctx.drawImage(off, 0, 0, canvas.width, canvas.height);
-    }
-
-    // Show live drawing preview
-    if (state.drawing && state.drawStart && state.mode === 'box'){
-      const cur = state.drawCurrent;
-      const x = Math.min(state.drawStart.x, cur.x);
-      const y = Math.min(state.drawStart.y, cur.y);
-      const w = Math.abs(cur.x - state.drawStart.x);
-      const h = Math.abs(cur.y - state.drawStart.y);
-      ctx.strokeStyle = '#8b5cf6';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 3]);
-      ctx.strokeRect(x * state.displayScale, y * state.displayScale,
-                     w * state.displayScale, h * state.displayScale);
-      ctx.setLineDash([]);
-    }
-  }
-
-  function hexToRgba(hex, a){
-    const n = parseInt(hex.slice(1), 16);
-    return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
-  }
-
-  /* ============================================================
-     CANVAS INTERACTION (BOX + BRUSH)
-     ============================================================ */
-  function canvasCoord(e){
-    const r = canvas.getBoundingClientRect();
-    const x = (e.clientX ?? (e.touches && e.touches[0].clientX)) - r.left;
-    const y = (e.clientY ?? (e.touches && e.touches[0].clientY)) - r.top;
-    return {
-      x: x / state.displayScale,
-      y: y / state.displayScale
-    };
-  }
-
-  function startDraw(e){
-    if (state.mode === 'auto') return;
-    e.preventDefault();
-    state.drawing = true;
-    const c = canvasCoord(e);
-    state.drawStart = c;
-    state.drawCurrent = c;
-
-    if (state.mode === 'brush'){
-      paintBrush(c);
-      redraw();
-    }
-  }
-  function moveDraw(e){
-    if (!state.drawing) return;
-    e.preventDefault();
-    const c = canvasCoord(e);
-    state.drawCurrent = c;
-
-    if (state.mode === 'brush'){
-      paintBrush(c);
-    }
-    redraw();
-  }
-  function endDraw(e){
-    if (!state.drawing) return;
-    state.drawing = false;
-
-    if (state.mode === 'box'){
-      const a = state.drawStart;
-      const b = state.drawCurrent;
-      const x = Math.min(a.x, b.x);
-      const y = Math.min(a.y, b.y);
-      const w = Math.abs(a.x - b.x);
-      const h = Math.abs(a.y - b.y);
-      if (w > 8 && h > 8){
-        state.regions.push({ x, y, w, h, source: 'box' });
+        else if (mode === 'box') {
+          detectBtn.hidden = true;
+          brushWrap.hidden = true;
+          toolLabel.textContent = 'Box select tools';
+          $('#hintText').innerHTML =
+            '<strong>Box mode:</strong> click &amp; drag on the image to draw a rectangle around the watermark. ' +
+            'You can draw multiple boxes.';
+        }
+        else if (mode === 'brush') {
+          detectBtn.hidden = true;
+          brushWrap.hidden = false;
+          toolLabel.textContent = 'Brush tools';
+          $('#hintText').innerHTML =
+            '<strong>Brush mode:</strong> click &amp; drag on the image to paint over the watermark. ' +
+            'Adjust the brush size below.';
+        }
         updateToolbarVisibility();
-        renderRegionsList();
       }
-    }
-    state.drawStart = null;
-    state.drawCurrent = null;
-    redraw();
-  }
 
-  canvas.addEventListener('mousedown', startDraw);
-  canvas.addEventListener('mousemove', moveDraw);
-  window.addEventListener('mouseup', endDraw);
-  canvas.addEventListener('touchstart', startDraw, { passive: false });
-  canvas.addEventListener('touchmove', moveDraw, { passive: false });
-  window.addEventListener('touchend', endDraw);
+      $$('.mode-card').forEach(card => {
+        card.addEventListener('click', () => setMode(card.dataset.mode));
+      });
 
-  function paintBrush(c){
-    const radius = state.brushSize / 2;
-    const cx = c.x, cy = c.y;
-    const minX = Math.max(0, Math.floor(cx - radius));
-    const maxX = Math.min(state.naturalW - 1, Math.ceil(cx + radius));
-    const minY = Math.max(0, Math.floor(cy - radius));
-    const maxY = Math.min(state.naturalH - 1, Math.ceil(cy + radius));
-    const r2 = radius * radius;
+      function updateToolbarVisibility() {
+        const hasRegions = state.regions.length > 0 || hasBrushMask();
+        $('#undoBtn').hidden = !hasRegions;
+        $('#clearBtn').hidden = !hasRegions;
+        $('#applyBtn').disabled = !hasRegions;
+      }
 
-    for (let py = minY; py <= maxY; py++){
-      for (let px = minX; px <= maxX; px++){
-        const dx = px - cx;
-        const dy = py - cy;
-        if (dx * dx + dy * dy <= r2){
-          state.brushMask[py * state.naturalW + px] = 1;
+      function hasBrushMask() {
+        if (!state.brushMask) return false;
+        // Check a sample of the mask (avoid full scan for perf)
+        for (let i = 0; i < state.brushMask.length; i += 97) {
+          if (state.brushMask[i]) return true;
+        }
+        return false;
+      }
+
+      /* ============================================================
+         CANVAS DRAWING
+         ============================================================ */
+      function redraw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(state.img, 0, 0, canvas.width, canvas.height);
+
+        // Draw regions as dashed boxes
+        state.regions.forEach((r, i) => {
+          const x = r.x * state.displayScale;
+          const y = r.y * state.displayScale;
+          const w = r.w * state.displayScale;
+          const h = r.h * state.displayScale;
+
+          // Color by confidence
+          let stroke = '#8b5cf6';
+          if (r.source === 'auto') {
+            if (r.confidence >= 0.7) stroke = '#10b981';
+            else if (r.confidence >= 0.4) stroke = '#f59e0b';
+            else stroke = '#94a3b8';
+          } else {
+            stroke = '#8b5cf6';
+          }
+
+          ctx.strokeStyle = stroke;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 4]);
+          ctx.strokeRect(x, y, w, h);
+          ctx.setLineDash([]);
+
+          // Fill tint
+          ctx.fillStyle = hexToRgba(stroke, 0.18);
+          ctx.fillRect(x, y, w, h);
+
+          // Number label
+          ctx.font = 'bold 13px "Plus Jakarta Sans", sans-serif';
+          ctx.fillStyle = stroke;
+          ctx.fillText('#' + (i + 1), x + 4, y - 4);
+        });
+
+        // Draw brush overlay from mask (downsampled for speed)
+        if (state.brushMask && hasBrushMask()) {
+          const off = document.createElement('canvas');
+          off.width = state.naturalW;
+          off.height = state.naturalH;
+          const offCtx = off.getContext('2d');
+          const id = offCtx.createImageData(state.naturalW, state.naturalH);
+          const d = id.data;
+          for (let i = 0; i < state.brushMask.length; i++) {
+            if (state.brushMask[i]) {
+              d[i * 4] = 139;
+              d[i * 4 + 1] = 92;
+              d[i * 4 + 2] = 246;
+              d[i * 4 + 3] = 80;
+            }
+          }
+          offCtx.putImageData(id, 0, 0);
+          ctx.drawImage(off, 0, 0, canvas.width, canvas.height);
+        }
+
+        // Show live drawing preview
+        if (state.drawing && state.drawStart && state.mode === 'box') {
+          const cur = state.drawCurrent;
+          const x = Math.min(state.drawStart.x, cur.x);
+          const y = Math.min(state.drawStart.y, cur.y);
+          const w = Math.abs(cur.x - state.drawStart.x);
+          const h = Math.abs(cur.y - state.drawStart.y);
+          ctx.strokeStyle = '#8b5cf6';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 3]);
+          ctx.strokeRect(x * state.displayScale, y * state.displayScale,
+            w * state.displayScale, h * state.displayScale);
+          ctx.setLineDash([]);
         }
       }
-    }
-  }
 
-  /* ============================================================
-     BRUSH SIZE
-     ============================================================ */
-  $('#brushSize').addEventListener('input', () => {
-    state.brushSize = parseInt($('#brushSize').value, 10);
-    $('#brushSizeVal').textContent = state.brushSize;
-  });
-
-  /* ============================================================
-     REGIONS LIST UI
-     ============================================================ */
-  function renderRegionsList(){
-    const list = $('#regionsList');
-    list.innerHTML = '';
-    state.regions.forEach((r, i) => {
-      const chip = document.createElement('div');
-      chip.className = 'region-chip';
-      if (r.source === 'auto'){
-        if (r.confidence >= 0.7) chip.classList.add('conf-high');
-        else if (r.confidence >= 0.4) chip.classList.add('conf-mid');
-        else chip.classList.add('conf-low');
+      function hexToRgba(hex, a) {
+        const n = parseInt(hex.slice(1), 16);
+        return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
       }
-      const w = Math.round(r.w);
-      const h = Math.round(r.h);
-      const tag = r.source === 'auto'
-        ? ('auto ' + Math.round((r.confidence || 0) * 100) + '%')
-        : 'box';
-      chip.innerHTML =
-        '📍 #' + (i + 1) + ' · ' + w + '×' + h + ' · ' + tag +
-        ' <button data-i="' + i + '" aria-label="Remove">✕</button>';
-      list.appendChild(chip);
-    });
-  }
 
-  $('#regionsList').addEventListener('click', e => {
-    const btn = e.target.closest('button[data-i]');
-    if (!btn) return;
-    state.regions.splice(parseInt(btn.dataset.i, 10), 1);
-    updateToolbarVisibility();
-    renderRegionsList();
-    redraw();
-  });
-
-  /* ============================================================
-     UNDO / CLEAR
-     ============================================================ */
-  $('#undoBtn').addEventListener('click', () => {
-    if (state.regions.length){
-      state.regions.pop();
-    } else if (state.brushMask){
-      // Clear brush mask entirely (single undo step for brush)
-      state.brushMask = new Uint8Array(state.naturalW * state.naturalH);
-    }
-    updateToolbarVisibility();
-    renderRegionsList();
-    redraw();
-  });
-
-  $('#clearBtn').addEventListener('click', () => {
-    state.regions = [];
-    state.brushMask = new Uint8Array(state.naturalW * state.naturalH);
-    updateToolbarVisibility();
-    renderRegionsList();
-    redraw();
-  });
-
-  /* ============================================================
-     AUTO-DETECT WATERMARKS
-     ============================================================ */
-  $('#detectBtn').addEventListener('click', () => {
-    if (!state.img) return;
-    detectWatermarks();
-  });
-
-  function detectWatermarks(){
-    $('#progWrap').hidden = false;
-    updateProgress(0, 'Analyzing image…');
-
-    // Downsample for speed
-    const maxW = 400;
-    const scale = Math.min(1, maxW / state.naturalW);
-    const w = Math.round(state.naturalW * scale);
-    const h = Math.round(state.naturalH * scale);
-
-    const tmp = document.createElement('canvas');
-    tmp.width = w; tmp.height = h;
-    const tctx = tmp.getContext('2d', { willReadFrequently: true });
-    tctx.drawImage(state.img, 0, 0, w, h);
-    const data = tctx.getImageData(0, 0, w, h).data;
-
-    updateProgress(0.15, 'Computing edges…');
-
-    // Grayscale
-    const gray = new Uint8Array(w * h);
-    for (let i = 0; i < w * h; i++){
-      gray[i] = Math.round(0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2]);
-    }
-
-    // Sobel edge magnitude
-    const edges = new Float32Array(w * h);
-    for (let y = 1; y < h - 1; y++){
-      for (let x = 1; x < w - 1; x++){
-        const i = y * w + x;
-        const gx =
-          -gray[i - w - 1] + gray[i - w + 1] +
-          -2 * gray[i - 1] + 2 * gray[i + 1] +
-          -gray[i + w - 1] + gray[i + w + 1];
-        const gy =
-          -gray[i - w - 1] - 2 * gray[i - w] - gray[i - w + 1] +
-          gray[i + w - 1] + 2 * gray[i + w] + gray[i + w + 1];
-        edges[i] = Math.sqrt(gx * gx + gy * gy) / 4;
+      /* ============================================================
+         CANVAS INTERACTION (BOX + BRUSH)
+         ============================================================ */
+      function canvasCoord(e) {
+        const r = canvas.getBoundingClientRect();
+        const x = (e.clientX ?? (e.touches && e.touches[0].clientX)) - r.left;
+        const y = (e.clientY ?? (e.touches && e.touches[0].clientY)) - r.top;
+        return {
+          x: x / state.displayScale,
+          y: y / state.displayScale
+        };
       }
-    }
 
-    updateProgress(0.35, 'Finding watermark-like regions…');
+      function startDraw(e) {
+        if (state.mode === 'auto') return;
+        e.preventDefault();
+        state.drawing = true;
+        const c = canvasCoord(e);
+        state.drawStart = c;
+        state.drawCurrent = c;
 
-    // Watermarks typically appear in corners or center.
-    // We score each of a 3x3 grid of regions plus check for high edge density.
-    const regions = [];
-    const gx = w / 3, gy = h / 3;
+        if (state.mode === 'brush') {
+          paintBrush(c);
+          redraw();
+        }
+      }
+      function moveDraw(e) {
+        if (!state.drawing) return;
+        e.preventDefault();
+        const c = canvasCoord(e);
+        state.drawCurrent = c;
 
-    // Priority locations (weight)
-    const weightMap = [
-      [0.6, 0.8, 0.6],   // top-left,  top-center,  top-right
-      [0.8, 1.0, 0.8],   // mid-left,  center,      mid-right
-      [1.0, 0.7, 1.2]    // bottom-left, bottom-center, bottom-right (most common)
-    ];
+        if (state.mode === 'brush') {
+          paintBrush(c);
+        }
+        redraw();
+      }
+      function endDraw(e) {
+        if (!state.drawing) return;
+        state.drawing = false;
 
-    for (let row = 0; row < 3; row++){
-      for (let col = 0; col < 3; col++){
-        const x0 = Math.round(col * gx);
-        const y0 = Math.round(row * gy);
-        const x1 = Math.round((col + 1) * gx);
-        const y1 = Math.round((row + 1) * gy);
-        const areaPixels = (x1 - x0) * (y1 - y0);
-
-        // Compute edge density + variance of edges
-        let edgeSum = 0, edgeSumSq = 0;
-        let smoothCount = 0;
-        for (let y = y0; y < y1; y++){
-          for (let x = x0; x < x1; x++){
-            const e = edges[y * w + x];
-            edgeSum += e;
-            edgeSumSq += e * e;
-            if (e < 8) smoothCount++;
+        if (state.mode === 'box') {
+          const a = state.drawStart;
+          const b = state.drawCurrent;
+          const x = Math.min(a.x, b.x);
+          const y = Math.min(a.y, b.y);
+          const w = Math.abs(a.x - b.x);
+          const h = Math.abs(a.y - b.y);
+          if (w > 8 && h > 8) {
+            state.regions.push({ x, y, w, h, source: 'box' });
+            updateToolbarVisibility();
+            renderRegionsList();
           }
         }
-        const mean = edgeSum / areaPixels;
-        const variance = edgeSumSq / areaPixels - mean * mean;
-        const smoothRatio = smoothCount / areaPixels;
+        state.drawStart = null;
+        state.drawCurrent = null;
+        redraw();
+      }
 
-        // Watermark score: 
-        //  - moderate mean edges (not too high = photo edges, not too low = blank)
-        //  - moderate variance (some structure)
-        //  - weighted by position
-        const meanScore = mean > 4 && mean < 40
-          ? 1 - Math.abs(mean - 15) / 20
-          : 0.15;
-        const varScore = variance > 20 && variance < 800
-          ? 1 - Math.abs(variance - 200) / 700
-          : 0.2;
-        const score = Math.max(0, Math.min(1,
-          (meanScore * 0.4 + varScore * 0.3 + smoothRatio * 0.3) * weightMap[row][col]
-        ));
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', moveDraw);
+      window.addEventListener('mouseup', endDraw);
+      canvas.addEventListener('touchstart', startDraw, { passive: false });
+      canvas.addEventListener('touchmove', moveDraw, { passive: false });
+      window.addEventListener('touchend', endDraw);
 
-        if (score > 0.35){
-          // Trim to actual bounding box of edges within region
-          let minX = x1, minY = y1, maxX = x0, maxY = y0, found = false;
-          for (let y = y0; y < y1; y++){
-            for (let x = x0; x < x1; x++){
-              if (edges[y * w + x] > 18){
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
-                if (y < minY) minY = y;
-                if (y > maxY) maxY = y;
-                found = true;
+      function paintBrush(c) {
+        const radius = state.brushSize / 2;
+        const cx = c.x, cy = c.y;
+        const minX = Math.max(0, Math.floor(cx - radius));
+        const maxX = Math.min(state.naturalW - 1, Math.ceil(cx + radius));
+        const minY = Math.max(0, Math.floor(cy - radius));
+        const maxY = Math.min(state.naturalH - 1, Math.ceil(cy + radius));
+        const r2 = radius * radius;
+
+        for (let py = minY; py <= maxY; py++) {
+          for (let px = minX; px <= maxX; px++) {
+            const dx = px - cx;
+            const dy = py - cy;
+            if (dx * dx + dy * dy <= r2) {
+              state.brushMask[py * state.naturalW + px] = 1;
+            }
+          }
+        }
+      }
+
+      /* ============================================================
+         BRUSH SIZE
+         ============================================================ */
+      $('#brushSize').addEventListener('input', () => {
+        state.brushSize = parseInt($('#brushSize').value, 10);
+        $('#brushSizeVal').textContent = state.brushSize;
+      });
+
+      /* ============================================================
+         REGIONS LIST UI
+         ============================================================ */
+      function renderRegionsList() {
+        const list = $('#regionsList');
+        list.innerHTML = '';
+        state.regions.forEach((r, i) => {
+          const chip = document.createElement('div');
+          chip.className = 'region-chip';
+          if (r.source === 'auto') {
+            if (r.confidence >= 0.7) chip.classList.add('conf-high');
+            else if (r.confidence >= 0.4) chip.classList.add('conf-mid');
+            else chip.classList.add('conf-low');
+          }
+          const w = Math.round(r.w);
+          const h = Math.round(r.h);
+          const tag = r.source === 'auto'
+            ? ('auto ' + Math.round((r.confidence || 0) * 100) + '%')
+            : 'box';
+          chip.innerHTML =
+            '📍 #' + (i + 1) + ' · ' + w + '×' + h + ' · ' + tag +
+            ' <button data-i="' + i + '" aria-label="Remove">✕</button>';
+          list.appendChild(chip);
+        });
+      }
+
+      $('#regionsList').addEventListener('click', e => {
+        const btn = e.target.closest('button[data-i]');
+        if (!btn) return;
+        state.regions.splice(parseInt(btn.dataset.i, 10), 1);
+        updateToolbarVisibility();
+        renderRegionsList();
+        redraw();
+      });
+
+      /* ============================================================
+         UNDO / CLEAR
+         ============================================================ */
+      $('#undoBtn').addEventListener('click', () => {
+        if (state.regions.length) {
+          state.regions.pop();
+        } else if (state.brushMask) {
+          // Clear brush mask entirely (single undo step for brush)
+          state.brushMask = new Uint8Array(state.naturalW * state.naturalH);
+        }
+        updateToolbarVisibility();
+        renderRegionsList();
+        redraw();
+      });
+
+      $('#clearBtn').addEventListener('click', () => {
+        state.regions = [];
+        state.brushMask = new Uint8Array(state.naturalW * state.naturalH);
+        updateToolbarVisibility();
+        renderRegionsList();
+        redraw();
+      });
+
+      /* ============================================================
+         AUTO-DETECT WATERMARKS
+         ============================================================ */
+      $('#detectBtn').addEventListener('click', () => {
+        if (!state.img) return;
+        detectWatermarks();
+      });
+
+      function detectWatermarks() {
+        $('#progWrap').hidden = false;
+        updateProgress(0, 'Analyzing image…');
+
+        // Downsample for speed
+        const maxW = 400;
+        const scale = Math.min(1, maxW / state.naturalW);
+        const w = Math.round(state.naturalW * scale);
+        const h = Math.round(state.naturalH * scale);
+
+        const tmp = document.createElement('canvas');
+        tmp.width = w; tmp.height = h;
+        const tctx = tmp.getContext('2d', { willReadFrequently: true });
+        tctx.drawImage(state.img, 0, 0, w, h);
+        const data = tctx.getImageData(0, 0, w, h).data;
+
+        updateProgress(0.15, 'Computing edges…');
+
+        // Grayscale
+        const gray = new Uint8Array(w * h);
+        for (let i = 0; i < w * h; i++) {
+          gray[i] = Math.round(0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2]);
+        }
+
+        // Sobel edge magnitude
+        const edges = new Float32Array(w * h);
+        for (let y = 1; y < h - 1; y++) {
+          for (let x = 1; x < w - 1; x++) {
+            const i = y * w + x;
+            const gx =
+              -gray[i - w - 1] + gray[i - w + 1] +
+              -2 * gray[i - 1] + 2 * gray[i + 1] +
+              -gray[i + w - 1] + gray[i + w + 1];
+            const gy =
+              -gray[i - w - 1] - 2 * gray[i - w] - gray[i - w + 1] +
+              gray[i + w - 1] + 2 * gray[i + w] + gray[i + w + 1];
+            edges[i] = Math.sqrt(gx * gx + gy * gy) / 4;
+          }
+        }
+
+        updateProgress(0.35, 'Finding watermark-like regions…');
+
+        // Watermarks typically appear in corners or center.
+        // We score each of a 3x3 grid of regions plus check for high edge density.
+        const regions = [];
+        const gx = w / 3, gy = h / 3;
+
+        // Priority locations (weight)
+        const weightMap = [
+          [0.6, 0.8, 0.6],   // top-left,  top-center,  top-right
+          [0.8, 1.0, 0.8],   // mid-left,  center,      mid-right
+          [1.0, 0.7, 1.2]    // bottom-left, bottom-center, bottom-right (most common)
+        ];
+
+        for (let row = 0; row < 3; row++) {
+          for (let col = 0; col < 3; col++) {
+            const x0 = Math.round(col * gx);
+            const y0 = Math.round(row * gy);
+            const x1 = Math.round((col + 1) * gx);
+            const y1 = Math.round((row + 1) * gy);
+            const areaPixels = (x1 - x0) * (y1 - y0);
+
+            // Compute edge density + variance of edges
+            let edgeSum = 0, edgeSumSq = 0;
+            let smoothCount = 0;
+            for (let y = y0; y < y1; y++) {
+              for (let x = x0; x < x1; x++) {
+                const e = edges[y * w + x];
+                edgeSum += e;
+                edgeSumSq += e * e;
+                if (e < 8) smoothCount++;
+              }
+            }
+            const mean = edgeSum / areaPixels;
+            const variance = edgeSumSq / areaPixels - mean * mean;
+            const smoothRatio = smoothCount / areaPixels;
+
+            // Watermark score: 
+            //  - moderate mean edges (not too high = photo edges, not too low = blank)
+            //  - moderate variance (some structure)
+            //  - weighted by position
+            const meanScore = mean > 4 && mean < 40
+              ? 1 - Math.abs(mean - 15) / 20
+              : 0.15;
+            const varScore = variance > 20 && variance < 800
+              ? 1 - Math.abs(variance - 200) / 700
+              : 0.2;
+            const score = Math.max(0, Math.min(1,
+              (meanScore * 0.4 + varScore * 0.3 + smoothRatio * 0.3) * weightMap[row][col]
+            ));
+
+            if (score > 0.35) {
+              // Trim to actual bounding box of edges within region
+              let minX = x1, minY = y1, maxX = x0, maxY = y0, found = false;
+              for (let y = y0; y < y1; y++) {
+                for (let x = x0; x < x1; x++) {
+                  if (edges[y * w + x] > 18) {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                    found = true;
+                  }
+                }
+              }
+              if (!found) { minX = x0; minY = y0; maxX = x1; maxY = y1; }
+
+              // Expand a bit
+              const pad = Math.round(Math.min(maxX - minX, maxY - minY) * 0.1);
+              const rx = Math.max(0, (minX - pad) / scale);
+              const ry = Math.max(0, (minY - pad) / scale);
+              const rw = Math.min(state.naturalW - rx, (maxX - minX + 2 * pad) / scale);
+              const rh = Math.min(state.naturalH - ry, (maxY - minY + 2 * pad) / scale);
+
+              regions.push({
+                x: rx, y: ry, w: rw, h: rh,
+                source: 'auto',
+                confidence: score
+              });
+            }
+          }
+        }
+
+        // Sort by confidence, take top 3
+        regions.sort((a, b) => b.confidence - a.confidence);
+        const top = regions.slice(0, 3);
+
+        updateProgress(0.9, 'Filtering overlaps…');
+
+        // Remove overlapping with existing regions
+        const before = state.regions.length;
+        state.regions = state.regions.filter(r => r.source !== 'auto');
+        top.forEach(r => state.regions.push(r));
+
+        updateProgress(1, 'Done');
+        setTimeout(() => { $('#progWrap').hidden = true; }, 800);
+
+        if (top.length) {
+          toast('Found ' + top.length + ' candidate' + (top.length === 1 ? '' : 's') + ' 🎯');
+        } else {
+          toast('No obvious watermark found — try Box or Brush mode');
+        }
+
+        updateToolbarVisibility();
+        renderRegionsList();
+        redraw();
+      }
+
+      /* ============================================================
+         PROGRESS
+         ============================================================ */
+      function updateProgress(pct, status) {
+        pct = Math.max(0, Math.min(1, pct));
+        $('#progFill').style.width = Math.round(pct * 100) + '%';
+        $('#progPct').textContent = Math.round(pct * 100) + '%';
+        if (status) $('#progStatus').textContent = status;
+      }
+
+      /* ============================================================
+         INPAINTING — Telea-style diffusion
+         ============================================================ */
+      async function inpaint() {
+        if (!state.img) return;
+        const hasRegions = state.regions.length > 0;
+        const hasBrush = hasBrushMask();
+        if (!hasRegions && !hasBrush) {
+          toast('Nothing to remove — select or detect regions first');
+          return;
+        }
+
+        const btn = $('#applyBtn');
+        btn.disabled = true;
+        btn.textContent = 'Removing…';
+        $('#progWrap').hidden = false;
+        updateProgress(0, 'Building mask…');
+
+        const t0 = performance.now();
+
+        try {
+          // 1) Build binary mask
+          const W = state.naturalW;
+          const H = state.naturalH;
+          const mask = new Uint8Array(W * H);
+
+          // From regions (with small padding)
+          const PAD = 3;
+          state.regions.forEach(r => {
+            const x0 = Math.max(0, Math.floor(r.x - PAD));
+            const y0 = Math.max(0, Math.floor(r.y - PAD));
+            const x1 = Math.min(W - 1, Math.ceil(r.x + r.w + PAD));
+            const y1 = Math.min(H - 1, Math.ceil(r.y + r.h + PAD));
+            for (let y = y0; y <= y1; y++) {
+              for (let x = x0; x <= x1; x++) {
+                mask[y * W + x] = 1;
+              }
+            }
+          });
+
+          // From brush
+          for (let i = 0; i < mask.length; i++) {
+            if (state.brushMask[i]) mask[i] = 1;
+          }
+
+          // Count mask pixels
+          let maskCount = 0;
+          for (let i = 0; i < mask.length; i++) if (mask[i]) maskCount++;
+          state.coverage = (maskCount / (W * H)) * 100;
+
+          updateProgress(0.1, 'Reading pixels…');
+
+          // 2) Read source pixels
+          const src = document.createElement('canvas');
+          src.width = W; src.height = H;
+          const sctx = src.getContext('2d', { willReadFrequently: true });
+          sctx.drawImage(state.img, 0, 0);
+          const imgData = sctx.getImageData(0, 0, W, H);
+          const d = imgData.data;
+
+          updateProgress(0.2, 'Computing distance from boundary…');
+
+          // 3) Multi-pass diffusion fill:
+          //    For each pass, we look at unmasked neighbors of masked pixels and fill them
+          //    with a distance-weighted average. Repeat until no masked pixels remain.
+          //
+          //    This is essentially a simplified "fast marching" fill.
+
+          // Build a distance map: iteration index at which each masked pixel gets filled
+          // We process in "rings" from the boundary inward.
+
+          // Working copy of the alpha mask
+          const filled = new Uint8Array(W * H); // 0 = unfilled masked, 1 = known or filled
+          for (let i = 0; i < mask.length; i++) {
+            filled[i] = mask[i] ? 0 : 1;
+          }
+
+          let remaining = maskCount;
+          let iteration = 0;
+          const MAX_ITER = Math.max(W, H);
+
+          // Precompute neighbor offsets
+          const N8 = [
+            [-1, -1], [0, -1], [1, -1],
+            [-1, 0], [1, 0],
+            [-1, 1], [0, 1], [1, 1]
+          ];
+
+          while (remaining > 0 && iteration < MAX_ITER) {
+            iteration++;
+
+            // Find boundary pixels (masked but with at least one filled 8-neighbor)
+            const toFill = [];
+            for (let y = 0; y < H; y++) {
+              const yBase = y * W;
+              for (let x = 0; x < W; x++) {
+                const idx = yBase + x;
+                if (filled[idx]) continue;
+                // Check if any 8-neighbor is filled
+                let anyFilled = false;
+                for (let k = 0; k < N8.length; k++) {
+                  const nx = x + N8[k][0];
+                  const ny = y + N8[k][1];
+                  if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+                  if (filled[ny * W + nx]) { anyFilled = true; break; }
+                }
+                if (anyFilled) toFill.push(idx);
+              }
+            }
+
+            if (toFill.length === 0) break;
+
+            // For each pixel to fill, compute distance-weighted average of filled neighbors
+            for (let t = 0; t < toFill.length; t++) {
+              const idx = toFill[t];
+              const x = idx % W;
+              const y = (idx - x) / W;
+
+              let sumR = 0, sumG = 0, sumB = 0, wsum = 0;
+              for (let k = 0; k < N8.length; k++) {
+                const dx = N8[k][0];
+                const dy = N8[k][1];
+                const nx = x + dx;
+                const ny = y + dy;
+                if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
+                const nIdx = ny * W + nx;
+                if (!filled[nIdx]) continue;
+                const dist2 = dx * dx + dy * dy; // 1 or 2
+                const w = 1 / dist2;
+                sumR += d[nIdx * 4] * w;
+                sumG += d[nIdx * 4 + 1] * w;
+                sumB += d[nIdx * 4 + 2] * w;
+                wsum += w;
+              }
+              if (wsum > 0) {
+                d[idx * 4] = Math.round(sumR / wsum);
+                d[idx * 4 + 1] = Math.round(sumG / wsum);
+                d[idx * 4 + 2] = Math.round(sumB / wsum);
+                d[idx * 4 + 3] = 255;
+              }
+            }
+
+            // Mark as filled
+            for (let t = 0; t < toFill.length; t++) {
+              filled[toFill[t]] = 1;
+            }
+            remaining -= toFill.length;
+
+            if (iteration % 8 === 0) {
+              updateProgress(0.2 + 0.7 * (1 - remaining / maskCount),
+                'Filling… ' + Math.round((1 - remaining / maskCount) * 100) + '%');
+              // Yield to keep UI responsive
+              await new Promise(r => setTimeout(r, 0));
+            }
+          }
+
+          updateProgress(0.92, 'Smoothing seams…');
+
+          // 4) Light smoothing INSIDE the masked region only (blend edges)
+          //    Do 2 iterations of a 3x3 average applied only to masked pixels.
+          for (let pass = 0; pass < 2; pass++) {
+            const copy = new Uint8ClampedArray(d);
+            for (let y = 1; y < H - 1; y++) {
+              for (let x = 1; x < W - 1; x++) {
+                const idx = y * W + x;
+                if (!mask[idx]) continue;
+                let sr = 0, sg = 0, sb = 0, n = 0;
+                for (let dy = -1; dy <= 1; dy++) {
+                  for (let dx = -1; dx <= 1; dx++) {
+                    const nIdx = (y + dy) * W + (x + dx);
+                    sr += copy[nIdx * 4];
+                    sg += copy[nIdx * 4 + 1];
+                    sb += copy[nIdx * 4 + 2];
+                    n++;
+                  }
+                }
+                d[idx * 4] = Math.round(sr / n);
+                d[idx * 4 + 1] = Math.round(sg / n);
+                d[idx * 4 + 2] = Math.round(sb / n);
               }
             }
           }
-          if (!found){ minX = x0; minY = y0; maxX = x1; maxY = y1; }
 
-          // Expand a bit
-          const pad = Math.round(Math.min(maxX - minX, maxY - minY) * 0.1);
-          const rx = Math.max(0, (minX - pad) / scale);
-          const ry = Math.max(0, (minY - pad) / scale);
-          const rw = Math.min(state.naturalW - rx, (maxX - minX + 2 * pad) / scale);
-          const rh = Math.min(state.naturalH - ry, (maxY - minY + 2 * pad) / scale);
+          // 5) Put back and export
+          sctx.putImageData(imgData, 0, 0);
 
-          regions.push({
-            x: rx, y: ry, w: rw, h: rh,
-            source: 'auto',
-            confidence: score
-          });
+          state.resultBlob = await new Promise(res => src.toBlob(b => res(b), 'image/png'));
+          if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
+          state.resultUrl = URL.createObjectURL(state.resultBlob);
+
+          state.processedAt = performance.now() - t0;
+
+          updateProgress(1, 'Done');
+
+          // Update chip
+          $('#previewBtn').hidden = false;
+          $('#applyBtn').disabled = false;
+          btn.textContent = '💧 Remove Watermark';
+
+          // Auto-open preview
+          openPreview();
+
+          toast('Watermark removed 🎉');
+        } catch (e) {
+          console.error(e);
+          toast('Failed: ' + (e.message || 'unknown error'));
+          $('#applyBtn').disabled = false;
+          btn.textContent = '💧 Remove Watermark';
+        } finally {
+          setTimeout(() => { $('#progWrap').hidden = true; }, 800);
         }
       }
-    }
 
-    // Sort by confidence, take top 3
-    regions.sort((a, b) => b.confidence - a.confidence);
-    const top = regions.slice(0, 3);
+      $('#applyBtn').addEventListener('click', inpaint);
 
-    updateProgress(0.9, 'Filtering overlaps…');
+      /* ============================================================
+         PREVIEW MODAL
+         ============================================================ */
+      function openPreview() {
+        if (!state.resultBlob) return;
 
-    // Remove overlapping with existing regions
-    const before = state.regions.length;
-    state.regions = state.regions.filter(r => r.source !== 'auto');
-    top.forEach(r => state.regions.push(r));
+        $('#cmpTitle').textContent = state.fileName;
+        $('#cmpBefore').src = state.originalUrl;
+        $('#cmpAfter').src = state.resultUrl;
 
-    updateProgress(1, 'Done');
-    setTimeout(() => { $('#progWrap').hidden = true; }, 800);
+        $('#dOrigSize').textContent = fmtSize(state.file.size);
+        $('#dOrigDim').textContent = state.naturalW + ' × ' + state.naturalH + ' px';
 
-    if (top.length){
-      toast('Found ' + top.length + ' candidate' + (top.length === 1 ? '' : 's') + ' 🎯');
-    } else {
-      toast('No obvious watermark found — try Box or Brush mode');
-    }
+        $('#dNewSize').textContent = fmtSize(state.resultBlob.size);
+        $('#dNewDim').textContent = state.naturalW + ' × ' + state.naturalH + ' px · PNG';
 
-    updateToolbarVisibility();
-    renderRegionsList();
-    redraw();
-  }
+        const regionCount = state.regions.length + (hasBrushMask() ? 1 : 0);
+        $('#dRegions').textContent = regionCount;
+        $('#dMethod').textContent = state.mode === 'auto' ? 'Auto-detect + inpaint'
+          : state.mode === 'box' ? 'Box + inpaint'
+            : 'Brush + inpaint';
 
-  /* ============================================================
-     PROGRESS
-     ============================================================ */
-  function updateProgress(pct, status){
-    pct = Math.max(0, Math.min(1, pct));
-    $('#progFill').style.width = Math.round(pct * 100) + '%';
-    $('#progPct').textContent = Math.round(pct * 100) + '%';
-    if (status) $('#progStatus').textContent = status;
-  }
+        const ms = state.processedAt;
+        $('#dTime').textContent = ms < 1000 ? Math.round(ms) + ' ms' : (ms / 1000).toFixed(2) + ' s';
+        $('#dCoverage').textContent = 'Masked area: ' + state.coverage.toFixed(1) + '%';
 
-  /* ============================================================
-     INPAINTING — Telea-style diffusion
-     ============================================================ */
-  async function inpaint(){
-    if (!state.img) return;
-    const hasRegions = state.regions.length > 0;
-    const hasBrush = hasBrushMask();
-    if (!hasRegions && !hasBrush){
-      toast('Nothing to remove — select or detect regions first');
-      return;
-    }
+        setSlider(50);
+        $('#cmpModal').classList.add('show');
+      }
 
-    const btn = $('#applyBtn');
-    btn.disabled = true;
-    btn.textContent = 'Removing…';
-    $('#progWrap').hidden = false;
-    updateProgress(0, 'Building mask…');
+      $('#previewBtn').addEventListener('click', openPreview);
 
-    const t0 = performance.now();
+      function setSlider(percent) {
+        percent = Math.max(0, Math.min(100, percent));
+        $('#afterWrap').style.clipPath = 'inset(0 ' + (100 - percent) + '% 0 0)';
+        $('#divider').style.left = percent + '%';
+      }
 
-    try {
-      // 1) Build binary mask
-      const W = state.naturalW;
-      const H = state.naturalH;
-      const mask = new Uint8Array(W * H);
+      (function initSlider() {
+        const wrap = $('#compare');
+        let dragging = false;
 
-      // From regions (with small padding)
-      const PAD = 3;
-      state.regions.forEach(r => {
-        const x0 = Math.max(0, Math.floor(r.x - PAD));
-        const y0 = Math.max(0, Math.floor(r.y - PAD));
-        const x1 = Math.min(W - 1, Math.ceil(r.x + r.w + PAD));
-        const y1 = Math.min(H - 1, Math.ceil(r.y + r.h + PAD));
-        for (let y = y0; y <= y1; y++){
-          for (let x = x0; x <= x1; x++){
-            mask[y * W + x] = 1;
-          }
+        function posFromEvent(e) {
+          const rect = wrap.getBoundingClientRect();
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          return ((clientX - rect.left) / rect.width) * 100;
+        }
+
+        function start(e) {
+          dragging = true;
+          setSlider(posFromEvent(e));
+          e.preventDefault();
+        }
+        function move(e) {
+          if (!dragging) return;
+          setSlider(posFromEvent(e));
+          e.preventDefault();
+        }
+        function end() { dragging = false; }
+
+        wrap.addEventListener('mousedown', start);
+        wrap.addEventListener('touchstart', start, { passive: false });
+        window.addEventListener('mousemove', move);
+        window.addEventListener('touchmove', move, { passive: false });
+        window.addEventListener('mouseup', end);
+        window.addEventListener('touchend', end);
+      })();
+
+      $('#cmpClose').addEventListener('click', () => $('#cmpModal').classList.remove('show'));
+      $('#cmpCancel').addEventListener('click', () => $('#cmpModal').classList.remove('show'));
+      $('#cmpModal').addEventListener('click', e => {
+        if (e.target === $('#cmpModal')) $('#cmpModal').classList.remove('show');
+      });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') $('#cmpModal').classList.remove('show');
+      });
+
+      $('#cmpDownload').addEventListener('click', () => {
+        if (!state.resultBlob) return;
+        const a = document.createElement('a');
+        a.href = state.resultUrl;
+        a.download = 'no-watermark-' + state.fileName.replace(/\.[^.]+$/, '') + '.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        toast('Downloaded 🎉');
+      });
+
+      /* ============================================================
+         RESET
+         ============================================================ */
+      $('#resetBtn').addEventListener('click', () => {
+        state.file = null;
+        state.img = null;
+        state.originalUrl = '';
+        state.regions = [];
+        state.brushMask = null;
+        state.resultBlob = null;
+        state.resultUrl = '';
+        $('#uploadStage').hidden = false;
+        $('#editStage').hidden = true;
+      });
+
+      /* ============================================================
+         DROPZONE
+         ============================================================ */
+      const dz = $('#dropzone');
+      const fi = $('#fileInput');
+
+      dz.addEventListener('click', () => fi.click());
+      dz.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); }
+      });
+      fi.addEventListener('change', () => { addFile(fi.files); fi.value = ''; });
+
+      ['dragenter', 'dragover'].forEach(evt =>
+        dz.addEventListener(evt, e => {
+          e.preventDefault(); e.stopPropagation();
+          dz.classList.add('dragover');
+        })
+      );
+      ['dragleave', 'drop'].forEach(evt =>
+        dz.addEventListener(evt, e => {
+          e.preventDefault(); e.stopPropagation();
+          if (evt === 'dragleave' && dz.contains(e.relatedTarget)) return;
+          dz.classList.remove('dragover');
+          if (evt === 'drop' && e.dataTransfer.files.length) addFile(e.dataTransfer.files);
+        })
+      );
+
+      window.addEventListener('dragover', e => {
+        if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
+      });
+      window.addEventListener('drop', e => {
+        if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
+      });
+    })();
+
+    /* ==========================================================
+       CUSTOM CURSOR — user initial badge that follows the mouse
+       ========================================================== */
+    (function initCustomCursor() {
+      // Don't run on touch devices
+      if (window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
+
+      // Read user initial from localStorage
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const initial = (user && user.name && user.name.trim())
+        ? user.name.trim().charAt(0).toUpperCase()
+        : '✦';
+
+      // Create the cursor elements
+      const cursor = document.createElement('div');
+      cursor.className = 'custom-cursor';
+      cursor.innerHTML = '<div class="cursor-avatar">' + initial + '</div>';
+      document.body.appendChild(cursor);
+
+      const ring = document.createElement('div');
+      ring.className = 'cursor-ring';
+      document.body.appendChild(ring);
+
+      let mx = -100, my = -100;
+      let rx = mx, ry = my;
+      let moved = false;
+
+      // Move the main cursor immediately
+      document.addEventListener('mousemove', function (e) {
+        mx = e.clientX;
+        my = e.clientY;
+
+        if (!moved) {
+          moved = true;
+          cursor.classList.add('visible');
+          ring.classList.add('visible');
+        }
+
+        cursor.style.transform =
+          'translate3d(' + mx + 'px, ' + my + 'px, 0) translate(-50%, -50%)';
+      }, { passive: true });
+
+      // Hide when the mouse leaves the window
+      document.addEventListener('mouseleave', function () {
+        cursor.classList.remove('visible');
+        ring.classList.remove('visible');
+      });
+      document.addEventListener('mouseenter', function () {
+        if (moved) {
+          cursor.classList.add('visible');
+          ring.classList.add('visible');
         }
       });
 
-      // From brush
-      for (let i = 0; i < mask.length; i++){
-        if (state.brushMask[i]) mask[i] = 1;
+      // Trailing ring — lerp toward the mouse position
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!prefersReduced) {
+        (function tick() {
+          rx += (mx - rx) * 0.18;
+          ry += (my - ry) * 0.18;
+          ring.style.transform =
+            'translate3d(' + rx + 'px, ' + ry + 'px, 0) translate(-50%, -50%)';
+          requestAnimationFrame(tick);
+        })();
+      } else {
+        document.addEventListener('mousemove', function () {
+          ring.style.transform =
+            'translate3d(' + mx + 'px, ' + my + 'px, 0) translate(-50%, -50%)';
+        }, { passive: true });
       }
 
-      // Count mask pixels
-      let maskCount = 0;
-      for (let i = 0; i < mask.length; i++) if (mask[i]) maskCount++;
-      state.coverage = (maskCount / (W * H)) * 100;
+      // Hover state — glow on interactive elements
+      const INTERACTIVE = 'a, button, [role="button"], .tool-card, .section-toggle, .theme-toggle, .profile-btn, .stat';
+      const TEXT_INPUTS = 'input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="search"], input[type="tel"], input[type="url"], textarea';
 
-      updateProgress(0.1, 'Reading pixels…');
+      document.addEventListener('mouseover', function (e) {
+        const t = e.target;
+        if (!t || !t.closest) return;
+        if (t.closest(INTERACTIVE)) cursor.classList.add('hovering');
+        if (t.closest(TEXT_INPUTS)) cursor.classList.add('text-mode');
+      });
 
-      // 2) Read source pixels
-      const src = document.createElement('canvas');
-      src.width = W; src.height = H;
-      const sctx = src.getContext('2d', { willReadFrequently: true });
-      sctx.drawImage(state.img, 0, 0);
-      const imgData = sctx.getImageData(0, 0, W, H);
-      const d = imgData.data;
-
-      updateProgress(0.2, 'Computing distance from boundary…');
-
-      // 3) Multi-pass diffusion fill:
-      //    For each pass, we look at unmasked neighbors of masked pixels and fill them
-      //    with a distance-weighted average. Repeat until no masked pixels remain.
-      //
-      //    This is essentially a simplified "fast marching" fill.
-
-      // Build a distance map: iteration index at which each masked pixel gets filled
-      // We process in "rings" from the boundary inward.
-
-      // Working copy of the alpha mask
-      const filled = new Uint8Array(W * H); // 0 = unfilled masked, 1 = known or filled
-      for (let i = 0; i < mask.length; i++){
-        filled[i] = mask[i] ? 0 : 1;
-      }
-
-      let remaining = maskCount;
-      let iteration = 0;
-      const MAX_ITER = Math.max(W, H);
-
-      // Precompute neighbor offsets
-      const N8 = [
-        [-1, -1], [0, -1], [1, -1],
-        [-1,  0],          [1,  0],
-        [-1,  1], [0,  1], [1,  1]
-      ];
-
-      while (remaining > 0 && iteration < MAX_ITER){
-        iteration++;
-
-        // Find boundary pixels (masked but with at least one filled 8-neighbor)
-        const toFill = [];
-        for (let y = 0; y < H; y++){
-          const yBase = y * W;
-          for (let x = 0; x < W; x++){
-            const idx = yBase + x;
-            if (filled[idx]) continue;
-            // Check if any 8-neighbor is filled
-            let anyFilled = false;
-            for (let k = 0; k < N8.length; k++){
-              const nx = x + N8[k][0];
-              const ny = y + N8[k][1];
-              if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
-              if (filled[ny * W + nx]){ anyFilled = true; break; }
-            }
-            if (anyFilled) toFill.push(idx);
-          }
+      document.addEventListener('mouseout', function (e) {
+        const to = e.relatedTarget;
+        if (!to || !to.closest) {
+          cursor.classList.remove('hovering', 'text-mode');
+          return;
         }
+        if (!to.closest(INTERACTIVE)) cursor.classList.remove('hovering');
+        if (!to.closest(TEXT_INPUTS)) cursor.classList.remove('text-mode');
+      });
 
-        if (toFill.length === 0) break;
+      // Click feedback
+      document.addEventListener('mousedown', function () {
+        cursor.classList.add('clicking');
+      });
+      document.addEventListener('mouseup', function () {
+        cursor.classList.remove('clicking');
+      });
 
-        // For each pixel to fill, compute distance-weighted average of filled neighbors
-        for (let t = 0; t < toFill.length; t++){
-          const idx = toFill[t];
-          const x = idx % W;
-          const y = (idx - x) / W;
-
-          let sumR = 0, sumG = 0, sumB = 0, wsum = 0;
-          for (let k = 0; k < N8.length; k++){
-            const dx = N8[k][0];
-            const dy = N8[k][1];
-            const nx = x + dx;
-            const ny = y + dy;
-            if (nx < 0 || nx >= W || ny < 0 || ny >= H) continue;
-            const nIdx = ny * W + nx;
-            if (!filled[nIdx]) continue;
-            const dist2 = dx * dx + dy * dy; // 1 or 2
-            const w = 1 / dist2;
-            sumR += d[nIdx * 4]     * w;
-            sumG += d[nIdx * 4 + 1] * w;
-            sumB += d[nIdx * 4 + 2] * w;
-            wsum += w;
-          }
-          if (wsum > 0){
-            d[idx * 4]     = Math.round(sumR / wsum);
-            d[idx * 4 + 1] = Math.round(sumG / wsum);
-            d[idx * 4 + 2] = Math.round(sumB / wsum);
-            d[idx * 4 + 3] = 255;
-          }
-        }
-
-        // Mark as filled
-        for (let t = 0; t < toFill.length; t++){
-          filled[toFill[t]] = 1;
-        }
-        remaining -= toFill.length;
-
-        if (iteration % 8 === 0){
-          updateProgress(0.2 + 0.7 * (1 - remaining / maskCount),
-            'Filling… ' + Math.round((1 - remaining / maskCount) * 100) + '%');
-          // Yield to keep UI responsive
-          await new Promise(r => setTimeout(r, 0));
-        }
-      }
-
-      updateProgress(0.92, 'Smoothing seams…');
-
-      // 4) Light smoothing INSIDE the masked region only (blend edges)
-      //    Do 2 iterations of a 3x3 average applied only to masked pixels.
-      for (let pass = 0; pass < 2; pass++){
-        const copy = new Uint8ClampedArray(d);
-        for (let y = 1; y < H - 1; y++){
-          for (let x = 1; x < W - 1; x++){
-            const idx = y * W + x;
-            if (!mask[idx]) continue;
-            let sr = 0, sg = 0, sb = 0, n = 0;
-            for (let dy = -1; dy <= 1; dy++){
-              for (let dx = -1; dx <= 1; dx++){
-                const nIdx = (y + dy) * W + (x + dx);
-                sr += copy[nIdx * 4];
-                sg += copy[nIdx * 4 + 1];
-                sb += copy[nIdx * 4 + 2];
-                n++;
-              }
-            }
-            d[idx * 4]     = Math.round(sr / n);
-            d[idx * 4 + 1] = Math.round(sg / n);
-            d[idx * 4 + 2] = Math.round(sb / n);
-          }
-        }
-      }
-
-      // 5) Put back and export
-      sctx.putImageData(imgData, 0, 0);
-
-      state.resultBlob = await new Promise(res => src.toBlob(b => res(b), 'image/png'));
-      if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
-      state.resultUrl = URL.createObjectURL(state.resultBlob);
-
-      state.processedAt = performance.now() - t0;
-
-      updateProgress(1, 'Done');
-
-      // Update chip
-      $('#previewBtn').hidden = false;
-      $('#applyBtn').disabled = false;
-      btn.textContent = '💧 Remove Watermark';
-
-      // Auto-open preview
-      openPreview();
-
-      toast('Watermark removed 🎉');
-    } catch (e){
-      console.error(e);
-      toast('Failed: ' + (e.message || 'unknown error'));
-      $('#applyBtn').disabled = false;
-      btn.textContent = '💧 Remove Watermark';
-    } finally {
-      setTimeout(() => { $('#progWrap').hidden = true; }, 800);
-    }
-  }
-
-  $('#applyBtn').addEventListener('click', inpaint);
-
-  /* ============================================================
-     PREVIEW MODAL
-     ============================================================ */
-  function openPreview(){
-    if (!state.resultBlob) return;
-
-    $('#cmpTitle').textContent = state.fileName;
-    $('#cmpBefore').src = state.originalUrl;
-    $('#cmpAfter').src = state.resultUrl;
-
-    $('#dOrigSize').textContent = fmtSize(state.file.size);
-    $('#dOrigDim').textContent = state.naturalW + ' × ' + state.naturalH + ' px';
-
-    $('#dNewSize').textContent = fmtSize(state.resultBlob.size);
-    $('#dNewDim').textContent = state.naturalW + ' × ' + state.naturalH + ' px · PNG';
-
-    const regionCount = state.regions.length + (hasBrushMask() ? 1 : 0);
-    $('#dRegions').textContent = regionCount;
-    $('#dMethod').textContent = state.mode === 'auto' ? 'Auto-detect + inpaint'
-      : state.mode === 'box' ? 'Box + inpaint'
-      : 'Brush + inpaint';
-
-    const ms = state.processedAt;
-    $('#dTime').textContent = ms < 1000 ? Math.round(ms) + ' ms' : (ms / 1000).toFixed(2) + ' s';
-    $('#dCoverage').textContent = 'Masked area: ' + state.coverage.toFixed(1) + '%';
-
-    setSlider(50);
-    $('#cmpModal').classList.add('show');
-  }
-
-  $('#previewBtn').addEventListener('click', openPreview);
-
-  function setSlider(percent){
-    percent = Math.max(0, Math.min(100, percent));
-    $('#afterWrap').style.clipPath = 'inset(0 ' + (100 - percent) + '% 0 0)';
-    $('#divider').style.left = percent + '%';
-  }
-
-  (function initSlider(){
-    const wrap = $('#compare');
-    let dragging = false;
-
-    function posFromEvent(e){
-      const rect = wrap.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      return ((clientX - rect.left) / rect.width) * 100;
-    }
-
-    function start(e){
-      dragging = true;
-      setSlider(posFromEvent(e));
-      e.preventDefault();
-    }
-    function move(e){
-      if (!dragging) return;
-      setSlider(posFromEvent(e));
-      e.preventDefault();
-    }
-    function end(){ dragging = false; }
-
-    wrap.addEventListener('mousedown', start);
-    wrap.addEventListener('touchstart', start, { passive: false });
-    window.addEventListener('mousemove', move);
-    window.addEventListener('touchmove', move, { passive: false });
-    window.addEventListener('mouseup', end);
-    window.addEventListener('touchend', end);
-  })();
-
-  $('#cmpClose').addEventListener('click', () => $('#cmpModal').classList.remove('show'));
-  $('#cmpCancel').addEventListener('click', () => $('#cmpModal').classList.remove('show'));
-  $('#cmpModal').addEventListener('click', e => {
-    if (e.target === $('#cmpModal')) $('#cmpModal').classList.remove('show');
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') $('#cmpModal').classList.remove('show');
-  });
-
-  $('#cmpDownload').addEventListener('click', () => {
-    if (!state.resultBlob) return;
-    const a = document.createElement('a');
-    a.href = state.resultUrl;
-    a.download = 'no-watermark-' + state.fileName.replace(/\.[^.]+$/, '') + '.png';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    toast('Downloaded 🎉');
-  });
-
-  /* ============================================================
-     RESET
-     ============================================================ */
-  $('#resetBtn').addEventListener('click', () => {
-    state.file = null;
-    state.img = null;
-    state.originalUrl = '';
-    state.regions = [];
-    state.brushMask = null;
-    state.resultBlob = null;
-    state.resultUrl = '';
-    $('#uploadStage').hidden = false;
-    $('#editStage').hidden = true;
-  });
-
-  /* ============================================================
-     DROPZONE
-     ============================================================ */
-  const dz = $('#dropzone');
-  const fi = $('#fileInput');
-
-  dz.addEventListener('click', () => fi.click());
-  dz.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fi.click(); }
-  });
-  fi.addEventListener('change', () => { addFile(fi.files); fi.value = ''; });
-
-  ['dragenter','dragover'].forEach(evt =>
-    dz.addEventListener(evt, e => {
-      e.preventDefault(); e.stopPropagation();
-      dz.classList.add('dragover');
-    })
-  );
-  ['dragleave','drop'].forEach(evt =>
-    dz.addEventListener(evt, e => {
-      e.preventDefault(); e.stopPropagation();
-      if (evt === 'dragleave' && dz.contains(e.relatedTarget)) return;
-      dz.classList.remove('dragover');
-      if (evt === 'drop' && e.dataTransfer.files.length) addFile(e.dataTransfer.files);
-    })
-  );
-
-  window.addEventListener('dragover', e => {
-    if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
-  });
-  window.addEventListener('drop', e => {
-    if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
-  });
-})();
-</script>
+      // Also handle the case where the user opens the profile dropdown
+      // so the cursor stays on top of it (z-index 99999 handles it anyway)
+    })();
+  </script>
 </body>
+
 </html>
