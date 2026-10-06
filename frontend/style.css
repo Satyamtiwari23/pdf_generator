@@ -1974,3 +1974,388 @@ body.dark-theme.has-custom-cursor .cursor-ring {
   body.has-custom-cursor .cursor-avatar,
   body.has-custom-cursor .cursor-avatar::after { transition: none; }
 }
+
+
+/* ============================================================
+   PROFILE AVATAR
+   ============================================================ */
+
+.profile-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-btn > #profileInitial {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.profile-avatar {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  border-radius: 50%;
+
+  display: none;
+}
+
+
+/* ============================================================
+   PROFILE SETTINGS BUTTON
+   ============================================================ */
+
+.profile-bottom-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 2px 0;
+}
+
+.profile-settings {
+  border: none;
+  background: transparent;
+
+  color: #625875;
+
+  padding: 9px 10px;
+
+  border-radius: 10px;
+
+  font-family: inherit;
+  font-size: .82rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background .18s ease,
+    color .18s ease;
+}
+
+.profile-settings:hover {
+  background: rgba(124, 58, 237, .10);
+  color: #6d28d9;
+}
+
+
+/* ============================================================
+   SETTINGS MODAL
+   ============================================================ */
+
+.profile-settings-modal {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(10, 7, 15, .48);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transition:
+    opacity .2s ease,
+    visibility .2s ease;
+
+  z-index: 1000;
+}
+
+.profile-settings-modal.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+
+/* ============================================================
+   SETTINGS CARD
+   ============================================================ */
+
+.profile-settings-card {
+  width: min(430px, 100%);
+
+  background: #ffffff;
+
+  border: 1px solid #eadfff;
+  border-radius: 22px;
+
+  box-shadow:
+    0 30px 80px rgba(40, 20, 70, .25);
+
+  overflow: hidden;
+
+  transform: translateY(12px) scale(.98);
+
+  transition: transform .22s ease;
+}
+
+.profile-settings-modal.show .profile-settings-card {
+  transform: translateY(0) scale(1);
+}
+
+
+/* ============================================================
+   SETTINGS HEADER
+   ============================================================ */
+
+.profile-settings-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  padding: 22px 22px 16px;
+
+  border-bottom: 1px solid #eee7f7;
+}
+
+.profile-settings-header h2 {
+  margin: 0;
+
+  color: #17121f;
+
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.profile-settings-header p {
+  margin: 5px 0 0;
+
+  color: #81778f;
+
+  font-size: .78rem;
+}
+
+.settings-close {
+  width: 32px;
+  height: 32px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #f5f1fa;
+
+  color: #625875;
+
+  font-size: 20px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background .18s ease,
+    color .18s ease;
+}
+
+.settings-close:hover {
+  background: #ede5f8;
+  color: #6d28d9;
+}
+
+
+/* ============================================================
+   SETTINGS BODY
+   ============================================================ */
+
+.profile-settings-body {
+  padding: 25px 22px 24px;
+}
+
+.settings-avatar-preview {
+  display: flex;
+  justify-content: center;
+
+  margin-bottom: 22px;
+}
+
+#settingsAvatarCircle {
+  position: relative;
+
+  width: 110px;
+  height: 110px;
+
+  border-radius: 50%;
+
+  display: grid;
+  place-items: center;
+
+  overflow: hidden;
+
+  background: linear-gradient(
+    140deg,
+    var(--p-500),
+    var(--p-800)
+  );
+
+  color: white;
+
+  font-size: 2.2rem;
+  font-weight: 800;
+
+  box-shadow:
+    0 15px 35px rgba(109, 40, 217, .22);
+}
+
+#settingsAvatarImage {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  display: none;
+}
+
+
+/* ============================================================
+   PICTURE BUTTONS
+   ============================================================ */
+
+.settings-picture-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.choose-picture-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 44px;
+
+  border-radius: 12px;
+
+  background: linear-gradient(
+    135deg,
+    #7c3aed,
+    #9333ea
+  );
+
+  color: #ffffff;
+
+  font-size: .85rem;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 12px 25px -12px #7c3aed;
+
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease;
+}
+
+.choose-picture-btn:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 16px 30px -12px #7c3aed;
+}
+
+.remove-picture-btn {
+  min-height: 40px;
+
+  border: 1px solid #eadfff;
+  border-radius: 12px;
+
+  background: transparent;
+
+  color: #d64545;
+
+  font-family: inherit;
+  font-size: .82rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: background .18s ease;
+}
+
+.remove-picture-btn:hover {
+  background: rgba(214, 69, 69, .07);
+}
+
+.profile-picture-status {
+  min-height: 18px;
+
+  margin: 12px 0 0;
+
+  text-align: center;
+
+  font-size: .75rem;
+  font-weight: 700;
+
+  color: #756b86;
+}
+
+
+/* ============================================================
+   DARK THEME
+   ============================================================ */
+
+body.dark-theme .profile-settings {
+  color: #aaa0ba;
+}
+
+body.dark-theme .profile-settings:hover {
+  background: rgba(167, 139, 250, .12);
+  color: #c4b5fd;
+}
+
+body.dark-theme .profile-settings-modal {
+  background: rgba(5, 3, 8, .62);
+}
+
+body.dark-theme .profile-settings-card {
+  background: #181321;
+  border-color: #3b2c50;
+
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, .55);
+}
+
+body.dark-theme .profile-settings-header {
+  border-color: #30233e;
+}
+
+body.dark-theme .profile-settings-header h2 {
+  color: #f7f3ff;
+}
+
+body.dark-theme .profile-settings-header p {
+  color: #aaa0ba;
+}
+
+body.dark-theme .settings-close {
+  background: #241c30;
+  color: #b8acc8;
+}
+
+body.dark-theme .settings-close:hover {
+  background: #30233e;
+  color: #c4b5fd;
+}
+
+body.dark-theme .remove-picture-btn {
+  border-color: #3b2c50;
+}
+
+body.dark-theme .profile-picture-status {
+  color: #aaa0ba;
+}

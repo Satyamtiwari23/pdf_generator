@@ -29,17 +29,41 @@
           <span id="themeIcon">☾</span>
         </button>
         <div class="profile-wrapper">
+
           <button id="profileBtn" class="profile-btn" type="button" aria-label="Open profile">
             <span id="profileInitial">S</span>
+            <img id="profileAvatar" class="profile-avatar" alt="Profile picture" />
           </button>
+
           <div id="profileDropdown" class="profile-dropdown">
+
             <div class="profile-info">
               <div id="profileName" class="profile-name">User</div>
-              <div id="profileEmail" class="profile-email">user@example.com</div>
+              <div id="profileEmail" class="profile-email">
+                user@example.com
+              </div>
             </div>
+
             <div class="profile-divider"></div>
-            <button id="logoutBtn" class="profile-logout" type="button">Logout</button>
+
+            <!-- Settings -->
+            <div class="profile-bottom-actions">
+
+              <button id="settingsBtn" class="profile-settings" type="button">
+                ⚙️ Settings
+              </button>
+
+            </div>
+
+            <div class="profile-divider"></div>
+
+            <!-- Logout -->
+            <button id="logoutBtn" class="profile-logout" type="button">
+              Logout
+            </button>
+
           </div>
+
         </div>
       </div>
     </div>
@@ -242,6 +266,63 @@
       </div>
     </section>
 
+    <!-- ============================================================
+     PROFILE SETTINGS MODAL
+     ============================================================ -->
+
+    <div id="profileSettingsModal" class="profile-settings-modal">
+
+      <div class="profile-settings-card">
+
+        <div class="profile-settings-header">
+
+          <div>
+            <h2>Profile Settings</h2>
+            <p>Manage your profile picture</p>
+          </div>
+
+          <button id="closeSettingsBtn" class="settings-close" type="button" aria-label="Close settings">
+            ×
+          </button>
+
+        </div>
+
+        <div class="profile-settings-body">
+
+          <div class="settings-avatar-preview">
+
+            <div id="settingsAvatarCircle">
+
+              <span id="settingsInitial">S</span>
+
+              <img id="settingsAvatarImage" alt="Profile preview" />
+
+            </div>
+
+          </div>
+
+          <div class="settings-picture-actions">
+
+            <label for="profilePictureInput" class="choose-picture-btn">
+              📷 Choose Profile Picture
+            </label>
+
+            <input type="file" id="profilePictureInput" accept="image/*" hidden />
+
+            <button id="removeProfilePictureBtn" class="remove-picture-btn" type="button">
+              Remove Picture
+            </button>
+
+          </div>
+
+          <p id="profilePictureStatus" class="profile-picture-status"></p>
+
+        </div>
+
+      </div>
+
+    </div>
+
   </main>
 
   <footer class="site-footer">
@@ -250,164 +331,1407 @@
 
   <script>
     (function () {
+
+      'use strict';
+
+
+      /* ==========================================================
+         API CONFIGURATION
+         ========================================================== */
+
+      /*
+         IMPORTANT:
+         Put your ACTUAL PDFnest production backend URL here.
+    
+         Do NOT use your CyberShield backend URL.
+    
+         Example:
+    
+         const API_BASE =
+           'https://pdf-generator-ochre-two.vercel.app';
+    
+         For local development:
+    
+         const API_BASE =
+           'http://localhost:5050';
+      */
+
+      const API_BASE =
+        'https://pdf-generator-ochre-two.vercel.app';
+
+
+      /* ==========================================================
+         PROFILE ELEMENTS
+         ========================================================== */
+
+      const profileBtn =
+        document.getElementById('profileBtn');
+
+      const profileDropdown =
+        document.getElementById('profileDropdown');
+
+      const profileInitial =
+        document.getElementById('profileInitial');
+
+      const profileAvatar =
+        document.getElementById('profileAvatar');
+
+      const profileName =
+        document.getElementById('profileName');
+
+      const profileEmail =
+        document.getElementById('profileEmail');
+
+      const settingsBtn =
+        document.getElementById('settingsBtn');
+
+      const settingsModal =
+        document.getElementById('profileSettingsModal');
+
+      const closeSettingsBtn =
+        document.getElementById('closeSettingsBtn');
+
+      const profilePictureInput =
+        document.getElementById('profilePictureInput');
+
+      const removeProfilePictureBtn =
+        document.getElementById('removeProfilePictureBtn');
+
+      const settingsInitial =
+        document.getElementById('settingsInitial');
+
+      const settingsAvatarImage =
+        document.getElementById('settingsAvatarImage');
+
+      const profilePictureStatus =
+        document.getElementById('profilePictureStatus');
+
+
+      /* ==========================================================
+         USER
+         ========================================================== */
+
+      let user = null;
+
+      try {
+
+        user = JSON.parse(
+          localStorage.getItem('user') || 'null'
+        );
+
+      } catch (error) {
+
+        console.error(
+          'Unable to read user:',
+          error
+        );
+
+      }
+
+
+      /* ==========================================================
+         RENDER PROFILE
+         ========================================================== */
+
+      function renderProfile() {
+
+        if (!user) return;
+
+
+        const name =
+          user.name || 'User';
+
+        const email =
+          user.email || '';
+
+        const initial =
+          name
+            .trim()
+            .charAt(0)
+            .toUpperCase() || 'U';
+
+
+        /* --------------------------------------------------------
+           Name + email
+           -------------------------------------------------------- */
+
+        if (profileName) {
+          profileName.textContent = name;
+        }
+
+        if (profileEmail) {
+          profileEmail.textContent = email;
+        }
+
+
+        /* --------------------------------------------------------
+           Initial
+           -------------------------------------------------------- */
+
+        if (profileInitial) {
+          profileInitial.textContent = initial;
+        }
+
+        if (settingsInitial) {
+          settingsInitial.textContent = initial;
+        }
+
+
+        /* --------------------------------------------------------
+           PROFILE PICTURE EXISTS
+           -------------------------------------------------------- */
+
+        if (
+          user.profilePicture &&
+          typeof user.profilePicture === 'string'
+        ) {
+
+          /* Header avatar */
+
+          if (profileAvatar) {
+
+            profileAvatar.src =
+              user.profilePicture;
+
+            profileAvatar.style.display =
+              'block';
+
+          }
+
+          if (profileInitial) {
+
+            profileInitial.style.display =
+              'none';
+
+          }
+
+
+          /* Settings preview */
+
+          if (settingsAvatarImage) {
+
+            settingsAvatarImage.src =
+              user.profilePicture;
+
+            settingsAvatarImage.style.display =
+              'block';
+
+          }
+
+          if (settingsInitial) {
+
+            settingsInitial.style.display =
+              'none';
+
+          }
+
+        }
+
+
+        /* --------------------------------------------------------
+           NO PROFILE PICTURE
+           -------------------------------------------------------- */
+
+        else {
+
+          if (profileAvatar) {
+
+            profileAvatar.removeAttribute('src');
+
+            profileAvatar.style.display =
+              'none';
+
+          }
+
+          if (profileInitial) {
+
+            profileInitial.style.display =
+              'grid';
+
+          }
+
+
+          if (settingsAvatarImage) {
+
+            settingsAvatarImage.removeAttribute(
+              'src'
+            );
+
+            settingsAvatarImage.style.display =
+              'none';
+
+          }
+
+          if (settingsInitial) {
+
+            settingsInitial.style.display =
+              'block';
+
+          }
+
+        }
+
+      }
+
+
+      /* Render immediately */
+
+      renderProfile();
+
+
       /* ==========================================================
          PROFILE DROPDOWN
          ========================================================== */
-      const profileBtn = document.getElementById('profileBtn');
-      const profileDropdown = document.getElementById('profileDropdown');
-      const profileInitial = document.getElementById('profileInitial');
-      const profileName = document.getElementById('profileName');
-      const profileEmail = document.getElementById('profileEmail');
 
-      const user = JSON.parse(localStorage.getItem('user') || 'null');
-      if (user) {
-        const name = user.name || 'User';
-        const email = user.email || '';
-        profileInitial.textContent = name.trim().charAt(0).toUpperCase() || 'U';
-        profileName.textContent = name;
-        profileEmail.textContent = email;
+      profileBtn?.addEventListener(
+        'click',
+        function (event) {
+
+          event.stopPropagation();
+
+          profileDropdown?.classList.toggle(
+            'show'
+          );
+
+        }
+      );
+
+
+      /* Close dropdown when clicking outside */
+
+      document.addEventListener(
+        'click',
+        function (event) {
+
+          if (
+            profileDropdown &&
+            !profileDropdown.contains(event.target) &&
+            !profileBtn?.contains(event.target)
+          ) {
+
+            profileDropdown.classList.remove(
+              'show'
+            );
+
+          }
+
+        }
+      );
+
+
+      /* ==========================================================
+         OPEN SETTINGS
+         ========================================================== */
+
+      settingsBtn?.addEventListener(
+        'click',
+        function (event) {
+
+          event.preventDefault();
+
+          event.stopPropagation();
+
+
+          /* Close profile dropdown */
+
+          profileDropdown?.classList.remove(
+            'show'
+          );
+
+
+          /* Open settings */
+
+          settingsModal?.classList.add(
+            'show'
+          );
+
+
+          if (profilePictureStatus) {
+
+            profilePictureStatus.textContent =
+              '';
+
+          }
+
+        }
+      );
+
+
+      /* ==========================================================
+         CLOSE SETTINGS
+         ========================================================== */
+
+      function closeSettings() {
+
+        settingsModal?.classList.remove(
+          'show'
+        );
+
       }
 
-      profileBtn?.addEventListener('click', e => {
-        e.stopPropagation();
-        profileDropdown?.classList.toggle('show');
-      });
 
-      document.addEventListener('click', e => {
-        if (profileDropdown && !profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
-          profileDropdown.classList.remove('show');
+      closeSettingsBtn?.addEventListener(
+        'click',
+        closeSettings
+      );
+
+
+      /* Click outside modal */
+
+      settingsModal?.addEventListener(
+        'click',
+        function (event) {
+
+          if (
+            event.target === settingsModal
+          ) {
+
+            closeSettings();
+
+          }
+
         }
-      });
+      );
 
-      document.getElementById('logoutBtn')?.addEventListener('click', e => {
-        e.preventDefault();
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.replace('login.html');
-      });
+
+      /* ESC key */
+
+      document.addEventListener(
+        'keydown',
+        function (event) {
+
+          if (
+            event.key === 'Escape' &&
+            settingsModal?.classList.contains('show')
+          ) {
+
+            closeSettings();
+
+          }
+
+        }
+      );
+
+
+      /* ==========================================================
+         COMPRESS PROFILE PICTURE
+         ========================================================== */
+
+      function compressProfilePicture(file) {
+
+        return new Promise(
+          function (resolve, reject) {
+
+            const reader =
+              new FileReader();
+
+
+            reader.onload =
+              function () {
+
+                const image =
+                  new Image();
+
+
+                image.onload =
+                  function () {
+
+                    /*
+                       Profile picture does NOT need
+                       high resolution.
+    
+                       Final image:
+                       128 × 128
+    
+                       This drastically reduces
+                       database storage.
+                    */
+
+                    const SIZE = 128;
+
+
+                    const canvas =
+                      document.createElement(
+                        'canvas'
+                      );
+
+                    canvas.width =
+                      SIZE;
+
+                    canvas.height =
+                      SIZE;
+
+
+                    const ctx =
+                      canvas.getContext(
+                        '2d'
+                      );
+
+
+                    /*
+                       High quality image
+                       smoothing before resize.
+                    */
+
+                    ctx.imageSmoothingEnabled =
+                      true;
+
+                    ctx.imageSmoothingQuality =
+                      'high';
+
+
+                    /*
+                       Cover crop.
+    
+                       This keeps the image
+                       square without stretching.
+                    */
+
+                    const scale =
+                      Math.max(
+                        SIZE / image.width,
+                        SIZE / image.height
+                      );
+
+
+                    const width =
+                      image.width * scale;
+
+                    const height =
+                      image.height * scale;
+
+
+                    const x =
+                      (SIZE - width) / 2;
+
+                    const y =
+                      (SIZE - height) / 2;
+
+
+                    ctx.drawImage(
+                      image,
+                      x,
+                      y,
+                      width,
+                      height
+                    );
+
+
+                    /*
+                       Convert to WebP.
+    
+                       WebP is considerably smaller
+                       than keeping the original image.
+    
+                       Quality 0.60 is enough for
+                       a small profile avatar.
+                    */
+
+                    const compressed =
+                      canvas.toDataURL(
+                        'image/webp',
+                        0.60
+                      );
+
+
+                    resolve(
+                      compressed
+                    );
+
+                  };
+
+
+                image.onerror =
+                  function () {
+
+                    reject(
+                      new Error(
+                        'Unable to read image'
+                      )
+                    );
+
+                  };
+
+
+                image.src =
+                  reader.result;
+
+              };
+
+
+            reader.onerror =
+              function () {
+
+                reject(
+                  new Error(
+                    'Unable to read selected file'
+                  )
+                );
+
+              };
+
+
+            reader.readAsDataURL(
+              file
+            );
+
+          }
+        );
+
+      }
+
+
+      /* ==========================================================
+         SAVE PROFILE PICTURE TO BACKEND
+         ========================================================== */
+
+      async function saveProfilePicture(
+        compressedImage
+      ) {
+
+        const token =
+          localStorage.getItem('token');
+
+
+        if (!token) {
+
+          throw new Error(
+            'Your login session has expired. Please login again.'
+          );
+
+        }
+
+
+        const response =
+          await fetch(
+            `${API_BASE}/api/auth/profile-picture`,
+            {
+
+              method: 'PUT',
+
+              headers: {
+
+                'Content-Type':
+                  'application/json',
+
+                'Authorization':
+                  `Bearer ${token}`
+
+              },
+
+              body: JSON.stringify({
+
+                profilePicture:
+                  compressedImage
+
+              })
+
+            }
+          );
+
+
+        let data = null;
+
+
+        try {
+
+          data =
+            await response.json();
+
+        } catch (error) {
+
+          data = null;
+
+        }
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            data?.message ||
+            'Unable to save profile picture'
+          );
+
+        }
+
+
+        return data;
+
+      }
+
+
+      /* ==========================================================
+         PROFILE PICTURE SELECT
+         ========================================================== */
+
+      profilePictureInput?.addEventListener(
+        'change',
+        async function () {
+
+          const file =
+            this.files?.[0];
+
+
+          if (!file) return;
+
+
+          /* --------------------------------------------------------
+             Validate file
+             -------------------------------------------------------- */
+
+          if (
+            !file.type.startsWith(
+              'image/'
+            )
+          ) {
+
+            if (profilePictureStatus) {
+
+              profilePictureStatus.textContent =
+                'Please select an image file.';
+
+            }
+
+            this.value = '';
+
+            return;
+
+          }
+
+
+          try {
+
+            if (profilePictureStatus) {
+
+              profilePictureStatus.textContent =
+                'Compressing picture...';
+
+            }
+
+
+            /* ------------------------------------------------------
+               Compress locally
+    
+               Original file NEVER gets sent.
+               Only the compressed WebP is sent.
+               ------------------------------------------------------ */
+
+            const compressedImage =
+              await compressProfilePicture(
+                file
+              );
+
+
+            /* ------------------------------------------------------
+               Check compressed size
+    
+               Base64 is slightly larger than
+               the binary WebP, but our limit is
+               still very small.
+               ------------------------------------------------------ */
+
+            const approxBytes =
+              Math.ceil(
+                compressedImage.length * 0.75
+              );
+
+
+            if (
+              approxBytes > 75000
+            ) {
+
+              throw new Error(
+                'Compressed profile picture is still too large.'
+              );
+
+            }
+
+
+            if (profilePictureStatus) {
+
+              profilePictureStatus.textContent =
+                'Saving profile picture...';
+
+            }
+
+
+            /* ------------------------------------------------------
+               Send to backend
+               ------------------------------------------------------ */
+
+            const data =
+              await saveProfilePicture(
+                compressedImage
+              );
+
+
+            /* ------------------------------------------------------
+               Update localStorage
+               ------------------------------------------------------ */
+
+            if (data?.user) {
+
+              user =
+                data.user;
+
+              localStorage.setItem(
+                'user',
+                JSON.stringify(user)
+              );
+
+            }
+            else {
+
+              /*
+                 Fallback in case backend doesn't
+                 return complete user object.
+              */
+
+              user.profilePicture =
+                compressedImage;
+
+              localStorage.setItem(
+                'user',
+                JSON.stringify(user)
+              );
+
+            }
+
+
+            /* ------------------------------------------------------
+               Update UI immediately
+               ------------------------------------------------------ */
+
+            renderProfile();
+
+
+            if (profilePictureStatus) {
+
+              profilePictureStatus.textContent =
+                'Profile picture updated ✓';
+
+            }
+
+
+            /* Allow selecting same image again */
+
+            this.value = '';
+
+
+          } catch (error) {
+
+            console.error(
+              'Profile picture error:',
+              error
+            );
+
+
+            if (profilePictureStatus) {
+
+              profilePictureStatus.textContent =
+                error.message ||
+                'Unable to update profile picture';
+
+            }
+
+
+            this.value = '';
+
+          }
+
+        }
+      );
+
+
+      /* ==========================================================
+         REMOVE PROFILE PICTURE
+         ========================================================== */
+
+      removeProfilePictureBtn?.addEventListener(
+        'click',
+        async function () {
+
+          if (
+            !user ||
+            !user.profilePicture
+          ) {
+
+            if (profilePictureStatus) {
+
+              profilePictureStatus.textContent =
+                'No profile picture to remove.';
+
+            }
+
+            return;
+
+          }
+
+
+          try {
+
+            if (profilePictureStatus) {
+
+              profilePictureStatus.textContent =
+                'Removing picture...';
+
+            }
+
+
+            const token =
+              localStorage.getItem(
+                'token'
+              );
+
+
+            if (!token) {
+
+              throw new Error(
+                'Your login session has expired. Please login again.'
+              );
+
+            }
+
+
+            const response =
+              await fetch(
+                `${API_BASE}/api/auth/profile-picture`,
+                {
+
+                  method: 'PUT',
+
+                  headers: {
+
+                    'Content-Type':
+                      'application/json',
+
+                    'Authorization':
+                      `Bearer ${token}`
+
+                  },
+
+                  body: JSON.stringify({
+
+                    profilePicture:
+                      null
+
+                  })
+
+                }
+              );
+
+
+            let data = null;
+
+
+            try {
+
+              data =
+                await response.json();
+
+            } catch (error) {
+
+              data = null;
+
+            }
+
+
+            if (!response.ok) {
+
+              throw new Error(
+                data?.message ||
+                'Unable to remove profile picture'
+              );
+
+            }
+
+
+            /* Update user */
+
+            if (data?.user) {
+
+              user =
+                data.user;
+
+            }
+            else {
+
+              user.profilePicture =
+                null;
+
+            }
+
+
+            localStorage.setItem(
+              'user',
+              JSON.stringify(user)
+            );
+
+
+            /* Update UI */
+
+            renderProfile();
+
+
+            if (profilePictureStatus) {
+
+              profilePictureStatus.textContent =
+                'Profile picture removed ✓';
+
+            }
+
+          } catch (error) {
+
+            console.error(
+              'Remove profile picture error:',
+              error
+            );
+
+
+            if (profilePictureStatus) {
+
+              profilePictureStatus.textContent =
+                error.message ||
+                'Unable to remove profile picture';
+
+            }
+
+          }
+
+        }
+      );
+
+
+      /* ==========================================================
+         LOGOUT
+         ========================================================== */
+
+      document
+        .getElementById('logoutBtn')
+        ?.addEventListener(
+          'click',
+          function (event) {
+
+            event.preventDefault();
+
+
+            localStorage.removeItem(
+              'token'
+            );
+
+            localStorage.removeItem(
+              'user'
+            );
+
+
+            window.location.replace(
+              'login.html'
+            );
+
+          }
+        );
+
 
       /* ==========================================================
          FLOATING BACKGROUND ORBS
          ========================================================== */
+
       (function initOrbs() {
-        if (document.querySelector('.bg-orbs')) return;
-        const wrap = document.createElement('div');
-        wrap.className = 'bg-orbs';
-        wrap.setAttribute('aria-hidden', 'true');
+
+        if (
+          document.querySelector(
+            '.bg-orbs'
+          )
+        ) return;
+
+
+        const wrap =
+          document.createElement(
+            'div'
+          );
+
+        wrap.className =
+          'bg-orbs';
+
+        wrap.setAttribute(
+          'aria-hidden',
+          'true'
+        );
+
+
         wrap.innerHTML =
           '<div class="bg-orb o1"></div>' +
           '<div class="bg-orb o2"></div>' +
           '<div class="bg-orb o3"></div>';
-        document.body.appendChild(wrap);
+
+
+        document.body.appendChild(
+          wrap
+        );
+
       })();
+
 
       /* ==========================================================
          COLLAPSIBLE SECTIONS
          ========================================================== */
-      document.querySelectorAll('.section-toggle').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          const section = btn.closest('.tool-section');
-          const willOpen = !section.classList.contains('open');
 
-          // Close all others (accordion behaviour)
-          document.querySelectorAll('.tool-section.open').forEach(function (open) {
-            if (open !== section) {
-              open.classList.remove('open');
-              const ob = open.querySelector('.section-toggle');
-              if (ob) ob.setAttribute('aria-expanded', 'false');
-            }
-          });
+      document
+        .querySelectorAll(
+          '.section-toggle'
+        )
+        .forEach(
+          function (btn) {
 
-          section.classList.toggle('open', willOpen);
-          btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-        });
-      });
+            btn.addEventListener(
+              'click',
+              function () {
+
+                const section =
+                  btn.closest(
+                    '.tool-section'
+                  );
+
+
+                if (!section) return;
+
+
+                const willOpen =
+                  !section.classList.contains(
+                    'open'
+                  );
+
+
+                /*
+                   Close all other sections
+                */
+
+                document
+                  .querySelectorAll(
+                    '.tool-section.open'
+                  )
+                  .forEach(
+                    function (open) {
+
+                      if (
+                        open !== section
+                      ) {
+
+                        open.classList.remove(
+                          'open'
+                        );
+
+
+                        const ob =
+                          open.querySelector(
+                            '.section-toggle'
+                          );
+
+
+                        if (ob) {
+
+                          ob.setAttribute(
+                            'aria-expanded',
+                            'false'
+                          );
+
+                        }
+
+                      }
+
+                    }
+                  );
+
+
+                section.classList.toggle(
+                  'open',
+                  willOpen
+                );
+
+
+                btn.setAttribute(
+                  'aria-expanded',
+                  willOpen
+                    ? 'true'
+                    : 'false'
+                );
+
+              }
+            );
+
+          }
+        );
+
 
       /* ==========================================================
          3D TILT ON TOOL CARDS
          ========================================================== */
-      const isTouch = window.matchMedia('(hover: none)').matches;
+
+      const isTouch =
+        window.matchMedia(
+          '(hover: none)'
+        ).matches;
+
 
       if (!isTouch) {
-        document.querySelectorAll('.tool-card').forEach(function (card) {
-          let raf = null;
 
-          card.addEventListener('mousemove', function (e) {
-            if (raf) return;
-            raf = requestAnimationFrame(function () {
-              const rect = card.getBoundingClientRect();
-              const x = (e.clientX - rect.left) / rect.width;   // 0..1
-              const y = (e.clientY - rect.top) / rect.height;   // 0..1
+        document
+          .querySelectorAll(
+            '.tool-card'
+          )
+          .forEach(
+            function (card) {
 
-              const rx = (0.5 - y) * 8;   // rotate X: -4° to +4°
-              const ry = (x - 0.5) * 8;   // rotate Y: -4° to +4°
+              let raf = null;
 
-              card.style.setProperty('--rx', rx.toFixed(2) + 'deg');
-              card.style.setProperty('--ry', ry.toFixed(2) + 'deg');
-              card.style.setProperty('--mx', (x * 100).toFixed(1) + '%');
-              card.style.setProperty('--my', (y * 100).toFixed(1) + '%');
-              raf = null;
-            });
-          });
 
-          card.addEventListener('mouseleave', function () {
-            card.style.setProperty('--rx', '0deg');
-            card.style.setProperty('--ry', '0deg');
-          });
-        });
+              card.addEventListener(
+                'mousemove',
+                function (e) {
+
+                  if (raf) return;
+
+
+                  raf =
+                    requestAnimationFrame(
+                      function () {
+
+                        const rect =
+                          card.getBoundingClientRect();
+
+
+                        const x =
+                          (e.clientX - rect.left) /
+                          rect.width;
+
+
+                        const y =
+                          (e.clientY - rect.top) /
+                          rect.height;
+
+
+                        const rx =
+                          (0.5 - y) * 8;
+
+
+                        const ry =
+                          (x - 0.5) * 8;
+
+
+                        card.style.setProperty(
+                          '--rx',
+                          rx.toFixed(2) + 'deg'
+                        );
+
+
+                        card.style.setProperty(
+                          '--ry',
+                          ry.toFixed(2) + 'deg'
+                        );
+
+
+                        card.style.setProperty(
+                          '--mx',
+                          (x * 100).toFixed(1) + '%'
+                        );
+
+
+                        card.style.setProperty(
+                          '--my',
+                          (y * 100).toFixed(1) + '%'
+                        );
+
+
+                        raf = null;
+
+                      }
+                    );
+
+                }
+              );
+
+
+              card.addEventListener(
+                'mouseleave',
+                function () {
+
+                  card.style.setProperty(
+                    '--rx',
+                    '0deg'
+                  );
+
+                  card.style.setProperty(
+                    '--ry',
+                    '0deg'
+                  );
+
+                }
+              );
+
+            }
+          );
+
       }
+
 
       /* ==========================================================
          SCROLL REVEAL
          ========================================================== */
-      if ('IntersectionObserver' in window) {
-        const io = new IntersectionObserver(function (entries) {
-          entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('in');
-              io.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
 
-        document.querySelectorAll('.tool-card').forEach(function (card, i) {
-          card.classList.add('reveal');
-          card.style.transitionDelay = Math.min(i * 40, 320) + 'ms';
-          io.observe(card);
-        });
+      if (
+        'IntersectionObserver'
+        in window
+      ) {
+
+        const io =
+          new IntersectionObserver(
+            function (entries) {
+
+              entries.forEach(
+                function (entry) {
+
+                  if (
+                    entry.isIntersecting
+                  ) {
+
+                    entry.target.classList.add(
+                      'in'
+                    );
+
+
+                    io.unobserve(
+                      entry.target
+                    );
+
+                  }
+
+                }
+              );
+
+            },
+            {
+              threshold: 0.08,
+              rootMargin:
+                '0px 0px -40px 0px'
+            }
+          );
+
+
+        document
+          .querySelectorAll(
+            '.tool-card'
+          )
+          .forEach(
+            function (card, i) {
+
+              card.classList.add(
+                'reveal'
+              );
+
+
+              card.style.transitionDelay =
+                Math.min(
+                  i * 40,
+                  320
+                ) + 'ms';
+
+
+              io.observe(card);
+
+            }
+          );
+
       }
+
 
       /* ==========================================================
-         HERO PARALLAX (subtle)
+         HERO PARALLAX
          ========================================================== */
+
       if (!isTouch) {
+
         let raf2 = null;
-        document.addEventListener('mousemove', function (e) {
-          if (raf2) return;
-          raf2 = requestAnimationFrame(function () {
-            const x = (e.clientX / window.innerWidth - 0.5) * 2;
-            const y = (e.clientY / window.innerHeight - 0.5) * 2;
 
-            const grad = document.querySelector('.hero h1 .grad');
-            if (grad) {
-              grad.style.transform =
-                'translate3d(' + (x * 5).toFixed(1) + 'px,' + (y * 5).toFixed(1) + 'px,0)';
-            }
 
-            const orbs = document.querySelector('.bg-orbs');
-            if (orbs) {
-              orbs.style.transform =
-                'translate3d(' + (x * 18).toFixed(1) + 'px,' + (y * 18).toFixed(1) + 'px,0)';
-            }
-            raf2 = null;
-          });
-        });
+        document.addEventListener(
+          'mousemove',
+          function (e) {
+
+            if (raf2) return;
+
+
+            raf2 =
+              requestAnimationFrame(
+                function () {
+
+                  const x =
+                    (
+                      e.clientX /
+                      window.innerWidth -
+                      0.5
+                    ) * 2;
+
+
+                  const y =
+                    (
+                      e.clientY /
+                      window.innerHeight -
+                      0.5
+                    ) * 2;
+
+
+                  const grad =
+                    document.querySelector(
+                      '.hero h1 .grad'
+                    );
+
+
+                  if (grad) {
+
+                    grad.style.transform =
+                      'translate3d(' +
+                      (x * 5).toFixed(1) +
+                      'px,' +
+                      (y * 5).toFixed(1) +
+                      'px,0)';
+
+                  }
+
+
+                  const orbs =
+                    document.querySelector(
+                      '.bg-orbs'
+                    );
+
+
+                  if (orbs) {
+
+                    orbs.style.transform =
+                      'translate3d(' +
+                      (x * 18).toFixed(1) +
+                      'px,' +
+                      (y * 18).toFixed(1) +
+                      'px,0)';
+
+                  }
+
+
+                  raf2 = null;
+
+                }
+              );
+
+          }
+        );
+
       }
+
+
     })();
 
-    /* ==========================================================
-   CUSTOM CURSOR — user initial badge that follows the mouse
-   ========================================================== */
+      /* ==========================================================
+       CUSTOM CURSOR — user initial badge that follows the mouse
+       ========================================================== */
     (function initCustomCursor() {
       // Don't run on touch devices
       if (window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
@@ -428,7 +1752,7 @@
       ring.className = 'cursor-ring';
       document.body.appendChild(ring);
 
-      let mx = -5, my = -5;
+      let mx = -100, my = -100;
       let rx = mx, ry = my;
       let moved = false;
 
@@ -463,8 +1787,8 @@
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (!prefersReduced) {
         (function tick() {
-          rx += (mx - rx) * 0.2;
-          ry += (my - ry) * 0.2;
+          rx += (mx - rx) * 0.18;
+          ry += (my - ry) * 0.18;
           ring.style.transform =
             'translate3d(' + rx + 'px, ' + ry + 'px, 0) translate(-50%, -50%)';
           requestAnimationFrame(tick);
@@ -504,6 +1828,9 @@
       document.addEventListener('mouseup', function () {
         cursor.classList.remove('clicking');
       });
+
+      // Also handle the case where the user opens the profile dropdown
+      // so the cursor stays on top of it (z-index 99999 handles it anyway)
     })();
   </script>
 </body>
