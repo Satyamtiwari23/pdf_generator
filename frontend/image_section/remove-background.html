@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Remove Background — PDFnest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css" />
+  <script src="../theme.js"></script>
+  <script src="../auth-guard.js"></script>
+
+  <style>
+    /* ============================================================
+       STAGE
+       ============================================================ */
+    .stage {
+      position: relative;
+      display: inline-block;
+      max-width: 100%;
+      margin-top: 18px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1.5px solid var(--line);
+      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 20px 20px;
+    }
+    body.dark-theme .stage {
+      border-color: #3b2c50;
+      background: repeating-conic-gradient(#1b1624 0% 25%, #241c31 0% 50%) 50% / 20px 20px;
+    }
+    .stage img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    /* ============================================================
+       HINT BAR
+       ============================================================ */
+    .hint {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 10px 12px;
+      border-radius: 11px;
+      background: rgba(139,92,246,.08);
+      border: 1.5px solid rgba(139,92,246,.2);
+      font-size: .78rem;
+      color: var(--p-800);
+      line-height: 1.45;
+      margin-top: 14px;
+    }
+    body.dark-theme .hint {
+      background: rgba(139,92,246,.12);
+      border-color: rgba(139,92,246,.3);
+      color: #d7c4ff;
+    }
+    .hint .icon { flex: none; }
+    .hint strong { color: var(--p-900); }
+    body.dark-theme .hint strong { color: #fff; }
+
+    /* ============================================================
+       PROGRESS
+       ============================================================ */
+    .prog-wrap {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(139,92,246,.06);
+      border: 1.5px solid rgba(139,92,246,.18);
+    }
+    body.dark-theme .prog-wrap {
+      background: rgba(139,92,246,.1);
+      border-color: rgba(139,92,246,.25);
+    }
+    .prog-head {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .prog-status {
+      font-size: .82rem; font-weight: 800; color: var(--p-800);
+    }
+    body.dark-theme .prog-status { color: #d7c4ff; }
+    .prog-pct { font-size: .78rem; font-weight: 800; color: var(--p-700); }
+    .prog-bar {
+      height: 8px; background: var(--p-100); border-radius: 999px; overflow: hidden;
+    }
+    body.dark-theme .prog-bar { background: rgba(139,92,246,.15); }
+    .prog-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--p-500), var(--p-700));
+      transition: width .35s ease;
+    }
+
+    /* ============================================================
+       RESULT COMPARISON SLIDER
+       ============================================================ */
+    .compare {
+      position: relative;
+      max-width: 100%;
+      margin-top: 18px;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1.5px solid var(--line);
+      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 20px 20px;
+      user-select: none;
+      touch-action: none;
+    }
+    body.dark-theme .compare {
+      border-color: #3b2c50;
+      background: repeating-conic-gradient(#1b1624 0% 25%, #241c31 0% 50%) 50% / 20px 20px;
+    }
+    .compare img {
+      display: block; max-width: 100%; height: auto;
+      -webkit-user-drag: none;
+    }
+    .compare .after-wrap {
+      position: absolute; inset: 0;
+      overflow: hidden;
+    }
+    .compare .after-wrap img {
+      position: absolute;
+      top: 0; left: 0;
+      max-width: none;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .compare .divider {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 3px;
+      background: #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 0 12px rgba(139,92,246,.6);
+      cursor: ew-resize;
+      z-index: 3;
+    }
+    .compare .divider::before,
+    .compare .divider::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--p-500), var(--p-700));
+      box-shadow: 0 6px 14px -4px var(--p-700);
+    }
+    .compare .divider::before { top: -17px; }
+    .compare .divider::after { bottom: -17px; }
+    .compare .divider .knob {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+      display: grid; place-items: center;
+      color: var(--p-700);
+      font-size: 1.05rem;
+      font-weight: 800;
+      pointer-events: none;
+    }
+    .compare .lbl {
+      position: absolute;
+      top: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,.92);
+      color: var(--p-800);
+      box-shadow: 0 4px 10px rgba(0,0,0,.1);
+      z-index: 4;
+    }
+    .compare .lbl.left { left: 12px; }
+    .compare .lbl.right { right: 12px; }
+
+    /* ============================================================
+       DETAILS PANEL
+       ============================================================ */
+    .details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .detail-card {
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1.5px solid var(--line);
+      background: #fff;
+    }
+    body.dark-theme .detail-card {
+      background: #1b1624;
+      border-color: #3b2c50;
+    }
+    .detail-card .d-label {
+      font-size: .68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .detail-card .d-value {
+      font-size: .95rem;
+      font-weight: 800;
+      color: var(--p-800);
+      letter-spacing: -.01em;
+    }
+    body.dark-theme .detail-card .d-value { color: #d7c4ff; }
+    .detail-card .d-sub {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: 3px;
+      font-weight: 600;
+    }
+    .detail-card.good .d-value {
+      background: linear-gradient(135deg, #10b981, #059669);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* ============================================================
+       DOWNLOAD MENU
+       ============================================================ */
+    .dl-wrap { position: relative; }
+    .dl-menu {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      min-width: 210px;
+      background: #fff;
+      border: 1px solid var(--p-200);
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 18px 45px rgba(60,35,100,.18);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(6px);
+      transition: opacity .18s ease, transform .18s ease, visibility .18s;
+      z-index: 100;
+    }
+    body.dark-theme .dl-menu {
+      background: #181321;
+      border-color: #3b2c50;
+      box-shadow: 0 20px 50px rgba(0,0,0,.45);
+    }
+    .dl-menu.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dl-menu button {
+      width: 100%;
+      text-align: left;
+      border: 0;
+      background: transparent;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: .84rem;
+      font-weight: 700;
+      color: var(--ink);
+      cursor: pointer;
+      transition: background .18s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    body.dark-theme .dl-menu button { color: #f5f2ff; }
+    .dl-menu button:hover { background: var(--p-100); }
+    body.dark-theme .dl-menu button:hover { background: rgba(139,92,246,.15); }
+
+    /* ============================================================
+       FILE CHIP
+       ============================================================ */
+    .file-chip {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1.5px solid var(--line);
+      margin-top: 14px;
+    }
+    body.dark-theme .file-chip {
+      background: #1b1624;
+      border-color: #3b2c50;
+    }
+    .file-chip .thumb {
+      width: 40px; height: 40px; border-radius: 8px;
+      object-fit: cover; flex: none;
+      border: 1px solid var(--line);
+    }
+    .file-chip .info { flex: 1; min-width: 0; }
+    .file-chip .nm {
+      font-weight: 700; font-size: .88rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-chip .sz {
+      font-size: .74rem; color: var(--muted); margin-top: 2px;
+    }
+    .file-chip .rm {
+      border: 0; background: transparent; cursor: pointer;
+      width: 28px; height: 28px; border-radius: 8px;
+      color: var(--muted); font-weight: 800;
+      transition: background .18s, color .18s;
+    }
+    .file-chip .rm:hover { background: #fee2e2; color: #b91c1c; }
+    body.dark-theme .file-chip .rm:hover { background: rgba(214,69,69,.15); color: #f87171; }
+
+    /* ============================================================
+       ACTION ROW
+       ============================================================ */
+    .act-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    .act-row .btn { flex: 1; min-width: 150px; max-width: 260px; }
+    @media (max-width: 500px) { .act-row .btn { max-width: none; } }
+
+    /* ============================================================
+       BACKGROUND SWATCHES
+       ============================================================ */
+    .bg-choices {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .bg-swatch {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 2px solid var(--line);
+      cursor: pointer;
+      transition: transform .15s, border-color .15s;
+      position: relative;
+    }
+    .bg-swatch:hover { transform: scale(1.08); }
+    .bg-swatch.active {
+      border-color: var(--p-600);
+      box-shadow: 0 0 0 3px rgba(139,92,246,.25);
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="../index.html" class="brand">
+      <span class="logo">✦</span>
+      <span>PDFnest<small>Remove Background</small></span>
+    </a>
+    <a href="../index.html" class="back-link">← All tools</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Remove <span class="grad">background</span></h1>
+    <p>AI-powered auto-detection · Live before/after comparison · Instant download</p>
+  </section>
+
+  <section class="card">
+
+    <!-- ============================================================
+         STAGE 1 — UPLOAD
+         ============================================================ -->
+    <div id="uploadStage">
+      <div class="field">
+        <label>Your image</label>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button">
+          <div class="dz-icon">✂️</div>
+          <div class="dz-title">Drag &amp; drop an image here</div>
+          <div class="dz-sub">or <span class="link">browse files</span> · best for portraits, products, pets</div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" hidden />
+      </div>
+    </div>
+
+    <!-- ============================================================
+         STAGE 2 — PREVIEW + REMOVE
+         ============================================================ -->
+    <div id="editStage" hidden>
+
+      <div class="file-chip">
+        <img class="thumb" id="thumbImg" alt="" />
+        <div class="info">
+          <div class="nm" id="fileNm">—</div>
+          <div class="sz" id="fileSz">—</div>
+        </div>
+        <button class="rm" id="resetBtn" aria-label="Remove">✕</button>
+      </div>
+
+      <!-- Hint -->
+      <div class="hint">
+        <span class="icon">✨</span>
+        <div>
+          <strong>AI auto-detects the subject.</strong> Just click the button below
+          — the model finds people, products, and pets automatically.
+        </div>
+      </div>
+
+      <!-- Image stage -->
+      <div style="text-align:center;">
+        <div class="stage" id="stage">
+          <img id="stageImg" alt="" />
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="act-row">
+        <button class="btn btn-primary" id="removeBtn">✂️ Remove Background</button>
+      </div>
+
+      <!-- Progress -->
+      <div class="prog-wrap" id="progWrap" hidden>
+        <div class="prog-head">
+          <div class="prog-status" id="progStatus">Preparing…</div>
+          <div class="prog-pct" id="progPct">0%</div>
+        </div>
+        <div class="prog-bar">
+          <div class="prog-fill" id="progFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         STAGE 3 — RESULT
+         ============================================================ -->
+    <div id="resultStage" hidden>
+
+      <!-- Comparison slider -->
+      <div class="compare" id="compare">
+        <img id="compareBefore" alt="Before" />
+        <div class="after-wrap" id="afterWrap">
+          <img id="compareAfter" alt="After" />
+        </div>
+        <div class="divider" id="divider">
+          <div class="knob">⇄</div>
+        </div>
+        <div class="lbl left">Original</div>
+        <div class="lbl right">Removed</div>
+      </div>
+
+      <!-- Details -->
+      <div class="details">
+        <div class="detail-card">
+          <div class="d-label">Original size</div>
+          <div class="d-value" id="dOrigSize">—</div>
+          <div class="d-sub" id="dOrigDim">—</div>
+        </div>
+        <div class="detail-card good">
+          <div class="d-label">Result size</div>
+          <div class="d-value" id="dNewSize">—</div>
+          <div class="d-sub" id="dNewDim">—</div>
+        </div>
+        <div class="detail-card">
+          <div class="d-label">Processing time</div>
+          <div class="d-value" id="dTime">—</div>
+          <div class="d-sub" id="dMode">—</div>
+        </div>
+        <div class="detail-card">
+          <div class="d-label">Subject area</div>
+          <div class="d-value" id="dArea">—</div>
+          <div class="d-sub">of the original image</div>
+        </div>
+      </div>
+
+      <!-- Background replacement -->
+      <div class="field" style="margin-top:22px;">
+        <label>Replace background with (optional)</label>
+        <div class="bg-choices" id="bgChoices">
+          <button type="button" class="bg-swatch active" data-bg="transparent" title="Transparent"
+            style="background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 12px 12px;"></button>
+          <button type="button" class="bg-swatch" data-bg="#ffffff" title="White" style="background:#ffffff;"></button>
+          <button type="button" class="bg-swatch" data-bg="#000000" title="Black" style="background:#000000;"></button>
+          <button type="button" class="bg-swatch" data-bg="#8b5cf6" title="Purple" style="background:#8b5cf6;"></button>
+          <button type="button" class="bg-swatch" data-bg="#10b981" title="Green" style="background:#10b981;"></button>
+          <button type="button" class="bg-swatch" data-bg="#ef4444" title="Red" style="background:#ef4444;"></button>
+          <button type="button" class="bg-swatch" data-bg="#f59e0b" title="Amber" style="background:#f59e0b;"></button>
+          <button type="button" class="bg-swatch" data-bg="#3b82f6" title="Blue" style="background:#3b82f6;"></button>
+        </div>
+      </div>
+
+      <!-- Result actions -->
+      <div class="act-row">
+        <button class="btn btn-ghost" id="tryAgainBtn">↺ Try again</button>
+        <div class="dl-wrap" style="flex:1;min-width:150px;max-width:260px;">
+          <button class="btn btn-primary" id="downloadToggle" style="width:100%">⬇ Download</button>
+          <div class="dl-menu" id="dlMenu">
+            <button data-dl="png">📄 PNG (transparent)</button>
+            <button data-dl="png-white">📄 PNG (white bg)</button>
+            <button data-dl="jpeg">📄 JPEG (white bg)</button>
+            <button data-dl="webp">📄 WEBP</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+</main>
+
+<footer class="site-footer">Powered by @imgly/background-removal · Files never leave your device.</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { removeBackground } from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm';
+
+const $ = (s, c = document) => c.querySelector(s);
+const $$ = (s, c = document) => Array.prototype.slice.call(c.querySelectorAll(s));
+
+let toastTimer = null;
+function toast(m){
+  const el = $('#toast');
+  el.textContent = m;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function fmtSize(b){
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1048576).toFixed(2) + ' MB';
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  file: null,
+  originalUrl: '',
+  img: null,
+  naturalW: 0,
+  naturalH: 0,
+  aiResultBlob: null,   // pure AI output (transparent background)
+  finalBlob: null,      // after background replacement
+  finalUrl: '',
+  bgColor: 'transparent',
+  processingTimeMs: 0,
+  subjectPercent: 0
+};
+
+/* ============================================================
+   STEP 1 — LOAD FILE
+   ============================================================ */
+async function addFile(list){
+  const f = Array.from(list).find(f => f.type.startsWith('image/'));
+  if (!f) { toast('Please choose an image'); return; }
+
+  state.file = f;
+  state.aiResultBlob = null;
+  state.finalBlob = null;
+  state.bgColor = 'transparent';
+
+  const url = await new Promise(r => {
+    const fr = new FileReader();
+    fr.onload = e => r(e.target.result);
+    fr.readAsDataURL(f);
+  });
+  state.originalUrl = url;
+
+  const img = await new Promise(r => {
+    const i = new Image();
+    i.onload = () => r(i);
+    i.src = url;
+  });
+  state.img = img;
+  state.naturalW = img.naturalWidth;
+  state.naturalH = img.naturalHeight;
+
+  $('#thumbImg').src = url;
+  $('#fileNm').textContent = f.name;
+  $('#fileSz').textContent = state.naturalW + ' × ' + state.naturalH + ' px · ' + fmtSize(f.size);
+
+  $('#stageImg').src = url;
+
+  $('#uploadStage').hidden = true;
+  $('#editStage').hidden = false;
+  $('#resultStage').hidden = true;
+
+  updateBgSwatchesUI();
+}
+
+/* ============================================================
+   STEP 2 — REMOVE BACKGROUND
+   ============================================================ */
+async function doRemove(){
+  if (!state.file) return;
+
+  const btn = $('#removeBtn');
+  btn.disabled = true;
+  btn.textContent = 'Removing…';
+  $('#progWrap').hidden = false;
+  $('#resultStage').hidden = true;
+  updateProgress(0, 'Loading AI model…');
+
+  const t0 = performance.now();
+
+  try {
+    // 1) Run AI background removal
+    const aiBlob = await removeBackground(state.file, {
+      progress: (key, current, total) => {
+        if (total){
+          const pct = current / total;
+          updateProgress(pct * 0.9, 'Processing… ' + Math.round(pct * 100) + '%');
+        }
+      }
+    });
+    state.aiResultBlob = aiBlob;
+    updateProgress(0.95, 'Finalizing…');
+
+    // 2) Apply chosen background (transparent by default)
+    state.finalBlob = aiBlob;
+    await applyBackground();
+
+    state.processingTimeMs = performance.now() - t0;
+
+    // 3) Compute subject area %
+    state.subjectPercent = await computeSubjectPercent(aiBlob);
+
+    updateProgress(1, 'Done');
+
+    // 4) Show result
+    showResult();
+
+    toast('Background removed 🎉');
+  } catch (e){
+    console.error(e);
+    toast('Failed: ' + (e.message || 'unknown error'));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✂️ Remove Background';
+    setTimeout(() => { $('#progWrap').hidden = true; }, 900);
+  }
+}
+
+/* ---------- Subject area % ---------- */
+async function computeSubjectPercent(blob){
+  const url = URL.createObjectURL(blob);
+  const img = await new Promise(r => {
+    const i = new Image();
+    i.onload = () => r(i);
+    i.src = url;
+  });
+  URL.revokeObjectURL(url);
+
+  const w = Math.min(400, img.naturalWidth);
+  const h = Math.round(img.naturalHeight * (w / img.naturalWidth));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, w, h);
+
+  const data = ctx.getImageData(0, 0, w, h).data;
+  let visible = 0;
+  for (let i = 0; i < w * h; i++){
+    if (data[i * 4 + 3] > 30) visible++;
+  }
+  return visible / (w * h) * 100;
+}
+
+/* ---------- Background replacement ---------- */
+async function applyBackground(){
+  if (!state.aiResultBlob) return;
+
+  const url = URL.createObjectURL(state.aiResultBlob);
+  const img = await new Promise(r => {
+    const i = new Image();
+    i.onload = () => r(i);
+    i.src = url;
+  });
+  URL.revokeObjectURL(url);
+
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  if (state.bgColor !== 'transparent'){
+    ctx.fillStyle = state.bgColor;
+    ctx.fillRect(0, 0, w, h);
+  }
+  ctx.drawImage(img, 0, 0);
+
+  const blob = await new Promise(res => canvas.toBlob(b => res(b), 'image/png'));
+  state.finalBlob = blob;
+  if (state.finalUrl) URL.revokeObjectURL(state.finalUrl);
+  state.finalUrl = URL.createObjectURL(blob);
+}
+
+/* ---------- Show result stage ---------- */
+function showResult(){
+  $('#compareBefore').src = state.originalUrl;
+  $('#compareAfter').src = state.finalUrl;
+
+  // Reset slider to 50%
+  setSlider(50);
+
+  // Details
+  $('#dOrigSize').textContent = fmtSize(state.file.size);
+  $('#dOrigDim').textContent = state.naturalW + ' × ' + state.naturalH + ' px';
+
+  const processing = state.processingTimeMs < 1000
+    ? Math.round(state.processingTimeMs) + ' ms'
+    : (state.processingTimeMs / 1000).toFixed(2) + ' s';
+  $('#dTime').textContent = processing;
+  $('#dMode').textContent = 'AI auto-detect';
+
+  $('#dArea').textContent = state.subjectPercent.toFixed(1) + '%';
+
+  // Show result
+  $('#editStage').hidden = true;
+  $('#resultStage').hidden = false;
+
+  // Update size details
+  $('#dNewSize').textContent = fmtSize(state.finalBlob.size);
+  $('#dNewDim').textContent = state.naturalW + ' × ' + state.naturalH + ' px · PNG';
+
+  // Scroll into view
+  setTimeout(() => {
+    $('#resultStage').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
+}
+
+/* ============================================================
+   PROGRESS
+   ============================================================ */
+function updateProgress(pct, status){
+  pct = Math.max(0, Math.min(1, pct));
+  $('#progFill').style.width = Math.round(pct * 100) + '%';
+  $('#progPct').textContent = Math.round(pct * 100) + '%';
+  if (status) $('#progStatus').textContent = status;
+}
+
+/* ============================================================
+   COMPARISON SLIDER
+   ============================================================ */
+function setSlider(percent){
+  percent = Math.max(0, Math.min(100, percent));
+  const after = $('#afterWrap');
+  const divider = $('#divider');
+  after.style.clipPath = 'inset(0 ' + (100 - percent) + '% 0 0)';
+  divider.style.left = percent + '%';
+}
+
+(function initSlider(){
+  const wrap = $('#compare');
+  let dragging = false;
+
+  function posFromEvent(e){
+    const rect = wrap.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    return ((clientX - rect.left) / rect.width) * 100;
+  }
+
+  function start(e){
+    dragging = true;
+    setSlider(posFromEvent(e));
+    e.preventDefault();
+  }
+  function move(e){
+    if (!dragging) return;
+    setSlider(posFromEvent(e));
+    e.preventDefault();
+  }
+  function end(){ dragging = false; }
+
+  wrap.addEventListener('mousedown', start);
+  wrap.addEventListener('touchstart', start, { passive: false });
+  window.addEventListener('mousemove', move);
+  window.addEventListener('touchmove', move, { passive: false });
+  window.addEventListener('mouseup', end);
+  window.addEventListener('touchend', end);
+})();
+
+/* ============================================================
+   BACKGROUND SWATCHES
+   ============================================================ */
+function updateBgSwatchesUI(){
+  $$('.bg-swatch').forEach(sw => {
+    sw.classList.toggle('active', sw.dataset.bg === state.bgColor);
+  });
+}
+
+$$('.bg-swatch').forEach(sw => {
+  sw.addEventListener('click', async () => {
+    state.bgColor = sw.dataset.bg;
+    updateBgSwatchesUI();
+
+    if (state.aiResultBlob){
+      await applyBackground();
+      $('#compareAfter').src = state.finalUrl;
+      $('#dNewSize').textContent = fmtSize(state.finalBlob.size);
+    }
+  });
+});
+
+/* ============================================================
+   TRY AGAIN / RESET
+   ============================================================ */
+$('#tryAgainBtn').addEventListener('click', () => {
+  $('#resultStage').hidden = true;
+  $('#editStage').hidden = false;
+});
+
+$('#resetBtn').addEventListener('click', () => {
+  state.file = null;
+  state.img = null;
+  state.originalUrl = '';
+  state.aiResultBlob = null;
+  state.finalBlob = null;
+  state.bgColor = 'transparent';
+  updateBgSwatchesUI();
+
+  $('#editStage').hidden = true;
+  $('#resultStage').hidden = true;
+  $('#uploadStage').hidden = false;
+});
+
+/* ============================================================
+   DOWNLOAD MENU
+   ============================================================ */
+$('#downloadToggle').addEventListener('click', e => {
+  e.stopPropagation();
+  $('#dlMenu').classList.toggle('show');
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('.dl-wrap')) $('#dlMenu').classList.remove('show');
+});
+
+$$('#dlMenu button').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    $('#dlMenu').classList.remove('show');
+    await downloadFormat(btn.dataset.dl);
+  });
+});
+
+async function downloadFormat(fmt){
+  if (!state.finalBlob) return;
+
+  const baseName = 'no-bg-' + state.file.name.replace(/\.[^.]+$/, '');
+  const img = await new Promise(r => {
+    const i = new Image();
+    i.onload = () => r(i);
+    i.src = state.finalUrl;
+  });
+
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  if (fmt === 'png'){
+    ctx.drawImage(img, 0, 0);
+    canvas.toBlob(b => triggerDownload(b, baseName + '.png'), 'image/png');
+  }
+  else if (fmt === 'png-white' || fmt === 'jpeg'){
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0);
+    const mime = fmt === 'jpeg' ? 'image/jpeg' : 'image/png';
+    const ext = fmt === 'jpeg' ? 'jpg' : 'png';
+    canvas.toBlob(b => triggerDownload(b, baseName + '.' + ext), mime, 0.95);
+  }
+  else if (fmt === 'webp'){
+    ctx.drawImage(img, 0, 0);
+    canvas.toBlob(b => triggerDownload(b, baseName + '.webp'), 'image/webp', 0.95);
+  }
+}
+
+function triggerDownload(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  toast('Downloaded 🎉');
+}
+
+/* ============================================================
+   DROPZONE
+   ============================================================ */
+const dz = $('#dropzone');
+const fi = $('#fileInput');
+
+dz.addEventListener('click', () => fi.click());
+dz.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fi.click(); }
+});
+fi.addEventListener('change', () => { addFile(fi.files); fi.value = ''; });
+
+['dragenter','dragover'].forEach(evt =>
+  dz.addEventListener(evt, e => {
+    e.preventDefault(); e.stopPropagation();
+    dz.classList.add('dragover');
+  })
+);
+['dragleave','drop'].forEach(evt =>
+  dz.addEventListener(evt, e => {
+    e.preventDefault(); e.stopPropagation();
+    if (evt === 'dragleave' && dz.contains(e.relatedTarget)) return;
+    dz.classList.remove('dragover');
+    if (evt === 'drop' && e.dataTransfer.files.length) addFile(e.dataTransfer.files);
+  })
+);
+
+window.addEventListener('dragover', e => {
+  if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
+});
+window.addEventListener('drop', e => {
+  if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
+});
+
+$('#removeBtn').addEventListener('click', doRemove);
+</script>
+</body>
+</html>

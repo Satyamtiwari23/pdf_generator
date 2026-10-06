@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Upscale — PDFnest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css" />
+  <script src="../theme.js"></script>
+  <script src="../auth-guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pica@9.0.1/dist/pica.min.js"></script>
+
+  <style>
+    .file-chip {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 12px;
+      background: #fff; border: 1.5px solid var(--line);
+      margin-top: 14px;
+    }
+    body.dark-theme .file-chip { background: #1b1624; border-color: #3b2c50; }
+    .file-chip .thumb {
+      width: 46px; height: 46px; border-radius: 8px;
+      object-fit: cover; flex: none; border: 1px solid var(--line);
+    }
+    .file-chip .info { flex: 1; min-width: 0; }
+    .file-chip .nm {
+      font-weight: 700; font-size: .88rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-chip .sz { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+    .file-chip .rm {
+      border: 0; background: transparent; cursor: pointer;
+      width: 28px; height: 28px; border-radius: 8px;
+      color: var(--muted); font-weight: 800;
+    }
+    .file-chip .rm:hover { background: #fee2e2; color: #b91c1c; }
+    body.dark-theme .file-chip .rm:hover { background: rgba(214,69,69,.15); color: #f87171; }
+
+    .pe-slider-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
+    @media (max-width: 560px) { .pe-slider-row { grid-template-columns: 1fr; } }
+    .pe-slider { display: flex; flex-direction: column; gap: 4px; }
+    .pe-slider label {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .72rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--p-800);
+    }
+    body.dark-theme .pe-slider label { color: #d7c4ff; }
+    .pe-slider label .val {
+      background: var(--p-100); padding: 2px 8px; border-radius: 999px;
+      font-size: .68rem; color: var(--p-700); border: 1px solid var(--p-200);
+    }
+    body.dark-theme .pe-slider label .val {
+      background: rgba(139,92,246,.15); border-color: #4b3864; color: #d7c4ff;
+    }
+    .pe-slider input[type="range"] { width: 100%; accent-color: var(--p-600); cursor: pointer; }
+
+    .rz-select {
+      width: 100%; padding: 11px 12px; border-radius: 11px;
+      border: 1.5px solid var(--line); background: #fff;
+      color: var(--ink); font-family: inherit; font-size: .9rem;
+      font-weight: 700; outline: none;
+      -webkit-appearance: none; appearance: none;
+      background-image: none !important;
+      padding-right: 40px; cursor: pointer;
+    }
+    .rz-select:focus {
+      border-color: var(--p-400); box-shadow: 0 0 0 4px rgba(139,92,246,.15);
+    }
+    body.dark-theme .rz-select {
+      background: #1b1624; color: var(--ink); border-color: #3b2c50;
+    }
+    .sel-wrap { position: relative; }
+    .sel-wrap::after {
+      content: "▾"; position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%); pointer-events: none;
+      color: var(--p-600); font-size: 1rem; font-weight: 800; line-height: 1;
+    }
+    body.dark-theme .sel-wrap::after { color: #b58cff; }
+
+    .preset-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px; margin-top: 8px;
+    }
+    .preset {
+      border: 1.5px solid var(--line); background: #fff;
+      padding: 14px 16px; border-radius: 12px;
+      font-family: inherit; text-align: left; cursor: pointer;
+      transition: border-color .18s, transform .16s, box-shadow .18s, background .18s;
+    }
+    body.dark-theme .preset { background: #1b1624; border-color: #3b2c50; color: var(--ink); }
+    .preset:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .preset.active {
+      border-color: var(--p-500);
+      background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(192,38,211,.05));
+      box-shadow: 0 0 0 3px rgba(139,92,246,.15);
+    }
+    body.dark-theme .preset.active {
+      background: linear-gradient(135deg, rgba(139,92,246,.15), rgba(192,38,211,.1));
+      border-color: #a78bfa;
+    }
+    .preset .p-name { font-weight: 800; font-size: .9rem; letter-spacing: -.01em;
+      display: flex; align-items: center; gap: 6px; }
+    .preset .p-desc { font-size: .72rem; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+    .preset.active .p-desc { color: var(--p-800); }
+    body.dark-theme .preset.active .p-desc { color: #d7c4ff; }
+
+    .estimate {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; border-radius: 12px;
+      background: rgba(139,92,246,.06);
+      border: 1.5px solid rgba(139,92,246,.2);
+      margin-top: 14px; font-size: .82rem; color: var(--p-800);
+      line-height: 1.45; flex-wrap: wrap;
+    }
+    body.dark-theme .estimate {
+      background: rgba(139,92,246,.1);
+      border-color: rgba(139,92,246,.25); color: #d7c4ff;
+    }
+    .estimate.warn {
+      background: rgba(245,158,11,.1);
+      border-color: rgba(245,158,11,.35);
+      color: #92400e;
+    }
+    body.dark-theme .estimate.warn {
+      background: rgba(245,158,11,.12);
+      border-color: rgba(245,158,11,.4);
+      color: #fbbf24;
+    }
+    .estimate strong { color: var(--p-900); }
+    body.dark-theme .estimate strong { color: #fff; }
+    .estimate .est-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 999px;
+      background: #fff; border: 1px solid var(--p-200);
+      font-weight: 800; font-size: .78rem; color: var(--p-700);
+    }
+    body.dark-theme .estimate .est-chip {
+      background: #211a2d; border-color: #4b3864; color: #d7c4ff;
+    }
+
+    .prog-wrap {
+      margin-top: 18px; padding: 16px; border-radius: 12px;
+      background: rgba(139,92,246,.06);
+      border: 1.5px solid rgba(139,92,246,.18);
+    }
+    body.dark-theme .prog-wrap {
+      background: rgba(139,92,246,.1); border-color: rgba(139,92,246,.25);
+    }
+    .prog-head {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .prog-status { font-size: .82rem; font-weight: 800; color: var(--p-800); }
+    body.dark-theme .prog-status { color: #d7c4ff; }
+    .prog-pct { font-size: .78rem; font-weight: 800; color: var(--p-700); }
+    .prog-bar { height: 8px; background: var(--p-100); border-radius: 999px; overflow: hidden; }
+    body.dark-theme .prog-bar { background: rgba(139,92,246,.15); }
+    .prog-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--p-500), var(--p-700));
+      transition: width .35s ease;
+    }
+
+    .act-row {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-top: 22px; justify-content: center;
+    }
+    .act-row .btn { flex: 1; min-width: 140px; max-width: 240px; }
+    @media (max-width: 500px) { .act-row .btn { max-width: none; } }
+
+    /* Preview modal */
+    .preview-modal {
+      position: fixed; inset: 0; background: rgba(15, 12, 20, .88);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity .22s ease;
+    }
+    .preview-modal.show { opacity: 1; pointer-events: auto; }
+    .preview-modal-content {
+      background: #fff; border-radius: 18px;
+      width: 100%; max-width: 1000px; max-height: 92vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 26px 60px -24px rgba(0,0,0,.55);
+    }
+    body.dark-theme .preview-modal-content { background: #1b1624; }
+    .preview-header {
+      padding: 16px 22px; border-bottom: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .preview-header h3 {
+      margin: 0; font-size: 1rem; font-weight: 800;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+    }
+    .preview-close {
+      background: transparent; border: 0; font-size: 1.2rem;
+      cursor: pointer; color: var(--muted);
+      width: 32px; height: 32px; border-radius: 8px;
+      display: grid; place-items: center; flex: none;
+    }
+    .preview-close:hover { background: var(--p-100); color: var(--p-800); }
+    body.dark-theme .preview-close:hover { background: #2b2040; color: #f5f2ff; }
+    .preview-body {
+      padding: 22px; overflow-y: auto; background: #f4f2fa;
+    }
+    body.dark-theme .preview-body { background: #110d16; }
+    .compare {
+      position: relative; max-width: 100%; margin: 0 auto;
+      border-radius: 14px; overflow: hidden; border: 1.5px solid var(--line);
+      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 20px 20px;
+      user-select: none; touch-action: none;
+    }
+    body.dark-theme .compare {
+      border-color: #3b2c50;
+      background: repeating-conic-gradient(#1b1624 0% 25%, #241c31 0% 50%) 50% / 20px 20px;
+    }
+    .compare img { display: block; max-width: 100%; height: auto; -webkit-user-drag: none; }
+    .compare .after-wrap { position: absolute; inset: 0; overflow: hidden; }
+    .compare .after-wrap img {
+      position: absolute; top: 0; left: 0;
+      max-width: none; width: 100%; height: 100%; object-fit: cover;
+    }
+    .compare .divider {
+      position: absolute; top: 0; bottom: 0; width: 3px; background: #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 0 12px rgba(139,92,246,.6);
+      cursor: ew-resize; z-index: 3;
+    }
+    .compare .divider::before,
+    .compare .divider::after {
+      content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--p-500), var(--p-700));
+      box-shadow: 0 6px 14px -4px var(--p-700);
+    }
+    .compare .divider::before { top: -17px; }
+    .compare .divider::after { bottom: -17px; }
+    .compare .divider .knob {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+      display: grid; place-items: center;
+      color: var(--p-700); font-size: 1.05rem; font-weight: 800;
+      pointer-events: none;
+    }
+    .compare .lbl {
+      position: absolute; top: 12px;
+      padding: 4px 10px; border-radius: 999px;
+      font-size: .68rem; font-weight: 800;
+      letter-spacing: .06em; text-transform: uppercase;
+      background: rgba(255,255,255,.92); color: var(--p-800);
+      box-shadow: 0 4px 10px rgba(0,0,0,.1); z-index: 4;
+    }
+    .compare .lbl.left { left: 12px; }
+    .compare .lbl.right { right: 12px; }
+
+    .zoom-bar {
+      display: flex; justify-content: center; gap: 8px; margin-top: 14px;
+      align-items: center; flex-wrap: wrap;
+    }
+    .zoom-bar button {
+      border: 1.5px solid var(--p-200); background: #fff;
+      color: var(--p-800); padding: 8px 14px; border-radius: 10px;
+      font-family: inherit; font-size: .78rem; font-weight: 800;
+      cursor: pointer; transition: background .18s, border-color .18s;
+    }
+    body.dark-theme .zoom-bar button {
+      background: #211a2d; color: #d7c4ff; border-color: #4b3864;
+    }
+    .zoom-bar button:hover { background: var(--p-100); border-color: var(--p-400); }
+    body.dark-theme .zoom-bar button:hover { background: #2b2040; border-color: #8b5cf6; }
+    .zoom-bar button.active {
+      background: linear-gradient(135deg, var(--p-600), var(--p-800));
+      color: #fff; border-color: transparent;
+    }
+
+    .details {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px; margin-top: 18px;
+    }
+    .detail-card {
+      padding: 14px 16px; border-radius: 12px;
+      border: 1.5px solid var(--line); background: #fff;
+    }
+    body.dark-theme .detail-card { background: #1b1624; border-color: #3b2c50; }
+    .detail-card .d-label {
+      font-size: .68rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .detail-card .d-value {
+      font-size: .95rem; font-weight: 800; color: var(--p-800); letter-spacing: -.01em;
+    }
+    body.dark-theme .detail-card .d-value { color: #d7c4ff; }
+    .detail-card .d-sub { font-size: .72rem; color: var(--muted); margin-top: 3px; font-weight: 600; }
+    .detail-card.good .d-value {
+      background: linear-gradient(135deg, #10b981, #059669);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .preview-footer {
+      padding: 14px 22px; border-top: 1px solid var(--line);
+      display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;
+    }
+    @media (max-width: 560px) {
+      .preview-body { padding: 14px; }
+      .preview-footer .btn { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="../index.html" class="brand">
+      <span class="logo">✦</span>
+      <span>PDFnest<small>Image Upscale</small></span>
+    </a>
+    <a href="../index.html" class="back-link">← All tools</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Upscale to <span class="grad">8K</span></h1>
+    <p>Real Lanczos resampling + edge-aware sharpening. Preview before you download.</p>
+  </section>
+
+  <section class="card">
+
+    <div id="uploadStage">
+      <div class="field">
+        <label>Your image</label>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button">
+          <div class="dz-icon">✨</div>
+          <div class="dz-title">Drag &amp; drop an image here</div>
+          <div class="dz-sub">or <span class="link">browse files</span> · JPG, PNG, WEBP</div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" hidden />
+      </div>
+    </div>
+
+    <div id="editorWrap" hidden>
+
+      <div class="file-chip">
+        <img class="thumb" id="thumbImg" alt="" />
+        <div class="info">
+          <div class="nm" id="fileNm">—</div>
+          <div class="sz" id="fileSz">—</div>
+        </div>
+        <button class="rm" id="resetBtn" aria-label="Remove">✕</button>
+      </div>
+
+      <div class="options" style="margin-top:18px;">
+        <div class="field">
+          <label for="targetMode">Target mode</label>
+          <div class="sel-wrap">
+            <select id="targetMode" class="rz-select">
+              <option value="width" selected>Fixed width (px)</option>
+              <option value="multiplier">Multiplier (× original)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" id="widthField">
+          <label for="targetWidth">Target width</label>
+          <div class="sel-wrap">
+            <select id="targetWidth" class="rz-select">
+              <option value="1280">HD — 1280 px</option>
+              <option value="1920">Full HD — 1920 px</option>
+              <option value="2560">2K — 2560 px</option>
+              <option value="3840" selected>4K — 3840 px</option>
+              <option value="5760">5K — 5760 px</option>
+              <option value="7680">8K — 7680 px</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field" id="multField" hidden>
+          <label for="multiplier">Multiplier</label>
+          <div class="sel-wrap">
+            <select id="multiplier" class="rz-select">
+              <option value="1.5">1.5×</option>
+              <option value="2" selected>2× — double</option>
+              <option value="3">3×</option>
+              <option value="4">4×</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:18px;">
+        <label>Quality mode</label>
+        <div class="preset-grid" id="presetGrid">
+          <button type="button" class="preset" data-preset="smooth">
+            <div class="p-name">🌊 Smooth</div>
+            <div class="p-desc">Softest — best for photos &amp; paintings</div>
+          </button>
+          <button type="button" class="preset active" data-preset="balanced">
+            <div class="p-name">⚖️ Balanced</div>
+            <div class="p-desc">Great all-around — recommended</div>
+          </button>
+          <button type="button" class="preset" data-preset="sharp">
+            <div class="p-name">🔪 Sharp</div>
+            <div class="p-desc">Crisp edges — best for text &amp; line art</div>
+          </button>
+          <button type="button" class="preset" data-preset="ultra">
+            <div class="p-name">💎 Ultra</div>
+            <div class="p-desc">Max detail — slower, best quality</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="pe-slider-row" style="margin-top:18px;">
+        <div class="pe-slider">
+          <label>Sharpening <span class="val" id="sharpenVal">80</span></label>
+          <input type="range" id="sharpen" min="0" max="200" value="80" />
+        </div>
+        <div class="pe-slider">
+          <label>Denoise <span class="val" id="denoiseVal">0</span></label>
+          <input type="range" id="denoise" min="0" max="100" value="0" />
+        </div>
+      </div>
+
+      <div class="estimate" id="estimate">
+        <span>📊 Output will be</span>
+        <span class="est-chip" id="estDims">— × — px</span>
+        <span class="est-chip" id="estMult">—</span>
+        <span class="est-chip" id="estPixels">— megapixels</span>
+      </div>
+
+      <div class="act-row">
+        <button class="btn btn-ghost" id="previewBtn">👁 Preview upscale</button>
+        <button class="btn btn-primary" id="upscaleBtn">✨ Upscale &amp; download</button>
+      </div>
+
+      <div class="prog-wrap" id="progWrap" hidden>
+        <div class="prog-head">
+          <div class="prog-status" id="progStatus">Preparing…</div>
+          <div class="prog-pct" id="progPct">0%</div>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">Powered by Pica (Lanczos) · 100% client-side · Files never leave your device.</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="preview-modal" id="previewModal">
+  <div class="preview-modal-content">
+    <div class="preview-header">
+      <h3 id="previewTitle">Preview &amp; comparison</h3>
+      <button class="preview-close" id="previewClose" aria-label="Close">✕</button>
+    </div>
+
+    <div class="preview-body">
+      <div class="compare" id="compare">
+        <img id="cmpBefore" alt="Before" />
+        <div class="after-wrap" id="afterWrap"><img id="cmpAfter" alt="After" /></div>
+        <div class="divider" id="divider"><div class="knob">⇄</div></div>
+        <div class="lbl left">Original</div>
+        <div class="lbl right">Upscaled</div>
+      </div>
+
+      <div class="zoom-bar">
+        <span style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:6px;">Detail check</span>
+        <button data-zoom="fit" class="active">Fit</button>
+        <button data-zoom="100">100%</button>
+        <button data-zoom="200">200%</button>
+        <button data-zoom="400">400%</button>
+      </div>
+
+      <div class="details">
+        <div class="detail-card">
+          <div class="d-label">Original</div>
+          <div class="d-value" id="dOrigSize">—</div>
+          <div class="d-sub" id="dOrigDim">—</div>
+        </div>
+        <div class="detail-card good">
+          <div class="d-label">Upscaled</div>
+          <div class="d-value" id="dNewSize">—</div>
+          <div class="d-sub" id="dNewDim">—</div>
+        </div>
+        <div class="detail-card">
+          <div class="d-label">Scale factor</div>
+          <div class="d-value" id="dScale">—</div>
+          <div class="d-sub" id="dScaleSub">—</div>
+        </div>
+        <div class="detail-card">
+          <div class="d-label">Processing time</div>
+          <div class="d-value" id="dTime">—</div>
+          <div class="d-sub" id="dMethod">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-footer">
+      <button class="btn btn-ghost" id="previewCancel">Close</button>
+      <button class="btn btn-primary" id="previewDownload">⬇ Download upscaled</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const $ = (s, c = document) => c.querySelector(s);
+  const $$ = (s, c = document) => Array.prototype.slice.call(c.querySelectorAll(s));
+
+  let toastTimer = null;
+  function toast(m){
+    const el = $('#toast');
+    el.textContent = m;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+  }
+  function fmtSize(b){
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(2) + ' MB';
+  }
+
+  /* ============================================================
+     STATE
+     ============================================================ */
+  const state = {
+    file: null,
+    img: null,
+    preset: 'balanced',
+    resultBlob: null,
+    resultUrl: '',
+    resultW: 0,
+    resultH: 0,
+    processingMs: 0
+  };
+
+  const PRESETS = {
+    smooth:   { unsharpAmount: 40,  unsharpRadius: 0.5, unsharpThreshold: 4, filter: 'lanczos3' },
+    balanced: { unsharpAmount: 100, unsharpRadius: 0.6, unsharpThreshold: 2, filter: 'lanczos3' },
+    sharp:    { unsharpAmount: 180, unsharpRadius: 0.7, unsharpThreshold: 1, filter: 'lanczos3' },
+    ultra:    { unsharpAmount: 240, unsharpRadius: 0.9, unsharpThreshold: 1, filter: 'lanczos3' }
+  };
+
+  // Canvas safety limit — most browsers handle ~32–40 MP reliably
+  const MAX_SAFE_PIXELS = 32000000; // 32 MP
+
+  /* ============================================================
+     LOAD FILE
+     ============================================================ */
+  async function addFile(list){
+    const f = Array.from(list).find(f => f.type.startsWith('image/'));
+    if (!f){ toast('Please choose an image'); return; }
+
+    const url = await new Promise(r => {
+      const fr = new FileReader();
+      fr.onload = e => r(e.target.result);
+      fr.readAsDataURL(f);
+    });
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = () => rej(new Error('Cannot decode image'));
+      i.src = url;
+    });
+
+    state.file = f;
+    state.img = img;
+    state.resultBlob = null;
+    if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
+    state.resultUrl = '';
+
+    $('#thumbImg').src = url;
+    $('#fileNm').textContent = f.name;
+    $('#fileSz').textContent = img.naturalWidth + ' × ' + img.naturalHeight + ' px · ' + fmtSize(f.size);
+
+    $('#uploadStage').hidden = true;
+    $('#editorWrap').hidden = false;
+
+    updateEstimate();
+  }
+
+  /* ============================================================
+     TARGET & ESTIMATE
+     ============================================================ */
+  $('#targetMode').addEventListener('change', () => {
+    const m = $('#targetMode').value;
+    $('#widthField').hidden = m !== 'width';
+    $('#multField').hidden = m !== 'multiplier';
+    updateEstimate();
+  });
+  $('#targetWidth').addEventListener('change', updateEstimate);
+  $('#multiplier').addEventListener('change', updateEstimate);
+
+  function getTargetDims(){
+    if (!state.img) return null;
+    if ($('#targetMode').value === 'width'){
+      const targetW = parseInt($('#targetWidth').value, 10);
+      const ratio = state.img.naturalHeight / state.img.naturalWidth;
+      return { w: targetW, h: Math.round(targetW * ratio) };
+    } else {
+      const m = parseFloat($('#multiplier').value);
+      return {
+        w: Math.round(state.img.naturalWidth * m),
+        h: Math.round(state.img.naturalHeight * m)
+      };
+    }
+  }
+
+  function updateEstimate(){
+    const dims = getTargetDims();
+    if (!dims) return;
+    const origW = state.img.naturalWidth;
+    const origH = state.img.naturalHeight;
+    const mult = dims.w / origW;
+    const mp = (dims.w * dims.h) / 1e6;
+    const pixels = dims.w * dims.h;
+
+    $('#estDims').textContent = dims.w + ' × ' + dims.h + ' px';
+    $('#estMult').textContent = mult.toFixed(2) + '× original';
+    $('#estPixels').textContent = mp.toFixed(1) + ' MP';
+
+    // Warn if too large for browser canvas
+    const est = $('#estimate');
+    if (pixels > MAX_SAFE_PIXELS){
+      est.classList.add('warn');
+      est.innerHTML =
+        '<span>⚠️</span>' +
+        '<span><strong>Too large for browser canvas</strong> (' + mp.toFixed(1) + ' MP). ' +
+        'Most browsers fail above ~32 MP. Use a smaller target, or use the multiplier mode with a lower value.</span>' +
+        '<span class="est-chip">' + dims.w + ' × ' + dims.h + ' px</span>' +
+        '<span class="est-chip">' + mp.toFixed(1) + ' MP</span>';
+    } else {
+      est.classList.remove('warn');
+      est.innerHTML =
+        '<span>📊</span>' +
+        '<span>Output will be</span>' +
+        '<span class="est-chip" id="estDims">' + dims.w + ' × ' + dims.h + ' px</span>' +
+        '<span class="est-chip" id="estMult">' + mult.toFixed(2) + '× original</span>' +
+        '<span class="est-chip" id="estPixels">' + mp.toFixed(1) + ' MP</span>';
+    }
+  }
+
+  /* ============================================================
+     PRESETS
+     ============================================================ */
+  $$('.preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.preset = btn.dataset.preset;
+      $$('.preset').forEach(b => b.classList.toggle('active', b === btn));
+      const cfg = PRESETS[state.preset];
+      $('#sharpen').value = cfg.unsharpAmount;
+      $('#sharpenVal').textContent = cfg.unsharpAmount;
+    });
+  });
+
+  $('#sharpen').addEventListener('input', e => {
+    $('#sharpenVal').textContent = e.target.value;
+    $$('.preset').forEach(b => b.classList.remove('active'));
+  });
+  $('#denoise').addEventListener('input', e => {
+    $('#denoiseVal').textContent = e.target.value;
+  });
+
+  /* ============================================================
+     PROGRESS
+     ============================================================ */
+  function setProgress(pct, status){
+    pct = Math.max(0, Math.min(1, pct));
+    $('#progWrap').hidden = false;
+    $('#progFill').style.width = Math.round(pct * 100) + '%';
+    $('#progPct').textContent = Math.round(pct * 100) + '%';
+    if (status) $('#progStatus').textContent = status;
+  }
+  function hideProgressSoon(delay = 900){
+    setTimeout(() => { $('#progWrap').hidden = true; }, delay);
+  }
+
+  /* ============================================================
+     DENOISE (3×3 median, optional pre-pass)
+     ============================================================ */
+  function denoiseCanvas(canvas, strength){
+    if (strength <= 0) return canvas;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const w = canvas.width, h = canvas.height;
+    const id = ctx.getImageData(0, 0, w, h);
+    const d = id.data;
+    const copy = new Uint8ClampedArray(d);
+    for (let y = 1; y < h - 1; y++){
+      for (let x = 1; x < w - 1; x++){
+        const i = (y * w + x) * 4;
+        const r = [], g = [], b = [];
+        for (let dy = -1; dy <= 1; dy++){
+          for (let dx = -1; dx <= 1; dx++){
+            const j = ((y + dy) * w + (x + dx)) * 4;
+            r.push(copy[j]); g.push(copy[j + 1]); b.push(copy[j + 2]);
+          }
+        }
+        r.sort((a, b) => a - b); g.sort((a, b) => a - b); b.sort((a, b) => a - b);
+        d[i] = r[4]; d[i + 1] = g[4]; d[i + 2] = b[4];
+      }
+    }
+    ctx.putImageData(id, 0, 0);
+    return canvas;
+  }
+
+  /* ============================================================
+     CORE UPSCALE — uses Pica (fix: no pica.debug = false)
+     ============================================================ */
+  async function upscaleImage(){
+    if (!state.img) return null;
+
+    const dims = getTargetDims();
+    if (!dims) return null;
+
+    const targetW = dims.w;
+    const targetH = dims.h;
+    const origW = state.img.naturalWidth;
+    const origH = state.img.naturalHeight;
+
+    // Pre-flight: check pixel count
+    if (targetW * targetH > MAX_SAFE_PIXELS * 1.5){
+      throw new Error(
+        'Target size (' + (targetW * targetH / 1e6).toFixed(1) + ' MP) exceeds browser limits. ' +
+        'Try a smaller target.'
+      );
+    }
+
+    // Source canvas
+    let srcCanvas = document.createElement('canvas');
+    srcCanvas.width = origW;
+    srcCanvas.height = origH;
+    srcCanvas.getContext('2d').drawImage(state.img, 0, 0);
+
+    // Optional denoise
+    const denoiseAmt = parseInt($('#denoise').value, 10);
+    if (denoiseAmt > 0){
+      srcCanvas = denoiseCanvas(srcCanvas, denoiseAmt);
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // FIX: initialize Pica correctly. In v9, `pica()` returns an
+    // instance. Setting `pica.debug = false` overrides an internal
+    // method and breaks resize(). Just call pica() and go.
+    // ────────────────────────────────────────────────────────────
+    const picaInstance = window.pica();
+
+    const cfg = { ...PRESETS[state.preset] };
+    cfg.unsharpAmount = parseInt($('#sharpen').value, 10);
+
+    // ────────────────────────────────────────────────────────────
+    // Stepwise resize: 2× at a time until close to target.
+    // Each step preserves detail better than one big jump.
+    // ────────────────────────────────────────────────────────────
+    let current = srcCanvas;
+    let currentW = origW;
+    let currentH = origH;
+
+    while (currentW * 2 <= targetW * 0.95 && currentW * 2 < 8192){
+      const nextW = Math.min(targetW, Math.round(currentW * 2));
+      const nextH = Math.round(nextW * (origH / origW));
+
+      const nextCanvas = document.createElement('canvas');
+      nextCanvas.width = nextW;
+      nextCanvas.height = nextH;
+
+      await picaInstance.resize(current, nextCanvas, {
+        filter: 'lanczos3',
+        unsharpAmount: 0,
+        unsharpRadius: 0,
+        unsharpThreshold: 0
+      });
+
+      current = nextCanvas;
+      currentW = nextW;
+      currentH = nextH;
+
+      setProgress(
+        0.2 + 0.6 * (currentW / targetW),
+        'Resizing step → ' + currentW + ' px…'
+      );
+
+      // Yield to keep UI responsive
+      await new Promise(r => setTimeout(r, 0));
+    }
+
+    // Final exact resize with sharpening
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = targetW;
+    finalCanvas.height = targetH;
+
+    setProgress(0.85, 'Applying Lanczos + sharpening…');
+
+    await picaInstance.resize(current, finalCanvas, {
+      filter: cfg.filter,
+      unsharpAmount: cfg.unsharpAmount,
+      unsharpRadius: cfg.unsharpRadius,
+      unsharpThreshold: cfg.unsharpThreshold
+    });
+
+    setProgress(0.95, 'Encoding…');
+
+    return finalCanvas;
+  }
+
+  /* ============================================================
+     DOWNLOAD
+     ============================================================ */
+  function triggerDownload(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  }
+
+  async function doUpscale(download = true){
+    if (!state.img){ toast('Load an image first'); return; }
+
+    // Pre-flight size check
+    const dims = getTargetDims();
+    if (dims.w * dims.h > MAX_SAFE_PIXELS * 1.5){
+      toast('Target too large — try a smaller size or multiplier');
+      return;
+    }
+
+    const btn = $('#upscaleBtn');
+    const prevBtn = $('#previewBtn');
+    btn.disabled = true; prevBtn.disabled = true;
+    btn.textContent = 'Upscaling…';
+
+    const t0 = performance.now();
+
+    try {
+      const canvas = await upscaleImage();
+      if (!canvas) throw new Error('Upscale returned null');
+
+      const blob = await new Promise((res, rej) => {
+        canvas.toBlob(b => {
+          if (b) res(b);
+          else rej(new Error('toBlob failed — canvas too large for this browser'));
+        }, 'image/png');
+      });
+
+      state.resultBlob = blob;
+      if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
+      state.resultUrl = URL.createObjectURL(blob);
+      state.resultW = canvas.width;
+      state.resultH = canvas.height;
+      state.processingMs = performance.now() - t0;
+
+      setProgress(1, 'Done');
+      hideProgressSoon(800);
+
+      if (download){
+        const baseName = state.file.name.replace(/\.[^.]+$/, '');
+        triggerDownload(blob, 'upscaled-' + canvas.width + 'px-' + baseName + '.png');
+        toast('Upscaled to ' + canvas.width + ' × ' + canvas.height + ' 🎉');
+      }
+
+      return canvas;
+    } catch (e){
+      console.error('Upscale error:', e);
+      toast(e.message || 'Upscale failed');
+      return null;
+    } finally {
+      btn.disabled = false; prevBtn.disabled = false;
+      btn.textContent = '✨ Upscale & download';
+    }
+  }
+
+  /* ============================================================
+     PREVIEW MODAL
+     ============================================================ */
+  function setSlider(percent){
+    percent = Math.max(0, Math.min(100, percent));
+    $('#afterWrap').style.clipPath = 'inset(0 ' + (100 - percent) + '% 0 0)';
+    $('#divider').style.left = percent + '%';
+  }
+
+  (function initSlider(){
+    const wrap = $('#compare');
+    let dragging = false;
+    function posFromEvent(e){
+      const rect = wrap.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      return ((clientX - rect.left) / rect.width) * 100;
+    }
+    function start(e){ dragging = true; setSlider(posFromEvent(e)); e.preventDefault(); }
+    function move(e){ if (!dragging) return; setSlider(posFromEvent(e)); e.preventDefault(); }
+    function end(){ dragging = false; }
+    wrap.addEventListener('mousedown', start);
+    wrap.addEventListener('touchstart', start, { passive: false });
+    window.addEventListener('mousemove', move);
+    window.addEventListener('touchmove', move, { passive: false });
+    window.addEventListener('mouseup', end);
+    window.addEventListener('touchend', end);
+  })();
+
+  async function openPreview(){
+    if (!state.img){ toast('Load an image first'); return; }
+    if (!state.resultBlob){
+      const ok = await doUpscale(false);
+      if (!ok) return;
+    }
+
+    $('#previewTitle').textContent = state.file.name;
+    $('#cmpBefore').src = state.img.src;
+    $('#cmpAfter').src = state.resultUrl;
+    setSlider(50);
+
+    const origW = state.img.naturalWidth;
+    const origH = state.img.naturalHeight;
+    const newW = state.resultW;
+    const newH = state.resultH;
+    const mult = newW / origW;
+    const mp = (newW * newH) / 1e6;
+    const ms = state.processingMs;
+    const timeStr = ms < 1000 ? Math.round(ms) + ' ms' : (ms / 1000).toFixed(2) + ' s';
+
+    $('#dOrigSize').textContent = fmtSize(state.file.size);
+    $('#dOrigDim').textContent = origW + ' × ' + origH + ' px';
+
+    $('#dNewSize').textContent = fmtSize(state.resultBlob.size);
+    $('#dNewDim').textContent = newW + ' × ' + newH + ' px · PNG';
+
+    $('#dScale').textContent = mult.toFixed(2) + '×';
+    $('#dScaleSub').textContent = mp.toFixed(1) + ' megapixels';
+
+    $('#dTime').textContent = timeStr;
+    const presetLabel = state.preset.charAt(0).toUpperCase() + state.preset.slice(1);
+    $('#dMethod').textContent = presetLabel + ' · Lanczos3';
+
+    $('#previewModal').classList.add('show');
+  }
+
+  $('#previewClose').addEventListener('click', () => $('#previewModal').classList.remove('show'));
+  $('#previewCancel').addEventListener('click', () => $('#previewModal').classList.remove('show'));
+  $('#previewModal').addEventListener('click', e => { if (e.target === $('#previewModal')) $('#previewModal').classList.remove('show'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#previewModal').classList.remove('show'); });
+
+  $('#previewDownload').addEventListener('click', () => {
+    if (!state.resultBlob) return;
+    const baseName = state.file.name.replace(/\.[^.]+$/, '');
+    triggerDownload(state.resultBlob, 'upscaled-' + state.resultW + 'px-' + baseName + '.png');
+    toast('Downloaded 🎉');
+    $('#previewModal').classList.remove('show');
+  });
+
+  /* Zoom controls */
+  $$('.zoom-bar button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.zoom-bar button').forEach(b => b.classList.toggle('active', b === btn));
+      const z = btn.dataset.zoom;
+      const compare = $('#compare');
+      const beforeImg = $('#cmpBefore');
+      const afterImg = $('#cmpAfter');
+      if (z === 'fit'){
+        compare.style.width = '';
+        compare.style.maxWidth = '100%';
+        beforeImg.style.width = '';
+        afterImg.style.width = '';
+      } else {
+        const pct = parseInt(z, 10);
+        const baseW = state.resultW;
+        const displayW = baseW * (pct / 100);
+        compare.style.width = Math.min(displayW, 3000) + 'px';
+        compare.style.maxWidth = '100%';
+        beforeImg.style.width = '100%';
+        afterImg.style.width = '100%';
+      }
+    });
+  });
+
+  /* ============================================================
+     RESET
+     ============================================================ */
+  $('#resetBtn').addEventListener('click', () => {
+    state.file = null;
+    state.img = null;
+    state.resultBlob = null;
+    if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
+    state.resultUrl = '';
+    $('#uploadStage').hidden = false;
+    $('#editorWrap').hidden = true;
+  });
+
+  /* ============================================================
+     DROPZONE
+     ============================================================ */
+  const dz = $('#dropzone');
+  const fi = $('#fileInput');
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fi.click(); } });
+  fi.addEventListener('change', () => { if (fi.files && fi.files.length) addFile(fi.files); fi.value = ''; });
+  ['dragenter','dragover'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(evt => dz.addEventListener(evt, e => {
+    e.preventDefault(); e.stopPropagation();
+    if (evt === 'dragleave' && dz.contains(e.relatedTarget)) return;
+    dz.classList.remove('dragover');
+    if (evt === 'drop' && e.dataTransfer.files.length) addFile(e.dataTransfer.files);
+  }));
+  window.addEventListener('dragover', e => { if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
+  window.addEventListener('drop', e => { if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
+
+  $('#previewBtn').addEventListener('click', openPreview);
+  $('#upscaleBtn').addEventListener('click', () => doUpscale(true));
+})();
+</script>
+</body>
+</html>

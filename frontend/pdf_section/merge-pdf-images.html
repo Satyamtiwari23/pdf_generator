@@ -4,44 +4,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Merge PDFs — PDFnest</title>
+  <title>Merge PDF + Images — PDFnest</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
-  <script src="theme.js"></script>
-  <script src="auth-guard.js"></script>
+  <link rel="stylesheet" href="../style.css" />
+  <script src="../theme.js"></script>
+  <script src="../auth-guard.js"></script>
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <!-- pdf.js is used to get image dimensions -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 
 <body>
 
   <header class="site-header">
     <div class="header-inner">
-      <a href="index.html" class="brand">
+      <a href="../index.html" class="brand">
         <span class="logo">✦</span>
-        <span>PDFnest<small>Merge PDFs</small></span>
+        <span>PDFnest<small>Merge PDF + Images</small></span>
       </a>
-      <a href="index.html" class="back-link">← All tools</a>
+      <a href="../index.html" class="back-link">← All tools</a>
     </div>
   </header>
 
   <main>
     <section class="hero">
-      <h1>Merge <span class="grad">multiple PDFs</span> into one</h1>
-      <p>Drop in your PDFs, drag to reorder, and combine them into a single document.</p>
+      <h1>Merge <span class="grad">PDF &amp; Images</span></h1>
+      <p>Upload one PDF and multiple images. Drag to reorder them, then combine everything into a single PDF.</p>
     </section>
 
     <section class="card">
       <div class="field">
-        <label>Your PDF files</label>
+        <label>Your files (1 PDF + Images)</label>
         <div class="dropzone" id="dropzone" tabindex="0" role="button">
           <div class="dz-icon">📎</div>
-          <div class="dz-title">Drag &amp; drop PDFs here</div>
-          <div class="dz-sub">or <span class="link">browse files</span> · multiple allowed</div>
+          <div class="dz-title">Drag &amp; drop a PDF and images here</div>
+          <div class="dz-sub">or <span class="link">browse files</span> · .pdf, .png, .jpg, .webp</div>
         </div>
-        <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple hidden />
+        <input type="file" id="fileInput" accept="application/pdf,image/*" multiple hidden />
       </div>
 
       <div class="file-list" id="fileList"></div>
@@ -68,7 +70,7 @@
         clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
       }
 
-      const state = { files: [] }; // { id, name, size, bytes }
+      const state = { files: [] }; // { id, type, name, size, bytes, dataUrl, width, height }
 
       function fmtSize(b) {
         if (b < 1024) return b + ' B';
@@ -76,17 +78,65 @@
         return (b / 1048576).toFixed(2) + ' MB';
       }
 
+      async function processImage(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.naturalWidth;
+              canvas.height = img.naturalHeight;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0);
+              // Convert to JPEG to ensure compatibility with pdf-lib
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+              resolve({
+                id: uid(),
+                type: 'image',
+                name: file.name,
+                size: file.size,
+                dataUrl: dataUrl,
+                width: img.naturalWidth,
+                height: img.naturalHeight
+              });
+            };
+            img.onerror = () => reject(new Error('Invalid image'));
+            img.src = e.target.result;
+          };
+          reader.onerror = () => reject(new Error('Read error'));
+          reader.readAsDataURL(file);
+        });
+      }
+
       async function addFiles(fileList) {
-        const files = Array.from(fileList).filter(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
-        if (!files.length) { toast('Please choose PDF files'); return; }
+        const files = Array.from(fileList);
+        if (!files.length) return;
+
         for (const file of files) {
-          try {
-            const buf = await file.arrayBuffer();
-            // verify it's a PDF
-            try { await PDFLib.PDFDocument.load(buf.slice(0)); }
-            catch (e) { toast('"' + file.name + '" is not a valid PDF'); continue; }
-            state.files.push({ id: uid(), name: file.name, size: file.size, bytes: buf });
-          } catch (err) { console.error(err); toast('Could not read "' + file.name + '"'); }
+          if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
+            try {
+              const buf = await file.arrayBuffer();
+              await PDFLib.PDFDocument.load(buf.slice(0));
+              // Check if we already have a PDF
+              if (state.files.some(f => f.type === 'pdf')) {
+                toast('Only one PDF allowed. Remove the existing one first.');
+                continue;
+              }
+              state.files.push({
+                id: uid(), type: 'pdf', name: file.name, size: file.size, bytes: buf
+              });
+            } catch (err) {
+              console.error(err); toast('"' + file.name + '" is not a valid PDF');
+            }
+          } else if (file.type.startsWith('image/')) {
+            try {
+              const imgData = await processImage(file);
+              state.files.push(imgData);
+            } catch (err) {
+              console.error(err); toast('Could not process "' + file.name + '"');
+            }
+          }
         }
         renderFiles();
       }
@@ -98,17 +148,26 @@
           el.className = 'file-item';
           el.draggable = true;
           el.dataset.id = f.id;
+
+          let iconHtml = '';
+          let infoHtml = '';
+
+          if (f.type === 'pdf') {
+            iconHtml = '<span class="file-icon">PDF</span>';
+            infoHtml = '<div class="file-name">' + f.name + '</div><div class="file-size">' + fmtSize(f.size) + '</div>';
+          } else {
+            iconHtml = '<img src="' + f.dataUrl + '" style="width:36px; height:36px; border-radius:8px; object-fit:cover;" />';
+            infoHtml = '<div class="file-name">' + f.name + '</div><div class="file-size">' + f.width + '×' + f.height + ' · ' + fmtSize(f.size) + '</div>';
+          }
+
           el.innerHTML =
             '<span class="file-handle">⠿</span>' +
-            '<span class="file-icon">PDF</span>' +
-            '<div class="file-info">' +
-            '<div class="file-name">' + f.name + '</div>' +
-            '<div class="file-size">' + fmtSize(f.size) + '</div>' +
-            '</div>' +
+            iconHtml +
+            '<div class="file-info">' + infoHtml + '</div>' +
             '<button class="remove" data-id="' + f.id + '" aria-label="Remove">✕</button>';
           list.appendChild(el);
         });
-        $('#mergeBtn').disabled = state.files.length < 2;
+        $('#mergeBtn').disabled = state.files.length === 0;
       }
 
       let dragEl = null;
@@ -146,16 +205,26 @@
       }
 
       async function mergeAndDownload() {
-        if (state.files.length < 2) { toast('Add at least two PDFs'); return; }
+        if (state.files.length === 0) { toast('Add some files first'); return; }
         const btn = $('#mergeBtn'); btn.disabled = true; btn.textContent = 'Merging…';
         try {
           const { PDFDocument } = PDFLib;
           const out = await PDFDocument.create();
+
           for (const f of state.files) {
-            const src = await PDFDocument.load(f.bytes);
-            const pages = await out.copyPages(src, src.getPageIndices());
-            pages.forEach(p => out.addPage(p));
+            if (f.type === 'pdf') {
+              const src = await PDFDocument.load(f.bytes);
+              const pages = await out.copyPages(src, src.getPageIndices());
+              pages.forEach(p => out.addPage(p));
+            } else {
+              // It's an image
+              const img = await out.embedJpg(f.dataUrl);
+              // Create a page matching the image dimensions (or A4 if you prefer)
+              const page = out.addPage([f.width, f.height]);
+              page.drawImage(img, { x: 0, y: 0, width: f.width, height: f.height });
+            }
           }
+
           const bytes = await out.save();
           const blob = new Blob([bytes], { type: 'application/pdf' });
           const url = URL.createObjectURL(blob);
@@ -165,7 +234,10 @@
           document.body.appendChild(a); a.click(); a.remove();
           setTimeout(() => URL.revokeObjectURL(url), 4000);
           toast('Merged PDF downloaded 🎉');
-        } catch (err) { console.error(err); toast('Merge failed — try again'); }
+        } catch (err) {
+          console.error(err);
+          toast('Merge failed — ' + err.message);
+        }
         finally { btn.disabled = false; btn.textContent = '🔗 Merge & download'; }
       }
 

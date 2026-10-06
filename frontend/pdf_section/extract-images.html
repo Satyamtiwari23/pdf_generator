@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Extract Images — PDFnest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../style.css" />
+  <script src="../theme.js"></script>
+  <script src="../auth-guard.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- JSZip for downloading all images as a zip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="brand">
+        <span class="logo">✦</span>
+        <span>PDFnest<small>Extract Images</small></span>
+      </a>
+      <a href="../index.html" class="back-link">← All tools</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Extract <span class="grad">images from PDF</span></h1>
+      <p>Upload a PDF and we'll convert every page into a high-quality image you can download.</p>
+    </section>
+
+    <section class="card">
+      <div class="field">
+        <label>Your PDF</label>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button">
+          <div class="dz-icon">🖼️</div>
+          <div class="dz-title">Drag &amp; drop a PDF here</div>
+          <div class="dz-sub">or <span class="link">browse files</span> · .pdf only</div>
+        </div>
+        <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden />
+      </div>
+
+      <div class="file-list" id="fileList"></div>
+
+      <div class="options" id="optionsBlock" hidden>
+        <div class="field">
+          <label for="format">Output format</label>
+          <select id="format">
+            <option value="image/jpeg">JPEG (Smallest)</option>
+            <option value="image/png">PNG (Lossless)</option>
+            <option value="image/webp">WEBP (Modern)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="quality">Quality</label>
+          <select id="quality">
+            <option value="0.7">Low (70%)</option>
+            <option value="0.85">Medium (85%)</option>
+            <option value="0.95" selected>High (95%)</option>
+            <option value="1.0">Maximum (100%)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="scale">Resolution</label>
+          <select id="scale">
+            <option value="1.0">Standard (1x)</option>
+            <option value="1.5">High (1.5x)</option>
+            <option value="2.0" selected>Very High (2x)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+        <button class="btn btn-primary" id="extractBtn" disabled>🖼️ Extract Images</button>
+        <button class="btn btn-ghost" id="downloadAllBtn" hidden>⬇ Download All as ZIP</button>
+      </div>
+    </section>
+
+    <section id="previewSection" hidden style="margin-top:38px;">
+      <div class="section-head">
+        <div>
+          <h2>Extracted Images <span class="count" id="imageCount">0</span></h2>
+          <p>Click download on any image, or download all as a ZIP.</p>
+        </div>
+      </div>
+      <div class="upload-list" id="imageGrid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));">
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">Powered by pdf.js + JSZip · Files never leave your device.</footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      'use strict';
+      const $ = (s, c = document) => c.querySelector(s);
+      const uid = () => Math.random().toString(36).slice(2, 9);
+
+      if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+
+      let toastTimer = null;
+      function toast(m) {
+        const el = $('#toast'); el.textContent = m; el.classList.add('show');
+        clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+      }
+
+      const state = { file: null, images: [] };
+
+      function fmtSize(b) {
+        if (b < 1024) return b + ' B';
+        if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+        return (b / 1048576).toFixed(2) + ' MB';
+      }
+
+      async function addFile(fileList) {
+        const f = Array.from(fileList).find(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+        if (!f) { toast('Please choose a PDF'); return; }
+
+        try {
+          const buf = await f.arrayBuffer();
+          await pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
+          state.file = { name: f.name, size: f.size, bytes: buf };
+          state.images = [];
+          $('#imageGrid').innerHTML = '';
+          $('#imageCount').textContent = '0';
+          $('#previewSection').hidden = true;
+          $('#downloadAllBtn').hidden = true;
+          renderFile();
+        } catch (err) {
+          console.error(err);
+          toast('Could not read that PDF. Make sure it is valid.');
+        }
+      }
+
+      function renderFile() {
+        const list = $('#fileList'); list.innerHTML = '';
+        if (!state.file) {
+          $('#extractBtn').disabled = true;
+          $('#optionsBlock').hidden = true;
+          return;
+        }
+
+        const f = state.file;
+        const el = document.createElement('div');
+        el.className = 'file-item';
+        el.innerHTML =
+          '<span class="file-icon">PDF</span>' +
+          '<div class="file-info">' +
+          '<div class="file-name">' + f.name + '</div>' +
+          '<div class="file-size">' + fmtSize(f.size) + '</div>' +
+          '</div>' +
+          '<button class="remove" aria-label="Remove">✕</button>';
+        list.appendChild(el);
+
+        $('#extractBtn').disabled = false;
+        $('#optionsBlock').hidden = false;
+      }
+
+      async function extractImages() {
+        if (!state.file) { toast('Add a PDF first'); return; }
+
+        const btn = $('#extractBtn');
+        btn.disabled = true; btn.textContent = 'Extracting…';
+        state.images = [];
+
+        try {
+          const format = $('#format').value;
+          const quality = parseFloat($('#quality').value);
+          const scale = parseFloat($('#scale').value);
+
+          const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(state.file.bytes) }).promise;
+
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const viewport = page.getViewport({ scale: scale });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            const ctx = canvas.getContext('2d');
+
+            await page.render({ canvasContext: ctx, viewport }).promise;
+
+            const dataUrl = canvas.toDataURL(format, quality);
+            state.images.push({
+              id: uid(),
+              pageNum: i,
+              dataUrl: dataUrl,
+              width: canvas.width,
+              height: canvas.height,
+              format: format.split('/')[1].toUpperCase()
+            });
+          }
+
+          renderImages();
+          toast('Extracted ' + state.images.length + ' images 🎉');
+        } catch (err) {
+          console.error(err);
+          toast('Extraction failed: ' + err.message);
+        } finally {
+          btn.disabled = false; btn.textContent = '🖼️ Extract Images';
+        }
+      }
+
+      function renderImages() {
+        const grid = $('#imageGrid');
+        grid.innerHTML = '';
+
+        if (state.images.length === 0) {
+          $('#previewSection').hidden = true;
+          $('#downloadAllBtn').hidden = true;
+          return;
+        }
+
+        $('#previewSection').hidden = false;
+        $('#downloadAllBtn').hidden = false;
+        $('#imageCount').textContent = state.images.length;
+
+        state.images.forEach(img => {
+          const item = document.createElement('div');
+          item.className = 'upload-item';
+          item.style.aspectRatio = 'auto';
+          item.style.display = 'flex';
+          item.style.flexDirection = 'column';
+
+          item.innerHTML =
+            '<img src="' + img.dataUrl + '" style="aspect-ratio: 1; object-fit: cover;" />' +
+            '<div style="padding: 8px; font-size: 0.75rem; text-align: center; background: #fff;">' +
+            '<div style="font-weight: bold; margin-bottom: 4px;">Page ' + img.pageNum + '</div>' +
+            '<div style="color: #6f6685; margin-bottom: 6px;">' + img.width + '×' + img.height + ' · ' + img.format + '</div>' +
+            '<button class="btn btn-primary" style="padding: 6px 10px; font-size: 0.7rem; width: 100%;" data-id="' + img.id + '">⬇ Download</button>' +
+            '</div>';
+
+          grid.appendChild(item);
+        });
+
+        // Add download listeners
+        grid.querySelectorAll('button[data-id]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const img = state.images.find(i => i.id === e.target.dataset.id);
+            if (!img) return;
+            const a = document.createElement('a');
+            a.href = img.dataUrl;
+            a.download = 'PDFnest-page-' + img.pageNum + '.' + img.format.toLowerCase();
+            document.body.appendChild(a); a.click(); a.remove();
+          });
+        });
+      }
+
+      async function downloadAllAsZip() {
+        if (state.images.length === 0) return;
+
+        const btn = $('#downloadAllBtn');
+        btn.disabled = true; btn.textContent = 'Zipping…';
+
+        try {
+          const zip = new JSZip();
+          state.images.forEach(img => {
+            const base64Data = img.dataUrl.split(',')[1];
+            zip.file('page-' + img.pageNum + '.' + img.format.toLowerCase(), base64Data, { base64: true });
+          });
+
+          const content = await zip.generateAsync({ type: 'blob' });
+          const url = URL.createObjectURL(content);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'PDFnest-extracted-' + new Date().toISOString().slice(0, 10) + '.zip';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 4000);
+          toast('ZIP downloaded 🎉');
+        } catch (err) {
+          console.error(err);
+          toast('Failed to create ZIP');
+        } finally {
+          btn.disabled = false; btn.textContent = '⬇ Download All as ZIP';
+        }
+      }
+
+      /* dropzone */
+      const dz = $('#dropzone'); const fileInput = $('#fileInput');
+      dz.addEventListener('click', () => fileInput.click());
+      dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+      fileInput.addEventListener('change', () => { addFile(fileInput.files); fileInput.value = ''; });
+      ['dragenter', 'dragover'].forEach(evt => {
+        dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        dz.addEventListener(evt, e => {
+          e.preventDefault(); e.stopPropagation();
+          if (evt === 'dragleave' && dz.contains(e.relatedTarget)) return;
+          dz.classList.remove('dragover');
+        });
+      });
+      dz.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files.length) addFile(e.dataTransfer.files); });
+      ['dragover', 'drop'].forEach(evt => {
+        window.addEventListener(evt, e => { if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
+      });
+
+      $('#fileList').addEventListener('click', e => {
+        if (!e.target.closest('.remove')) return;
+        state.file = null; state.images = []; renderFile();
+        $('#previewSection').hidden = true;
+        $('#downloadAllBtn').hidden = true;
+      });
+
+      $('#extractBtn').addEventListener('click', extractImages);
+      $('#downloadAllBtn').addEventListener('click', downloadAllAsZip);
+    })();
+  </script>
+</body>
+
+</html>

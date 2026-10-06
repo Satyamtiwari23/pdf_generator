@@ -9,10 +9,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
-  <script src="theme.js"></script>
-  <script src="auth-guard.js"></script>
-  
+  <link rel="stylesheet" href="../style.css" />
+  <script src="../theme.js"></script>
+  <script src="../auth-guard.js"></script>
+
   <!-- PDF.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <!-- DOCX -->
@@ -22,49 +22,112 @@
 
   <style>
     .preview-modal {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background: rgba(15, 12, 20, 0.85);
       backdrop-filter: blur(5px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 1000; padding: 20px;
-      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
     }
-    .preview-modal.show { opacity: 1; pointer-events: auto; }
+
+    .preview-modal.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
     .preview-modal-content {
-      background: #fff; border-radius: 16px;
-      width: 100%; max-width: 850px; max-height: 90vh;
-      display: flex; flex-direction: column; overflow: hidden;
-      box-shadow: 0 26px 60px -24px rgba(0,0,0,0.6);
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 850px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 26px 60px -24px rgba(0, 0, 0, 0.6);
     }
-    body.dark-theme .preview-modal-content { background: #1b1624; color: #f5f2ff; }
+
+    body.dark-theme .preview-modal-content {
+      background: #1b1624;
+      color: #f5f2ff;
+    }
+
     .preview-header {
-      padding: 16px 24px; border-bottom: 1px solid var(--line);
-      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .preview-header h3 { margin: 0; font-size: 1.1rem; }
+
+    .preview-header h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
     .preview-close {
-      background: transparent; border: 0; font-size: 1.2rem;
-      cursor: pointer; color: var(--muted);
+      background: transparent;
+      border: 0;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: var(--muted);
     }
+
     .preview-body {
-      padding: 30px; overflow-y: auto; background: #e8e8e8;
+      padding: 30px;
+      overflow-y: auto;
+      background: #e8e8e8;
     }
-    body.dark-theme .preview-body { background: #110d16; }
+
+    body.dark-theme .preview-body {
+      background: #110d16;
+    }
+
     .docx-page {
-      background: #fff; color: #000;
-      padding: 50px; margin: 0 auto; max-width: 700px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-      min-height: 900px; line-height: 1.6; 
-      font-family: 'Times New Roman', serif; font-size: 12pt;
+      background: #fff;
+      color: #000;
+      padding: 50px;
+      margin: 0 auto;
+      max-width: 700px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      min-height: 900px;
+      line-height: 1.6;
+      font-family: 'Times New Roman', serif;
+      font-size: 12pt;
     }
-    .docx-page p { margin: 0 0 8px 0; }
-    .docx-page h1, .docx-page h2, .docx-page h3 { margin: 15px 0 10px 0; }
+
+    .docx-page p {
+      margin: 0 0 8px 0;
+    }
+
+    .docx-page h1,
+    .docx-page h2,
+    .docx-page h3 {
+      margin: 15px 0 10px 0;
+    }
+
     .preview-footer {
-      padding: 16px 24px; border-top: 1px solid var(--line);
-      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
     }
+
     .preview-error {
-      color: #b91c1c; padding: 20px; text-align: center; font-family: monospace;
+      color: #b91c1c;
+      padding: 20px;
+      text-align: center;
+      font-family: monospace;
     }
   </style>
 </head>
@@ -73,11 +136,11 @@
 
   <header class="site-header">
     <div class="header-inner">
-      <a href="index.html" class="brand">
+      <a href="../index.html" class="brand">
         <span class="logo">✦</span>
         <span>PDFnest<small>PDF to DOCX</small></span>
       </a>
-      <a href="index.html" class="back-link">← All tools</a>
+      <a href="../index.html" class="back-link">← All tools</a>
     </div>
   </header>
 
@@ -155,7 +218,7 @@
       async function addFile(fileList) {
         const f = Array.from(fileList).find(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
         if (!f) { toast('Please choose a PDF'); return; }
-        
+
         try {
           const buf = await f.arrayBuffer();
           await pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
@@ -170,24 +233,24 @@
 
       function renderFile() {
         const list = $('#fileList'); list.innerHTML = '';
-        if (!state.file) { 
-          $('#convertBtn').disabled = true; 
+        if (!state.file) {
+          $('#convertBtn').disabled = true;
           $('#previewBtn').disabled = true;
-          return; 
+          return;
         }
-        
+
         const f = state.file;
         const el = document.createElement('div');
         el.className = 'file-item';
         el.innerHTML =
           '<span class="file-icon">PDF</span>' +
           '<div class="file-info">' +
-            '<div class="file-name">' + f.name + '</div>' +
-            '<div class="file-size">' + fmtSize(f.size) + '</div>' +
+          '<div class="file-name">' + f.name + '</div>' +
+          '<div class="file-size">' + fmtSize(f.size) + '</div>' +
           '</div>' +
           '<button class="remove" aria-label="Remove">✕</button>';
         list.appendChild(el);
-        
+
         $('#convertBtn').disabled = false;
         $('#previewBtn').disabled = false;
       }
@@ -217,7 +280,7 @@
           const textContent = await page.getTextContent();
           const styles = textContent.styles;
           const items = textContent.items.filter(it => it.str.trim() !== '');
-          
+
           if (items.length === 0) continue;
 
           // 1. Sort all text items by Y (top to bottom), then X (left to right)
@@ -293,7 +356,7 @@
               const lowerFont = fontFamily.toLowerCase();
               const isBold = lowerFont.includes('bold') || lowerFont.includes('black') || lowerFont.includes('heavy');
               const isItalic = lowerFont.includes('italic') || lowerFont.includes('oblique');
-              
+
               let cleanFont = fontFamily.replace(/['"]/g, '').split(',')[0].trim();
               if (cleanFont === 'sans-serif') cleanFont = 'Arial';
               if (cleanFont === 'serif') cleanFont = 'Times New Roman';
@@ -305,7 +368,7 @@
                 italics: isItalic,
                 font: cleanFont
               }));
-              
+
               totalTextLength += item.str.length;
             });
 
@@ -316,7 +379,7 @@
             if (lastY !== null) {
               const gap = lastY - line.y;
               const expectedLineHeight = lastFontSize * 1.2;
-              
+
               if (gap < expectedLineHeight + 4 && alignment === currentParagraphAlignment) {
                 isNewParagraph = false;
               } else if (gap > expectedLineHeight + 2) {
@@ -341,7 +404,7 @@
             }
 
             currentParagraphRuns.push(...runs);
-            
+
             lastY = line.y;
             lastFontSize = fontSize;
           }
@@ -381,16 +444,16 @@
 
         try {
           state.docxBlob = await generateDocxBlob();
-          
+
           // Convert the generated DOCX blob to HTML using mammoth for preview
           const arrayBuffer = await state.docxBlob.arrayBuffer();
-          
+
           if (typeof mammoth === 'undefined') {
             throw new Error('Mammoth library not loaded. Cannot generate preview.');
           }
 
           const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
-          
+
           if (!result.value || result.value.trim() === '') {
             throw new Error('Preview generated empty content. The PDF might only contain images.');
           }
@@ -400,12 +463,12 @@
           toast('Preview generated successfully!');
         } catch (err) {
           console.error('Preview error:', err);
-          $('#docxPreviewContainer').innerHTML = 
+          $('#docxPreviewContainer').innerHTML =
             '<div class="preview-error">' +
-              '<p><strong>Preview Error:</strong> ' + err.message + '</p>' +
-              '<p style="font-size:0.85rem; color:#666; margin-top:10px;">' +
-              'This usually happens if the PDF is a scanned image or if the document is too complex. ' +
-              'You can still try downloading it directly.</p>' +
+            '<p><strong>Preview Error:</strong> ' + err.message + '</p>' +
+            '<p style="font-size:0.85rem; color:#666; margin-top:10px;">' +
+            'This usually happens if the PDF is a scanned image or if the document is too complex. ' +
+            'You can still try downloading it directly.</p>' +
             '</div>';
           $('#previewModal').classList.add('show');
         } finally {
@@ -422,7 +485,7 @@
           if (!state.docxBlob) {
             state.docxBlob = await generateDocxBlob();
           }
-          
+
           const url = URL.createObjectURL(state.docxBlob);
           const a = document.createElement('a');
           a.href = url;
@@ -474,7 +537,7 @@
 
       $('#previewBtn').addEventListener('click', handlePreview);
       $('#convertBtn').addEventListener('click', handleDownload);
-      
+
       $('#closePreviewBtn').addEventListener('click', () => $('#previewModal').classList.remove('show'));
       $('#cancelPreviewBtn').addEventListener('click', () => $('#previewModal').classList.remove('show'));
       $('#downloadFromPreviewBtn').addEventListener('click', () => {

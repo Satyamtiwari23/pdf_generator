@@ -1,119 +1,57 @@
 // ============================================================
-// PDFnest Authentication Guard
+// PDFnest Authentication Guard (supports subfolders)
 // ============================================================
 
 (function () {
 
-  const API_URL =
-    'https://pdf-generator-ochre-two.vercel.app/api/auth';
+  const API_URL = 'https://pdf-generator-ochre-two.vercel.app/api/auth';
 
-  const token = localStorage.getItem('token');
+  // Detect if we're inside a section subfolder
+  const isSubfolder = /\/(image_section|converter_section|pdf_section)\//.test(
+    window.location.pathname
+  );
+  const rootPrefix = isSubfolder ? '../' : '';
 
-  const currentPage =
-    window.location.pathname.split('/').pop().toLowerCase();
+  const currentPage = window.location.pathname.split('/').pop().toLowerCase();
 
-  const publicPages = [
-    'login.html',
-    'signup.html'
-  ];
+  const publicPages = ['login.html', 'signup.html'];
 
-
-  // ==========================================================
-  // CHECK AUTHENTICATION
-  // ==========================================================
+  function goTo(page) {
+    window.location.replace(rootPrefix + page);
+  }
 
   function checkAuthentication() {
 
     const currentToken = localStorage.getItem('token');
 
-    // No token = definitely logged out
     if (!currentToken) {
-
-      if (!publicPages.includes(currentPage)) {
-        window.location.replace('login.html');
-      }
-
+      if (!publicPages.includes(currentPage)) goTo('login.html');
       return;
     }
 
-
-    // Verify token with backend
     fetch(`${API_URL}/me`, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${currentToken}`
-      }
+      headers: { 'Authorization': `Bearer ${currentToken}` }
     })
-
       .then(response => {
-
-        if (!response.ok) {
-          throw new Error('Invalid token');
-        }
-
+        if (!response.ok) throw new Error('Invalid token');
         return response.json();
-
       })
-
       .then(data => {
-
         if (data.user) {
-
-          localStorage.setItem(
-            'user',
-            JSON.stringify(data.user)
-          );
-
+          localStorage.setItem('user', JSON.stringify(data.user));
         }
-
-        // Already logged in → don't allow login/signup
-        if (publicPages.includes(currentPage)) {
-
-          window.location.replace('index.html');
-
-        }
-
+        if (publicPages.includes(currentPage)) goTo('index.html');
       })
-
       .catch(error => {
-
-        console.log(
-          'Authentication failed:',
-          error.message
-        );
-
+        console.log('Authentication failed:', error.message);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-
-        if (!publicPages.includes(currentPage)) {
-
-          window.location.replace('login.html');
-
-        }
-
+        if (!publicPages.includes(currentPage)) goTo('login.html');
       });
-
   }
 
-
-  // ==========================================================
-  // INITIAL CHECK
-  // ==========================================================
-
   checkAuthentication();
-
-
-  // ==========================================================
-  // BACK/FORWARD BUTTON + BFCACHE PROTECTION
-  // ==========================================================
-
-  window.addEventListener('pageshow', function () {
-
-    checkAuthentication();
-
-  });
+  window.addEventListener('pageshow', checkAuthentication);
 
 })();
-
-
-

@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Converter — PDFnest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css" />
+  <script src="../theme.js"></script>
+  <script src="../auth-guard.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    /* ============================================================
+       FILE CHIP
+       ============================================================ */
+    .file-chip {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 12px;
+      background: #fff; border: 1.5px solid var(--line);
+      margin-top: 14px;
+    }
+    body.dark-theme .file-chip { background: #1b1624; border-color: #3b2c50; }
+    .file-chip .thumb {
+      width: 48px; height: 48px; border-radius: 8px;
+      object-fit: cover; flex: none; border: 1px solid var(--line);
+      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 10px 10px;
+    }
+    .file-chip .info { flex: 1; min-width: 0; }
+    .file-chip .nm {
+      font-weight: 700; font-size: .88rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-chip .sz { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+    .file-chip .rm {
+      border: 0; background: transparent; cursor: pointer;
+      width: 28px; height: 28px; border-radius: 8px;
+      color: var(--muted); font-weight: 800;
+      transition: background .18s, color .18s;
+    }
+    .file-chip .rm:hover { background: #fee2e2; color: #b91c1c; }
+    body.dark-theme .file-chip .rm:hover { background: rgba(214,69,69,.15); color: #f87171; }
+
+    /* ============================================================
+       FORMAT GRID (to-type picker)
+       ============================================================ */
+    .format-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 8px;
+    }
+    .format-tile {
+      border: 1.5px solid var(--line);
+      background: #fff;
+      padding: 12px 8px;
+      border-radius: 11px;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color .18s, transform .16s, background .18s, box-shadow .18s;
+      display: flex; flex-direction: column; gap: 3px; align-items: center;
+    }
+    body.dark-theme .format-tile { background: #1b1624; border-color: #3b2c50; color: var(--ink); }
+    .format-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); border-color: var(--p-300); }
+    .format-tile.active {
+      border-color: var(--p-500);
+      background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(192,38,211,.05));
+      box-shadow: 0 0 0 3px rgba(139,92,246,.15);
+    }
+    body.dark-theme .format-tile.active {
+      background: linear-gradient(135deg, rgba(139,92,246,.15), rgba(192,38,211,.1));
+      border-color: #a78bfa;
+    }
+    .format-tile .f-icon { font-size: 1.35rem; line-height: 1; }
+    .format-tile .f-name {
+      font-weight: 800; font-size: .82rem; letter-spacing: -.01em;
+      color: var(--ink);
+    }
+    .format-tile.active .f-name { color: var(--p-800); }
+    body.dark-theme .format-tile .f-name { color: var(--ink); }
+    body.dark-theme .format-tile.active .f-name { color: #d7c4ff; }
+    .format-tile .f-tag {
+      font-size: .62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: var(--p-50);
+      border: 1px solid var(--p-100);
+    }
+    body.dark-theme .format-tile .f-tag {
+      background: rgba(139,92,246,.1);
+      border-color: #3b2c50;
+      color: #aaa1bd;
+    }
+    .format-tile.active .f-tag {
+      background: var(--p-100);
+      color: var(--p-800);
+      border-color: var(--p-200);
+    }
+    body.dark-theme .format-tile.active .f-tag {
+      background: rgba(139,92,246,.2);
+      color: #d7c4ff;
+    }
+    .format-tile .f-tag.lossy { background: rgba(245,158,11,.15); color: #92400e; border-color: rgba(245,158,11,.3); }
+    .format-tile .f-tag.lossless { background: rgba(16,185,129,.15); color: #047857; border-color: rgba(16,185,129,.3); }
+    body.dark-theme .format-tile .f-tag.lossy { color: #fbbf24; }
+    body.dark-theme .format-tile .f-tag.lossless { color: #34d399; }
+
+    /* ============================================================
+       SLIDERS
+       ============================================================ */
+    .pe-slider { display: flex; flex-direction: column; gap: 4px; }
+    .pe-slider label {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .72rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--p-800);
+    }
+    body.dark-theme .pe-slider label { color: #d7c4ff; }
+    .pe-slider label .val {
+      background: var(--p-100); padding: 2px 8px; border-radius: 999px;
+      font-size: .68rem; color: var(--p-700); border: 1px solid var(--p-200);
+    }
+    body.dark-theme .pe-slider label .val {
+      background: rgba(139,92,246,.15); border-color: #4b3864; color: #d7c4ff;
+    }
+    .pe-slider input[type="range"] { width: 100%; accent-color: var(--p-600); cursor: pointer; }
+
+    /* ============================================================
+       BACKGROUND PICKER
+       ============================================================ */
+    .bg-choices {
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    }
+    .bg-swatch {
+      width: 32px; height: 32px; border-radius: 9px;
+      border: 2px solid var(--line); cursor: pointer; padding: 0;
+      transition: transform .16s, border-color .18s, box-shadow .18s;
+    }
+    body.dark-theme .bg-swatch { border-color: #3b2c50; }
+    .bg-swatch:hover { transform: scale(1.1); }
+    .bg-swatch.active {
+      border-color: var(--p-600);
+      box-shadow: 0 0 0 3px rgba(139,92,246,.25);
+    }
+    .bg-custom {
+      position: relative; overflow: hidden;
+      background: conic-gradient(#ef4444, #f59e0b, #10b981, #3b82f6, #8b5cf6, #ef4444);
+    }
+    .bg-custom input {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
+    }
+
+    /* ============================================================
+       INFO PANEL
+       ============================================================ */
+    .info-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(139,92,246,.06);
+      border: 1.5px solid rgba(139,92,246,.2);
+      margin-top: 14px;
+    }
+    body.dark-theme .info-panel {
+      background: rgba(139,92,246,.1);
+      border-color: rgba(139,92,246,.25);
+    }
+    .info-item { display: flex; flex-direction: column; gap: 3px; }
+    .info-item .k {
+      font-size: .66rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--muted);
+    }
+    .info-item .v {
+      font-size: .88rem; font-weight: 800;
+      color: var(--p-800); letter-spacing: -.01em;
+    }
+    body.dark-theme .info-item .v { color: #d7c4ff; }
+
+    /* ============================================================
+       ACTIONS
+       ============================================================ */
+    .act-row {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-top: 22px; justify-content: center;
+    }
+    .act-row .btn { flex: 1; min-width: 140px; max-width: 240px; }
+    @media (max-width: 500px) { .act-row .btn { max-width: none; } }
+
+    /* ============================================================
+       PREVIEW MODAL
+       ============================================================ */
+    .preview-modal {
+      position: fixed; inset: 0;
+      background: rgba(15, 12, 20, .88);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity .22s ease;
+    }
+    .preview-modal.show { opacity: 1; pointer-events: auto; }
+    .preview-modal-content {
+      background: #fff; border-radius: 18px;
+      width: 100%; max-width: 1000px; max-height: 92vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 26px 60px -24px rgba(0,0,0,.55);
+    }
+    body.dark-theme .preview-modal-content { background: #1b1624; }
+    .preview-header {
+      padding: 16px 22px; border-bottom: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .preview-header h3 {
+      margin: 0; font-size: 1rem; font-weight: 800;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+    }
+    .preview-close {
+      background: transparent; border: 0; font-size: 1.2rem;
+      cursor: pointer; color: var(--muted);
+      width: 32px; height: 32px; border-radius: 8px;
+      display: grid; place-items: center; flex: none;
+    }
+    .preview-close:hover { background: var(--p-100); color: var(--p-800); }
+    body.dark-theme .preview-close:hover { background: #2b2040; color: #f5f2ff; }
+
+    .preview-body {
+      padding: 22px; overflow-y: auto; background: #f4f2fa;
+    }
+    body.dark-theme .preview-body { background: #110d16; }
+
+    .compare {
+      position: relative; max-width: 100%; margin: 0 auto;
+      border-radius: 14px; overflow: hidden; border: 1.5px solid var(--line);
+      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 20px 20px;
+      user-select: none; touch-action: none;
+    }
+    body.dark-theme .compare {
+      border-color: #3b2c50;
+      background: repeating-conic-gradient(#1b1624 0% 25%, #241c31 0% 50%) 50% / 20px 20px;
+    }
+    .compare img { display: block; max-width: 100%; height: auto; -webkit-user-drag: none; }
+    .compare .after-wrap { position: absolute; inset: 0; overflow: hidden; }
+    .compare .after-wrap img {
+      position: absolute; top: 0; left: 0;
+      max-width: none; width: 100%; height: 100%; object-fit: cover;
+    }
+    .compare .divider {
+      position: absolute; top: 0; bottom: 0; width: 3px; background: #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 0 12px rgba(139,92,246,.6);
+      cursor: ew-resize; z-index: 3;
+    }
+    .compare .divider::before,
+    .compare .divider::after {
+      content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--p-500), var(--p-700));
+      box-shadow: 0 6px 14px -4px var(--p-700);
+    }
+    .compare .divider::before { top: -17px; }
+    .compare .divider::after { bottom: -17px; }
+    .compare .divider .knob {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+      display: grid; place-items: center;
+      color: var(--p-700); font-size: 1.05rem; font-weight: 800;
+      pointer-events: none;
+    }
+    .compare .lbl {
+      position: absolute; top: 12px;
+      padding: 4px 10px; border-radius: 999px;
+      font-size: .68rem; font-weight: 800;
+      letter-spacing: .06em; text-transform: uppercase;
+      background: rgba(255,255,255,.92); color: var(--p-800);
+      box-shadow: 0 4px 10px rgba(0,0,0,.1); z-index: 4;
+    }
+    .compare .lbl.left { left: 12px; }
+    .compare .lbl.right { right: 12px; }
+
+    .details {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px; margin-top: 18px;
+    }
+    .detail-card {
+      padding: 14px 16px; border-radius: 12px;
+      border: 1.5px solid var(--line); background: #fff;
+    }
+    body.dark-theme .detail-card { background: #1b1624; border-color: #3b2c50; }
+    .detail-card .d-label {
+      font-size: .68rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    .detail-card .d-value {
+      font-size: .95rem; font-weight: 800; color: var(--p-800); letter-spacing: -.01em;
+    }
+    body.dark-theme .detail-card .d-value { color: #d7c4ff; }
+    .detail-card .d-sub { font-size: .72rem; color: var(--muted); margin-top: 3px; font-weight: 600; }
+    .detail-card.good .d-value {
+      background: linear-gradient(135deg, #10b981, #059669);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .detail-card.warn .d-value {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .preview-footer {
+      padding: 14px 22px; border-top: 1px solid var(--line);
+      display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;
+    }
+    @media (max-width: 560px) {
+      .preview-body { padding: 14px; }
+      .preview-footer .btn { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="../index.html" class="brand">
+      <span class="logo">✦</span>
+      <span>PDFnest<small>Image Type Converter</small></span>
+    </a>
+    <a href="../index.html" class="back-link">← All tools</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Convert <span class="grad">image formats</span></h1>
+    <p>JPG · JPEG · PNG · WEBP · AVIF · HEIC · BMP · GIF · ICO · PDF — all in your browser.</p>
+  </section>
+
+  <section class="card">
+
+    <div id="uploadStage">
+      <div class="field">
+        <label>Your image</label>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button">
+          <div class="dz-icon">🔄</div>
+          <div class="dz-title">Drag &amp; drop an image here</div>
+          <div class="dz-sub">or <span class="link">browse files</span> · JPG, PNG, WEBP, AVIF, HEIC, BMP, GIF</div>
+        </div>
+        <input type="file" id="fileInput"
+          accept="image/*,.heic,.heif,.avif,image/avif,image/heic,image/heif"
+          hidden />
+      </div>
+    </div>
+
+    <div id="editorWrap" hidden>
+
+      <div class="file-chip">
+        <img class="thumb" id="thumbImg" alt="" />
+        <div class="info">
+          <div class="nm" id="fileNm">—</div>
+          <div class="sz" id="fileSz">—</div>
+        </div>
+        <button class="rm" id="resetBtn" aria-label="Remove">✕</button>
+      </div>
+
+      <!-- Detected source -->
+      <div class="info-panel" id="srcInfo">
+        <div class="info-item">
+          <div class="k">Detected format</div>
+          <div class="v" id="infoSrcFormat">—</div>
+        </div>
+        <div class="info-item">
+          <div class="k">Dimensions</div>
+          <div class="v" id="infoSrcDims">—</div>
+        </div>
+        <div class="info-item">
+          <div class="k">File size</div>
+          <div class="v" id="infoSrcSize">—</div>
+        </div>
+        <div class="info-item">
+          <div class="k">Aspect ratio</div>
+          <div class="v" id="infoSrcRatio">—</div>
+        </div>
+      </div>
+
+      <!-- Output format grid -->
+      <div class="field" style="margin-top:20px;">
+        <label>Convert to</label>
+        <div class="format-grid" id="formatGrid">
+          <button type="button" class="format-tile" data-format="image/jpeg" data-ext="jpg">
+            <span class="f-icon">🖼️</span>
+            <span class="f-name">JPG</span>
+            <span class="f-tag lossy">Lossy</span>
+          </button>
+          <button type="button" class="format-tile" data-format="image/jpeg" data-ext="jpeg">
+            <span class="f-icon">🖼️</span>
+            <span class="f-name">JPEG</span>
+            <span class="f-tag lossy">Lossy</span>
+          </button>
+          <button type="button" class="format-tile active" data-format="image/png" data-ext="png">
+            <span class="f-icon">🎨</span>
+            <span class="f-name">PNG</span>
+            <span class="f-tag lossless">Lossless</span>
+          </button>
+          <button type="button" class="format-tile" data-format="image/webp" data-ext="webp">
+            <span class="f-icon">🌐</span>
+            <span class="f-name">WEBP</span>
+            <span class="f-tag lossy">Modern</span>
+          </button>
+          <button type="button" class="format-tile" data-format="image/avif" data-ext="avif">
+            <span class="f-icon">🚀</span>
+            <span class="f-name">AVIF</span>
+            <span class="f-tag lossy">Next-gen</span>
+          </button>
+          <button type="button" class="format-tile" data-format="image/bmp" data-ext="bmp">
+            <span class="f-icon">📦</span>
+            <span class="f-name">BMP</span>
+            <span class="f-tag lossless">Raw</span>
+          </button>
+          <button type="button" class="format-tile" data-format="image/gif" data-ext="gif">
+            <span class="f-icon">🎞️</span>
+            <span class="f-name">GIF</span>
+            <span class="f-tag">256 colors</span>
+          </button>
+          <button type="button" class="format-tile" data-format="application/pdf" data-ext="pdf">
+            <span class="f-icon">📄</span>
+            <span class="f-name">PDF</span>
+            <span class="f-tag">Document</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quality slider (only for lossy) -->
+      <div class="pe-slider" id="qualityWrap" style="margin-top:18px;">
+        <label>Quality <span class="val" id="qualityVal">92%</span></label>
+        <input type="range" id="quality" min="10" max="100" value="92" />
+      </div>
+
+      <!-- Background for no-alpha formats -->
+      <div class="field" id="bgWrap" style="margin-top:18px;" hidden>
+        <label>Background (no transparency in this format)</label>
+        <div class="bg-choices" id="bgChoices">
+          <button type="button" class="bg-swatch active" data-bg="#ffffff" title="White" style="background:#ffffff;"></button>
+          <button type="button" class="bg-swatch" data-bg="#000000" title="Black" style="background:#000000;"></button>
+          <button type="button" class="bg-swatch" data-bg="#8b5cf6" title="Purple" style="background:#8b5cf6;"></button>
+          <button type="button" class="bg-swatch" data-bg="#10b981" title="Green" style="background:#10b981;"></button>
+          <button type="button" class="bg-swatch" data-bg="#ef4444" title="Red" style="background:#ef4444;"></button>
+          <button type="button" class="bg-swatch" data-bg="#3b82f6" title="Blue" style="background:#3b82f6;"></button>
+          <button type="button" class="bg-swatch bg-custom" title="Custom color">
+            <input type="color" id="bgCustom" value="#ffffff" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Format help text -->
+      <div class="info-panel" id="formatHelp" style="margin-top:16px;">
+        <div class="info-item" style="grid-column: 1 / -1;">
+          <div class="k" id="helpTitle">PNG — Lossless</div>
+          <div class="v" id="helpText" style="font-size:.82rem; font-weight:600; line-height:1.5; color:var(--muted);">
+            Best for graphics, screenshots, and images with transparency. Larger file size than JPG.
+          </div>
+        </div>
+      </div>
+
+      <div class="act-row">
+        <button class="btn btn-ghost" id="previewBtn">👁 Preview &amp; details</button>
+        <button class="btn btn-primary" id="convertBtn">🔄 Convert &amp; download</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">100% client-side conversion · Files never leave your device.</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ============================================================
+     PREVIEW MODAL
+     ============================================================ -->
+<div class="preview-modal" id="previewModal">
+  <div class="preview-modal-content">
+    <div class="preview-header">
+      <h3 id="previewTitle">Preview &amp; details</h3>
+      <button class="preview-close" id="previewClose" aria-label="Close">✕</button>
+    </div>
+
+    <div class="preview-body">
+      <div class="compare" id="compare">
+        <img id="cmpBefore" alt="Before" />
+        <div class="after-wrap" id="afterWrap"><img id="cmpAfter" alt="After" /></div>
+        <div class="divider" id="divider"><div class="knob">⇄</div></div>
+        <div class="lbl left" id="cmpLeftLbl">Original</div>
+        <div class="lbl right" id="cmpRightLbl">Converted</div>
+      </div>
+
+      <div class="details">
+        <div class="detail-card">
+          <div class="d-label">Source</div>
+          <div class="d-value" id="dSrcFormat">—</div>
+          <div class="d-sub" id="dSrcSize">—</div>
+        </div>
+        <div class="detail-card good">
+          <div class="d-label">Output</div>
+          <div class="d-value" id="dOutFormat">—</div>
+          <div class="d-sub" id="dOutSize">—</div>
+        </div>
+        <div class="detail-card" id="dChangeCard">
+          <div class="d-label">Size change</div>
+          <div class="d-value" id="dChange">—</div>
+          <div class="d-sub" id="dChangeSub">—</div>
+        </div>
+        <div class="detail-card">
+          <div class="d-label">Dimensions</div>
+          <div class="d-value" id="dDims">—</div>
+          <div class="d-sub" id="dDimsSub">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-footer">
+      <button class="btn btn-ghost" id="previewCancel">Close</button>
+      <button class="btn btn-primary" id="previewDownload">⬇ Download converted</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const $ = (s, c = document) => c.querySelector(s);
+  const $$ = (s, c = document) => Array.prototype.slice.call(c.querySelectorAll(s));
+
+  let toastTimer = null;
+  function toast(m){
+    const el = $('#toast');
+    el.textContent = m;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+  function fmtSize(b){
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(2) + ' MB';
+  }
+  function gcd(a, b){ return b === 0 ? a : gcd(b, a % b); }
+
+  /* ============================================================
+     STATE
+     ============================================================ */
+  const state = {
+    originalFile: null,     // Original uploaded File
+    workingFile: null,      // After HEIC decode (if any)
+    img: null,              // Decoded HTMLImageElement
+    detectedType: '',       // MIME
+    detectedExt: '',        // e.g. 'jpg', 'heic'
+    targetFormat: 'image/png',
+    targetExt: 'png',
+    quality: 0.92,
+    bgColor: '#ffffff',
+    // Output
+    outputBlob: null,
+    outputUrl: '',
+    outputExt: ''
+  };
+
+  /* ============================================================
+     FORMAT HELP
+     ============================================================ */
+  const FORMAT_HELP = {
+    'image/jpeg': {
+      title: 'JPG / JPEG — Lossy',
+      text: 'Universal format supported everywhere. Small file size. Best for photos. No transparency.'
+    },
+    'image/png': {
+      title: 'PNG — Lossless',
+      text: 'Best for graphics, screenshots, and images with transparency. Larger file size than JPG.'
+    },
+    'image/webp': {
+      title: 'WEBP — Modern lossy/lossless',
+      text: '30% smaller than JPG at the same quality. Supports transparency. Supported by all modern browsers.'
+    },
+    'image/avif': {
+      title: 'AVIF — Next-gen compression',
+      text: '50% smaller than JPG. Best-in-class quality. Supported in Chrome, Edge, Firefox, Safari 16+.'
+    },
+    'image/bmp': {
+      title: 'BMP — Uncompressed',
+      text: 'Very large file size. No compression. Use only if a legacy program requires it.'
+    },
+    'image/gif': {
+      title: 'GIF — 256 colors',
+      text: 'Limited to 256 colors. Best for simple graphics, pixel art, or animations. No gradients.'
+    },
+    'application/pdf': {
+      title: 'PDF — Document',
+      text: 'Wraps the image into a PDF page matching the image dimensions.'
+    }
+  };
+
+  /* Lossy formats that use the quality slider */
+  const LOSSY = new Set(['image/jpeg', 'image/webp', 'image/avif']);
+  /* Formats with no alpha support */
+  const NO_ALPHA = new Set(['image/jpeg', 'image/bmp']);
+
+  /* ============================================================
+     FILE LOAD
+     ============================================================ */
+  function detectType(file){
+    if (file.type && file.type.startsWith('image/')) return file.type;
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    const map = {
+      jpg: 'image/jpeg', jpeg: 'image/jpeg',
+      png: 'image/png', webp: 'image/webp',
+      avif: 'image/avif', heic: 'image/heic', heif: 'image/heif',
+      bmp: 'image/bmp', gif: 'image/gif'
+    };
+    return map[ext] || '';
+  }
+
+  async function addFile(list){
+    const f = Array.from(list)[0];
+    if (!f){ toast('Please choose an image'); return; }
+
+    const detected = detectType(f);
+    if (!detected){ toast('Unsupported file type'); return; }
+
+    state.originalFile = f;
+    state.detectedType = detected;
+    state.detectedExt = (f.name.split('.').pop() || '').toLowerCase();
+    state.outputBlob = null;
+    if (state.outputUrl) URL.revokeObjectURL(state.outputUrl);
+    state.outputUrl = '';
+
+    let workingFile = f;
+    const isHEIC = detected === 'image/heic' || detected === 'image/heif'
+                 || /\.(heic|heif)$/i.test(f.name);
+
+    if (isHEIC){
+      try {
+        toast('Decoding HEIC…');
+        const result = await heic2any({ blob: f, toType: 'image/png', quality: 1 });
+        const blob = Array.isArray(result) ? result[0] : result;
+        workingFile = new File(
+          [blob],
+          f.name.replace(/\.(heic|heif)$/i, '.png'),
+          { type: 'image/png' }
+        );
+        toast('HEIC decoded ✓');
+      } catch (e){
+        console.error(e);
+        toast('Failed to decode HEIC: ' + e.message);
+        return;
+      }
+    }
+
+    state.workingFile = workingFile;
+
+    const url = await new Promise(r => {
+      const fr = new FileReader();
+      fr.onload = e => r(e.target.result);
+      fr.readAsDataURL(workingFile);
+    });
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = () => rej(new Error('Cannot decode image'));
+      i.src = url;
+    });
+    state.img = img;
+
+    // Update chip
+    $('#thumbImg').src = url;
+    $('#fileNm').textContent = f.name;
+    $('#fileSz').textContent = img.naturalWidth + ' × ' + img.naturalHeight + ' px · ' + fmtSize(f.size);
+
+    // Update info panel
+    const g = gcd(img.naturalWidth, img.naturalHeight);
+    $('#infoSrcFormat').textContent = detected.replace('image/', '').toUpperCase();
+    $('#infoSrcDims').textContent = img.naturalWidth + ' × ' + img.naturalHeight;
+    $('#infoSrcSize').textContent = fmtSize(f.size);
+    $('#infoSrcRatio').textContent = (img.naturalWidth / g) + ':' + (img.naturalHeight / g);
+
+    $('#uploadStage').hidden = true;
+    $('#editorWrap').hidden = false;
+
+    updateFormatUI();
+  }
+
+  /* ============================================================
+     FORMAT SELECTION
+     ============================================================ */
+  $$('.format-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      state.targetFormat = tile.dataset.format;
+      state.targetExt = tile.dataset.ext;
+      $$('.format-tile').forEach(t => t.classList.toggle('active', t === tile));
+      updateFormatUI();
+    });
+  });
+
+  function updateFormatUI(){
+    const fmt = state.targetFormat;
+
+    // Quality slider
+    const isLossy = LOSSY.has(fmt);
+    $('#qualityWrap').hidden = !isLossy;
+
+    // Background picker
+    const needsBg = NO_ALPHA.has(fmt);
+    $('#bgWrap').hidden = !needsBg;
+
+    // Help text
+    const help = FORMAT_HELP[fmt];
+    if (help){
+      $('#helpTitle').textContent = help.title;
+      $('#helpText').textContent = help.text;
+    }
+  }
+
+  /* ============================================================
+     QUALITY & BACKGROUND
+     ============================================================ */
+  $('#quality').addEventListener('input', e => {
+    state.quality = parseInt(e.target.value, 10) / 100;
+    $('#qualityVal').textContent = e.target.value + '%';
+  });
+
+  $$('.bg-swatch[data-bg]').forEach(sw => {
+    sw.addEventListener('click', () => {
+      state.bgColor = sw.dataset.bg;
+      $$('.bg-swatch').forEach(s => s.classList.toggle('active', s === sw));
+    });
+  });
+
+  $('#bgCustom').addEventListener('input', e => {
+    state.bgColor = e.target.value;
+    $$('.bg-swatch').forEach(s => s.classList.remove('active'));
+    e.target.parentElement.classList.add('active');
+  });
+
+  /* ============================================================
+     BROWSER ENCODE SUPPORT
+     ============================================================ */
+  function supportsEncode(mime){
+    return new Promise(resolve => {
+      const c = document.createElement('canvas');
+      c.width = c.height = 1;
+      try {
+        c.toBlob(blob => {
+          resolve(!!blob && blob.type === mime);
+        }, mime);
+      } catch (e){
+        resolve(false);
+      }
+    });
+  }
+
+  /* ============================================================
+     CORE CONVERSION
+     ============================================================ */
+  async function convert(){
+    if (!state.img) return null;
+
+    const fmt = state.targetFormat;
+    const w = state.img.naturalWidth;
+    const h = state.img.naturalHeight;
+
+    // ── PDF ────────────────────────────────────────────
+    if (fmt === 'application/pdf'){
+      const { jsPDF } = window.jspdf;
+      const orientation = w > h ? 'landscape' : 'portrait';
+      const doc = new jsPDF({ unit: 'px', format: [w, h], orientation });
+
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const cx = c.getContext('2d');
+      cx.fillStyle = state.bgColor;
+      cx.fillRect(0, 0, w, h);
+      cx.drawImage(state.img, 0, 0);
+
+      const dataUrl = c.toDataURL('image/jpeg', state.quality);
+      doc.addImage(dataUrl, 'JPEG', 0, 0, w, h);
+      const blob = doc.output('blob');
+      return { blob, ext: 'pdf' };
+    }
+
+    // ── Image ──────────────────────────────────────────
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+
+    // Fill background if format has no alpha
+    if (NO_ALPHA.has(fmt)){
+      ctx.fillStyle = state.bgColor;
+      ctx.fillRect(0, 0, w, h);
+    }
+    ctx.drawImage(state.img, 0, 0);
+
+    // Check browser encoding support
+    const canEncode = await supportsEncode(fmt);
+    if (!canEncode){
+      throw new Error(
+        'Your browser cannot encode ' + fmt.split('/')[1].toUpperCase() +
+        '. Try another format (PNG/JPG always work).'
+      );
+    }
+
+    // Encode
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(b => {
+        if (b) resolve(b);
+        else reject(new Error('Encoding failed'));
+      }, fmt, state.quality);
+    });
+
+    return { blob, ext: state.targetExt };
+  }
+
+  /* ============================================================
+     DOWNLOAD
+     ============================================================ */
+  function triggerDownload(blob, filename){
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  }
+
+  async function doConvert(download = true){
+    if (!state.img){ toast('Load an image first'); return; }
+
+    const btn = $('#convertBtn');
+    const prevBtn = $('#previewBtn');
+    btn.disabled = true; prevBtn.disabled = true;
+    btn.textContent = 'Converting…';
+
+    try {
+      const result = await convert();
+      if (!result){ throw new Error('Conversion returned null'); }
+
+      state.outputBlob = result.blob;
+      state.outputExt = result.ext;
+      if (state.outputUrl) URL.revokeObjectURL(state.outputUrl);
+      state.outputUrl = URL.createObjectURL(result.blob);
+
+      if (download){
+        const baseName = state.originalFile.name.replace(/\.[^.]+$/, '');
+        triggerDownload(result.blob, baseName + '.' + result.ext);
+        toast('Converted to ' + result.ext.toUpperCase() + ' 🎉');
+      }
+      return result;
+    } catch (e){
+      console.error(e);
+      toast(e.message || 'Conversion failed');
+      return null;
+    } finally {
+      btn.disabled = false; prevBtn.disabled = false;
+      btn.textContent = '🔄 Convert & download';
+    }
+  }
+
+  /* ============================================================
+     PREVIEW MODAL
+     ============================================================ */
+  function setSlider(percent){
+    percent = Math.max(0, Math.min(100, percent));
+    $('#afterWrap').style.clipPath = 'inset(0 ' + (100 - percent) + '% 0 0)';
+    $('#divider').style.left = percent + '%';
+  }
+  (function initSlider(){
+    const wrap = $('#compare');
+    let dragging = false;
+    function posFromEvent(e){
+      const rect = wrap.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      return ((clientX - rect.left) / rect.width) * 100;
+    }
+    function start(e){ dragging = true; setSlider(posFromEvent(e)); e.preventDefault(); }
+    function move(e){ if (!dragging) return; setSlider(posFromEvent(e)); e.preventDefault(); }
+    function end(){ dragging = false; }
+    wrap.addEventListener('mousedown', start);
+    wrap.addEventListener('touchstart', start, { passive: false });
+    window.addEventListener('mousemove', move);
+    window.addEventListener('touchmove', move, { passive: false });
+    window.addEventListener('mouseup', end);
+    window.addEventListener('touchend', end);
+  })();
+
+  async function openPreview(){
+    if (!state.img){ toast('Load an image first'); return; }
+    if (!state.outputBlob){
+      const ok = await doConvert(false);
+      if (!ok) return;
+    }
+
+    const srcFormat = (state.detectedType || '').replace('image/', '').toUpperCase();
+    const outFormat = state.targetExt.toUpperCase();
+    const srcSize = state.originalFile.size;
+    const outSize = state.outputBlob.size;
+    const diff = outSize - srcSize;
+    const pct = (diff / srcSize) * 100;
+
+    $('#previewTitle').textContent = state.originalFile.name;
+    $('#cmpBefore').src = state.img.src;
+    $('#cmpAfter').src = state.outputUrl;
+    setSlider(50);
+
+    $('#cmpLeftLbl').textContent = srcFormat;
+    $('#cmpRightLbl').textContent = outFormat;
+
+    $('#dSrcFormat').textContent = srcFormat;
+    $('#dSrcSize').textContent = fmtSize(srcSize);
+
+    $('#dOutFormat').textContent = outFormat;
+    $('#dOutSize').textContent = fmtSize(outSize);
+
+    const changeCard = $('#dChangeCard');
+    changeCard.classList.remove('good', 'warn');
+    if (pct < -1){
+      changeCard.classList.add('good');
+      $('#dChange').textContent = Math.round(pct) + '%';
+      $('#dChangeSub').textContent = 'Smaller than original (' + fmtSize(Math.abs(diff)) + ' less)';
+    } else if (pct > 1){
+      changeCard.classList.add('warn');
+      $('#dChange').textContent = '+' + Math.round(pct) + '%';
+      $('#dChangeSub').textContent = 'Larger than original (' + fmtSize(diff) + ' more)';
+    } else {
+      $('#dChange').textContent = '~same';
+      $('#dChangeSub').textContent = 'Similar file size';
+    }
+
+    const w = state.img.naturalWidth;
+    const h = state.img.naturalHeight;
+    $('#dDims').textContent = w + ' × ' + h;
+    $('#dDimsSub').textContent = (w * h / 1e6).toFixed(2) + ' megapixels';
+
+    $('#previewModal').classList.add('show');
+  }
+
+  $('#previewClose').addEventListener('click', () => $('#previewModal').classList.remove('show'));
+  $('#previewCancel').addEventListener('click', () => $('#previewModal').classList.remove('show'));
+  $('#previewModal').addEventListener('click', e => {
+    if (e.target === $('#previewModal')) $('#previewModal').classList.remove('show');
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') $('#previewModal').classList.remove('show');
+  });
+
+  $('#previewDownload').addEventListener('click', () => {
+    if (!state.outputBlob) return;
+    const baseName = state.originalFile.name.replace(/\.[^.]+$/, '');
+    triggerDownload(state.outputBlob, baseName + '.' + state.outputExt);
+    toast('Downloaded 🎉');
+    $('#previewModal').classList.remove('show');
+  });
+
+  /* ============================================================
+     RESET
+     ============================================================ */
+  $('#resetBtn').addEventListener('click', () => {
+    state.originalFile = null;
+    state.workingFile = null;
+    state.img = null;
+    state.outputBlob = null;
+    if (state.outputUrl) URL.revokeObjectURL(state.outputUrl);
+    state.outputUrl = '';
+    $('#uploadStage').hidden = false;
+    $('#editorWrap').hidden = true;
+  });
+
+  /* ============================================================
+     DROPZONE
+     ============================================================ */
+  const dz = $('#dropzone');
+  const fi = $('#fileInput');
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fi.click(); }
+  });
+  fi.addEventListener('change', () => { if (fi.files.length) addFile(fi.files); fi.value = ''; });
+  ['dragenter','dragover'].forEach(evt =>
+    dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); })
+  );
+  ['dragleave','drop'].forEach(evt =>
+    dz.addEventListener(evt, e => {
+      e.preventDefault(); e.stopPropagation();
+      if (evt === 'dragleave' && dz.contains(e.relatedTarget)) return;
+      dz.classList.remove('dragover');
+      if (evt === 'drop' && e.dataTransfer.files.length) addFile(e.dataTransfer.files);
+    })
+  );
+  window.addEventListener('dragover', e => {
+    if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
+  });
+  window.addEventListener('drop', e => {
+    if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
+  });
+
+  /* ============================================================
+     BUTTONS
+     ============================================================ */
+  $('#previewBtn').addEventListener('click', openPreview);
+  $('#convertBtn').addEventListener('click', () => doConvert(true));
+})();
+</script>
+</body>
+</html>

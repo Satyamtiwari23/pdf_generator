@@ -1,0 +1,2374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Editor — PDFnest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css" />
+  <script src="../theme.js"></script>
+  <script src="../auth-guard.js"></script>
+
+  <style>
+    .pe-stage { display: block; margin: 20px auto 0; text-align: center; }
+    .pe-stage-inner {
+      display: inline-block;
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      background: repeating-conic-gradient(#f0f0f0 0% 25%, #fff 0% 50%) 50% / 20px 20px;
+      max-width: 100%;
+      line-height: 0;
+    }
+    body.dark-theme .pe-stage-inner {
+      background: repeating-conic-gradient(#1b1624 0% 25%, #241c31 0% 50%) 50% / 20px 20px;
+    }
+    #editCanvas { display: block; max-width: 100%; height: auto; margin: 0 auto; touch-action: none; }
+    #editCanvas.freeform { cursor: default; }
+    #editCanvas.freeform.dragging { cursor: grabbing; }
+
+    .mode-bar {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px;
+      background: var(--p-100); border-radius: 14px; border: 1px solid var(--p-200);
+      margin-bottom: 12px; max-width: 420px; margin-left: auto; margin-right: auto;
+    }
+    body.dark-theme .mode-bar { background: rgba(139,92,246,.12); border-color: #4b3864; }
+    .mode-bar button {
+      border: 0; background: transparent; cursor: pointer; padding: 10px 8px; border-radius: 10px;
+      font: inherit; font-weight: 800; font-size: .84rem; color: var(--p-800);
+      transition: background .18s, color .18s, box-shadow .18s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    body.dark-theme .mode-bar button { color: #d7c4ff; }
+    .mode-bar button.active {
+      background: linear-gradient(135deg, var(--p-600), var(--p-800));
+      color: #fff; box-shadow: 0 8px 18px -10px var(--p-700);
+    }
+    .mode-bar button:hover:not(.active) { background: rgba(255,255,255,.6); }
+    body.dark-theme .mode-bar button:hover:not(.active) { background: rgba(255,255,255,.08); }
+
+    .img-strip {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 8px; margin-top: 10px;
+    }
+    .img-thumb {
+      position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden;
+      border: 2px solid var(--line); cursor: pointer;
+      transition: border-color .18s, transform .16s;
+    }
+    body.dark-theme .img-thumb { border-color: #3b2c50; }
+    .img-thumb:hover { transform: translateY(-2px); }
+    .img-thumb.active { border-color: var(--p-600); box-shadow: 0 0 0 3px rgba(139,92,246,.25); }
+    .img-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .img-thumb .idx {
+      position: absolute; left: 4px; bottom: 4px;
+      background: rgba(60,16,120,.85); color: #fff;
+      font-size: .62rem; font-weight: 800; padding: 2px 6px; border-radius: 5px;
+    }
+    .img-thumb .rm {
+      position: absolute; top: 4px; right: 4px;
+      width: 20px; height: 20px; border-radius: 50%; border: 0;
+      background: rgba(60,16,120,.85); color: #fff; cursor: pointer;
+      font-size: .68rem; display: grid; place-items: center;
+    }
+    .img-thumb .rm:hover { background: #b91c1c; }
+    .add-more {
+      aspect-ratio: 1; border-radius: 10px;
+      border: 2px dashed var(--p-300); background: var(--p-50);
+      color: var(--p-700); cursor: pointer;
+      display: grid; place-items: center; font-size: 1.6rem; font-weight: 800;
+    }
+    .add-more:hover { background: var(--p-100); border-color: var(--p-500); }
+    body.dark-theme .add-more { background: rgba(139,92,246,.1); border-color: #4b3864; color: #d7c4ff; }
+
+    .pe-tabs {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 5px;
+      background: var(--p-100); border-radius: 14px; border: 1px solid var(--p-200);
+      margin-top: 20px;
+    }
+    body.dark-theme .pe-tabs { background: rgba(139,92,246,.12); border-color: #4b3864; }
+    .pe-tab {
+      border: 0; background: transparent; cursor: pointer; padding: 10px 4px; border-radius: 10px;
+      font: inherit; font-weight: 800; font-size: .82rem; color: var(--p-800);
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+    }
+    body.dark-theme .pe-tab { color: #d7c4ff; }
+    .pe-tab .t-icon { font-size: 1.05rem; }
+    .pe-tab .t-label { font-size: .7rem; letter-spacing: -.01em; }
+    .pe-tab.active {
+      background: linear-gradient(135deg, var(--p-600), var(--p-800));
+      color: #fff; box-shadow: 0 8px 18px -10px var(--p-700);
+    }
+    .pe-tab:hover:not(.active) { background: rgba(255,255,255,.6); }
+    body.dark-theme .pe-tab:hover:not(.active) { background: rgba(255,255,255,.08); }
+
+    .pe-pane { display: none; margin-top: 18px; }
+    .pe-pane.active { display: block; animation: peFade .22s ease both; }
+    @keyframes peFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+    .pe-slider-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px;
+    }
+    @media (max-width: 560px) { .pe-slider-row { grid-template-columns: 1fr; } }
+    .pe-slider { display: flex; flex-direction: column; gap: 4px; }
+    .pe-slider label {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--p-800);
+    }
+    body.dark-theme .pe-slider label { color: #d7c4ff; }
+    .pe-slider label .val {
+      background: var(--p-100); padding: 2px 8px; border-radius: 999px;
+      font-size: .68rem; color: var(--p-700); border: 1px solid var(--p-200);
+    }
+    body.dark-theme .pe-slider label .val {
+      background: rgba(139,92,246,.15); border-color: #4b3864; color: #d7c4ff;
+    }
+    .pe-slider input[type="range"] { width: 100%; accent-color: var(--p-600); cursor: pointer; }
+
+    .pe-btns {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px; margin-top: 14px;
+    }
+    .pe-btn {
+      border: 1.5px solid var(--p-200); background: #fff; color: var(--p-800);
+      padding: 10px 12px; border-radius: 11px; font-family: inherit;
+      font-size: .82rem; font-weight: 800; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      transition: background .18s, border-color .18s, transform .16s;
+    }
+    body.dark-theme .pe-btn { background: #211a2d; color: #d7c4ff; border-color: #4b3864; }
+    .pe-btn:hover { background: var(--p-100); border-color: var(--p-400); transform: translateY(-1px); }
+    body.dark-theme .pe-btn:hover { background: #2b2040; border-color: #8b5cf6; }
+    .pe-btn.danger:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+    body.dark-theme .pe-btn.danger:hover { background: rgba(214,69,69,.15); color: #f87171; }
+    .pe-btn.accent {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff; border-color: transparent;
+      box-shadow: 0 8px 18px -10px #047857;
+    }
+    .pe-btn.accent:hover { transform: translateY(-1px); box-shadow: 0 12px 24px -12px #047857; }
+
+    .pe-preset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+    .pe-preset {
+      border: 2px solid var(--line); color: #2e1065;
+      padding: 14px 8px; border-radius: 11px; font-family: inherit;
+      font-size: .74rem; font-weight: 800; cursor: pointer;
+      transition: transform .16s, border-color .18s, box-shadow .18s; text-align: center;
+    }
+    body.dark-theme .pe-preset { border-color: #3b2c50; }
+    .pe-preset:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .pe-preset.active { border-color: var(--p-600); box-shadow: 0 0 0 3px rgba(139,92,246,.25); }
+
+    .pe-section-label {
+      display: block; font-size: .68rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: .09em; color: var(--p-800);
+      margin-bottom: 8px; margin-top: 14px;
+    }
+    body.dark-theme .pe-section-label { color: #d7c4ff; }
+    .pe-section-label:first-child { margin-top: 0; }
+
+    .tool-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tool-chip {
+      border: 1.5px solid var(--p-200); background: #fff; color: var(--p-800);
+      padding: 8px 14px; border-radius: 10px; font-family: inherit;
+      font-size: .78rem; font-weight: 800; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: background .18s, border-color .18s, transform .16s;
+    }
+    body.dark-theme .tool-chip { background: #211a2d; color: #d7c4ff; border-color: #4b3864; }
+    .tool-chip:hover { background: var(--p-100); border-color: var(--p-400); }
+    body.dark-theme .tool-chip:hover { background: #2b2040; border-color: #8b5cf6; }
+    .tool-chip.active {
+      background: linear-gradient(135deg, var(--p-600), var(--p-800));
+      color: #fff; border-color: transparent; box-shadow: 0 6px 14px -8px var(--p-700);
+    }
+
+    .color-swatches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .color-swatch {
+      width: 32px; height: 32px; border-radius: 9px; border: 2px solid var(--line);
+      cursor: pointer; transition: transform .16s, border-color .18s, box-shadow .18s; padding: 0;
+    }
+    body.dark-theme .color-swatch { border-color: #3b2c50; }
+    .color-swatch:hover { transform: scale(1.1); }
+    .color-swatch.active { border-color: var(--p-600); box-shadow: 0 0 0 3px rgba(139,92,246,.25); }
+    .color-swatch.custom {
+      position: relative; overflow: hidden;
+      background: conic-gradient(#ef4444, #f59e0b, #10b981, #3b82f6, #8b5cf6, #ef4444);
+    }
+    .color-swatch.custom input {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+
+    .bg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 8px; }
+    .bg-tile {
+      aspect-ratio: 1; border-radius: 10px; border: 2px solid var(--line); cursor: pointer;
+      transition: transform .16s, border-color .18s, box-shadow .18s; padding: 0;
+    }
+    body.dark-theme .bg-tile { border-color: #3b2c50; }
+    .bg-tile:hover { transform: scale(1.06); }
+    .bg-tile.active { border-color: var(--p-600); box-shadow: 0 0 0 3px rgba(139,92,246,.25); }
+
+    .layout-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+    .layout-tile {
+      aspect-ratio: 1; border-radius: 10px; border: 2px solid var(--line);
+      background: #fff; cursor: pointer; padding: 6px;
+      transition: transform .16s, border-color .18s, box-shadow .18s;
+      display: grid; gap: 3px;
+    }
+    body.dark-theme .layout-tile { background: #1b1624; border-color: #3b2c50; }
+    .layout-tile:hover { transform: translateY(-2px); }
+    .layout-tile.active { border-color: var(--p-600); box-shadow: 0 0 0 3px rgba(139,92,246,.25); }
+    .layout-tile .cell { background: linear-gradient(135deg, var(--p-400), var(--p-600)); border-radius: 3px; }
+    .layout-tile.free { background: linear-gradient(135deg, #fef3c7, #fbcfe8); }
+    body.dark-theme .layout-tile.free { background: linear-gradient(135deg, #4c1d95, #6b21a8); }
+    .layout-tile.free .cell {
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      transform: rotate(var(--r, 0deg));
+    }
+
+    .pe-toggle {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 11px; border: 1.5px solid var(--line);
+      background: #fff; cursor: pointer; font-size: .82rem; font-weight: 700;
+      color: var(--ink); user-select: none;
+      transition: border-color .18s, background .18s;
+    }
+    body.dark-theme .pe-toggle { background: #1b1624; border-color: #3b2c50; color: var(--ink); }
+    .pe-toggle.checked { border-color: var(--p-400); background: rgba(139,92,246,.06); }
+    body.dark-theme .pe-toggle.checked { background: rgba(139,92,246,.12); border-color: #6d4ca5; }
+    .pe-toggle .switch {
+      position: relative; width: 36px; height: 20px;
+      background: var(--p-200); border-radius: 999px; transition: background .2s; flex: none;
+    }
+    .pe-toggle .switch::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 16px; height: 16px; border-radius: 50%; background: #fff;
+      transition: transform .2s; box-shadow: 0 2px 4px rgba(0,0,0,.15);
+    }
+    .pe-toggle.checked .switch { background: var(--p-600); }
+    .pe-toggle.checked .switch::after { transform: translateX(16px); }
+
+    .pe-actions {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; justify-content: center;
+    }
+    .pe-actions .btn { flex: 1; min-width: 130px; max-width: 220px; }
+    @media (max-width: 500px) { .pe-actions .btn { max-width: none; } }
+
+    .file-chip {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 12px; background: #fff;
+      border: 1.5px solid var(--line); margin-top: 14px;
+    }
+    body.dark-theme .file-chip { background: #1b1624; border-color: #3b2c50; }
+    .file-chip .thumb {
+      width: 40px; height: 40px; border-radius: 8px;
+      object-fit: cover; flex: none; border: 1px solid var(--line);
+    }
+    .file-chip .info { flex: 1; min-width: 0; }
+    .file-chip .nm {
+      font-weight: 700; font-size: .88rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-chip .sz { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+    .file-chip .rm {
+      border: 0; background: transparent; cursor: pointer;
+      width: 28px; height: 28px; border-radius: 8px;
+      color: var(--muted); font-weight: 800;
+    }
+    .file-chip .rm:hover { background: #fee2e2; color: #b91c1c; }
+    body.dark-theme .file-chip .rm:hover { background: rgba(214,69,69,.15); color: #f87171; }
+
+    /* ── Selected item toolbar ─────────────────────────────── */
+    .item-toolbar {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      padding: 12px; border-radius: 12px;
+      background: linear-gradient(135deg, rgba(139,92,246,.08), rgba(192,38,211,.05));
+      border: 1.5px solid rgba(139,92,246,.25);
+      margin-top: 14px;
+    }
+    body.dark-theme .item-toolbar {
+      background: linear-gradient(135deg, rgba(139,92,246,.12), rgba(192,38,211,.08));
+      border-color: #4b3864;
+    }
+    .item-toolbar .it-label {
+      font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--p-800); display: flex; align-items: center;
+      margin-right: 4px;
+    }
+    body.dark-theme .item-toolbar .it-label { color: #d7c4ff; }
+    .item-toolbar .pe-btn { padding: 8px 12px; font-size: .78rem; }
+
+    .preview-modal {
+      position: fixed; inset: 0; background: rgba(15, 12, 20, .88);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity .22s ease;
+    }
+    .preview-modal.show { opacity: 1; pointer-events: auto; }
+    .preview-modal-content {
+      background: #fff; border-radius: 18px;
+      width: 100%; max-width: 960px; max-height: 92vh;
+      display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 26px 60px -24px rgba(0,0,0,.55);
+    }
+    body.dark-theme .preview-modal-content { background: #1b1624; }
+    .preview-header {
+      padding: 16px 22px; border-bottom: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .preview-header h3 {
+      margin: 0; font-size: 1rem; font-weight: 800;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+    }
+    .preview-close {
+      background: transparent; border: 0; font-size: 1.2rem;
+      cursor: pointer; color: var(--muted);
+      width: 32px; height: 32px; border-radius: 8px;
+      display: grid; place-items: center; flex: none;
+    }
+    .preview-close:hover { background: var(--p-100); color: var(--p-800); }
+    body.dark-theme .preview-close:hover { background: #2b2040; color: #f5f2ff; }
+    .preview-body {
+      padding: 22px; overflow-y: auto; background: #f4f2fa;
+    }
+    body.dark-theme .preview-body { background: #110d16; }
+    .compare {
+      position: relative; max-width: 100%; margin: 0 auto;
+      border-radius: 14px; overflow: hidden; border: 1.5px solid var(--line);
+      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 20px 20px;
+      user-select: none; touch-action: none;
+    }
+    body.dark-theme .compare {
+      border-color: #3b2c50;
+      background: repeating-conic-gradient(#1b1624 0% 25%, #241c31 0% 50%) 50% / 20px 20px;
+    }
+    .compare img { display: block; max-width: 100%; height: auto; -webkit-user-drag: none; }
+    .compare .after-wrap { position: absolute; inset: 0; overflow: hidden; }
+    .compare .after-wrap img {
+      position: absolute; top: 0; left: 0;
+      max-width: none; width: 100%; height: 100%; object-fit: cover;
+    }
+    .compare .divider {
+      position: absolute; top: 0; bottom: 0; width: 3px; background: #fff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 0 12px rgba(139,92,246,.6);
+      cursor: ew-resize; z-index: 3;
+    }
+    .compare .divider::before,
+    .compare .divider::after {
+      content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--p-500), var(--p-700));
+      box-shadow: 0 6px 14px -4px var(--p-700);
+    }
+    .compare .divider::before { top: -17px; }
+    .compare .divider::after { bottom: -17px; }
+    .compare .divider .knob {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 40px; height: 40px; border-radius: 50%; background: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,.3);
+      display: grid; place-items: center;
+      color: var(--p-700); font-size: 1.05rem; font-weight: 800;
+      pointer-events: none;
+    }
+    .compare .lbl {
+      position: absolute; top: 12px; padding: 4px 10px; border-radius: 999px;
+      font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+      background: rgba(255,255,255,.92); color: var(--p-800);
+      box-shadow: 0 4px 10px rgba(0,0,0,.1); z-index: 4;
+    }
+    .compare .lbl.left { left: 12px; }
+    .compare .lbl.right { right: 12px; }
+    .details {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px; margin-top: 18px;
+    }
+    .detail-card {
+      padding: 14px 16px; border-radius: 12px;
+      border: 1.5px solid var(--line); background: #fff;
+    }
+    body.dark-theme .detail-card { background: #1b1624; border-color: #3b2c50; }
+    .detail-card .d-label {
+      font-size: .68rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted); margin-bottom: 6px;
+    }
+    .detail-card .d-value {
+      font-size: .95rem; font-weight: 800; color: var(--p-800); letter-spacing: -.01em;
+    }
+    body.dark-theme .detail-card .d-value { color: #d7c4ff; }
+    .detail-card .d-sub { font-size: .72rem; color: var(--muted); margin-top: 3px; font-weight: 600; }
+    .detail-card.good .d-value {
+      background: linear-gradient(135deg, #10b981, #059669);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .preview-footer {
+      padding: 14px 22px; border-top: 1px solid var(--line);
+      display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;
+    }
+    @media (max-width: 560px) {
+      .preview-body { padding: 14px; }
+      .preview-footer .btn { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="../index.html" class="brand">
+      <span class="logo">✦</span>
+      <span>PDFnest<small>Photo Editor</small></span>
+    </a>
+    <a href="../index.html" class="back-link">← All tools</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Edit <span class="grad">photos</span></h1>
+    <p>Adjust · Filters · Pro · Doodles · Grid or Freestyle collage · Backgrounds</p>
+  </section>
+
+  <section class="card">
+
+    <div id="uploadStage">
+      <div class="field">
+        <label>Your images</label>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button">
+          <div class="dz-icon">🎨</div>
+          <div class="dz-title">Drag &amp; drop images here</div>
+          <div class="dz-sub">or <span class="link">browse files</span> · single or multiple for collage</div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" multiple hidden />
+      </div>
+    </div>
+
+    <div id="editorWrap" hidden>
+
+      <div class="file-chip">
+        <img class="thumb" id="thumbImg" alt="" />
+        <div class="info">
+          <div class="nm" id="fileNm">—</div>
+          <div class="sz" id="fileSz">—</div>
+        </div>
+        <button class="rm" id="resetBtn" aria-label="Remove">✕</button>
+      </div>
+
+      <div id="stripWrap" hidden style="margin-top:14px;">
+        <span class="pe-section-label">Images</span>
+        <div class="img-strip" id="imgStrip"></div>
+      </div>
+
+      <div class="mode-bar" style="margin-top:18px;">
+        <button class="active" data-mode="single">🖼️ Single image</button>
+        <button data-mode="collage">🧩 Collage</button>
+      </div>
+
+      <div class="pe-stage">
+        <div class="pe-stage-inner">
+          <canvas id="editCanvas"></canvas>
+        </div>
+      </div>
+
+      <div class="pe-tabs">
+        <button class="pe-tab active" data-tab="adjust"><span class="t-icon">🎚️</span><span class="t-label">Adjust</span></button>
+        <button class="pe-tab" data-tab="filters"><span class="t-icon">🎞️</span><span class="t-label">Filters</span></button>
+        <button class="pe-tab" data-tab="pro"><span class="t-icon">⚡</span><span class="t-label">Pro</span></button>
+        <button class="pe-tab" data-tab="draw"><span class="t-icon">✏️</span><span class="t-label">Draw</span></button>
+        <button class="pe-tab" data-tab="background"><span class="t-icon">🎨</span><span class="t-label">Bg</span></button>
+      </div>
+
+      <!-- ADJUST -->
+      <div class="pe-pane active" data-pane="adjust">
+        <div class="pe-slider-row">
+          <div class="pe-slider"><label>Brightness <span class="val" id="brightnessVal">100%</span></label><input type="range" id="brightness" min="0" max="200" value="100" /></div>
+          <div class="pe-slider"><label>Contrast <span class="val" id="contrastVal">100%</span></label><input type="range" id="contrast" min="0" max="200" value="100" /></div>
+          <div class="pe-slider"><label>Saturation <span class="val" id="saturationVal">100%</span></label><input type="range" id="saturation" min="0" max="200" value="100" /></div>
+          <div class="pe-slider"><label>Hue <span class="val" id="hueVal">0°</span></label><input type="range" id="hue" min="-180" max="180" value="0" /></div>
+          <div class="pe-slider"><label>Grayscale <span class="val" id="grayscaleVal">0%</span></label><input type="range" id="grayscale" min="0" max="100" value="0" /></div>
+          <div class="pe-slider"><label>Sepia <span class="val" id="sepiaVal">0%</span></label><input type="range" id="sepia" min="0" max="100" value="0" /></div>
+          <div class="pe-slider"><label>Invert <span class="val" id="invertVal">0%</span></label><input type="range" id="invert" min="0" max="100" value="0" /></div>
+          <div class="pe-slider"><label>Blur <span class="val" id="blurVal">0px</span></label><input type="range" id="blur" min="0" max="20" value="0" /></div>
+        </div>
+        <span class="pe-section-label">Transform</span>
+        <div class="pe-btns">
+          <button class="pe-btn" id="rotL">↺ Rotate Left</button>
+          <button class="pe-btn" id="rotR">↻ Rotate Right</button>
+          <button class="pe-btn" id="flipH">↔ Flip H</button>
+          <button class="pe-btn" id="flipV">↕ Flip V</button>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="pe-pane" data-pane="filters">
+        <span class="pe-section-label">Presets</span>
+        <div class="pe-preset-grid" id="presetGrid">
+          <button class="pe-preset active" data-preset="none" style="background: linear-gradient(135deg, #f3e8ff, #ddd6fe);">Original</button>
+          <button class="pe-preset" data-preset="bw" style="background: linear-gradient(135deg, #e5e5e5, #737373); color:#1a1a1a;">B &amp; W</button>
+          <button class="pe-preset" data-preset="sepia" style="background: linear-gradient(135deg, #f5e6d3, #b8860b); color:#2b1a05;">Vintage</button>
+          <button class="pe-preset" data-preset="cinematic" style="background: linear-gradient(135deg, #1e3a8a, #0f172a); color:#e0e7ff;">Cinematic</button>
+          <button class="pe-preset" data-preset="cool" style="background: linear-gradient(135deg, #67e8f9, #0ea5e9); color:#0c4a6e;">Cool</button>
+          <button class="pe-preset" data-preset="warm" style="background: linear-gradient(135deg, #fcd34d, #f97316); color:#7c2d12;">Warm</button>
+          <button class="pe-preset" data-preset="dramatic" style="background: linear-gradient(135deg, #6b21a8, #1e1b4b); color:#f5f3ff;">Dramatic</button>
+          <button class="pe-preset" data-preset="fade" style="background: linear-gradient(135deg, #fef3c7, #fbcfe8); color:#581c87;">Fade</button>
+          <button class="pe-preset" data-preset="vivid" style="background: linear-gradient(135deg, #f472b6, #ec4899, #a855f7); color:#fff;">Vivid</button>
+        </div>
+        <span class="pe-section-label">Advanced</span>
+        <div class="pe-slider-row">
+          <div class="pe-slider"><label>Exposure <span class="val" id="exposureVal">0</span></label><input type="range" id="exposure" min="-100" max="100" value="0" /></div>
+          <div class="pe-slider"><label>Temperature <span class="val" id="temperatureVal">0</span></label><input type="range" id="temperature" min="-100" max="100" value="0" /></div>
+          <div class="pe-slider"><label>Vignette <span class="val" id="vignetteVal">0%</span></label><input type="range" id="vignette" min="0" max="100" value="0" /></div>
+          <div class="pe-slider"><label>Grain <span class="val" id="grainVal">0%</span></label><input type="range" id="grain" min="0" max="100" value="0" /></div>
+        </div>
+      </div>
+
+      <!-- PRO -->
+      <div class="pe-pane" data-pane="pro">
+        <span class="pe-section-label">✨ Auto enhance</span>
+        <div class="pe-btns" style="margin-top:0;">
+          <button class="pe-btn accent" id="autoEnhanceBtn">✨ Auto-Enhance now</button>
+        </div>
+        <span class="pe-section-label">Tone curve</span>
+        <div class="pe-slider-row">
+          <div class="pe-slider"><label>Highlights <span class="val" id="highlightsVal">0</span></label><input type="range" id="highlights" min="-100" max="100" value="0" /></div>
+          <div class="pe-slider"><label>Shadows <span class="val" id="shadowsVal">0</span></label><input type="range" id="shadows" min="-100" max="100" value="0" /></div>
+          <div class="pe-slider"><label>Vibrance <span class="val" id="vibranceVal">0</span></label><input type="range" id="vibrance" min="-100" max="100" value="0" /></div>
+          <div class="pe-slider"><label>Fade <span class="val" id="fadeVal">0%</span></label><input type="range" id="fade" min="0" max="100" value="0" /></div>
+        </div>
+        <span class="pe-section-label">Detail</span>
+        <div class="pe-slider-row">
+          <div class="pe-slider"><label>Sharpen <span class="val" id="sharpenVal">0%</span></label><input type="range" id="sharpen" min="0" max="100" value="0" /></div>
+          <div class="pe-slider"><label>Clarity <span class="val" id="clarityVal">0</span></label><input type="range" id="clarity" min="-100" max="100" value="0" /></div>
+        </div>
+      </div>
+
+      <!-- DRAW -->
+      <div class="pe-pane" data-pane="draw">
+        <span class="pe-section-label">Tool</span>
+        <div class="tool-chips">
+          <button class="tool-chip active" data-tool="pen">✏️ Pen</button>
+          <button class="tool-chip" data-tool="line">📏 Line</button>
+          <button class="tool-chip" data-tool="arrow">➡️ Arrow</button>
+          <button class="tool-chip" data-tool="rect">⬜ Rectangle</button>
+          <button class="tool-chip" data-tool="circle">⭕ Circle</button>
+          <button class="tool-chip" data-tool="text">🅰 Text</button>
+          <button class="tool-chip" data-tool="eraser">🧽 Eraser</button>
+        </div>
+        <span class="pe-section-label">Color</span>
+        <div class="color-swatches" id="colorSwatches">
+          <button class="color-swatch active" data-color="#ef4444" style="background:#ef4444;"></button>
+          <button class="color-swatch" data-color="#f97316" style="background:#f97316;"></button>
+          <button class="color-swatch" data-color="#f59e0b" style="background:#f59e0b;"></button>
+          <button class="color-swatch" data-color="#eab308" style="background:#eab308;"></button>
+          <button class="color-swatch" data-color="#10b981" style="background:#10b981;"></button>
+          <button class="color-swatch" data-color="#06b6d4" style="background:#06b6d4;"></button>
+          <button class="color-swatch" data-color="#3b82f6" style="background:#3b82f6;"></button>
+          <button class="color-swatch" data-color="#8b5cf6" style="background:#8b5cf6;"></button>
+          <button class="color-swatch" data-color="#ec4899" style="background:#ec4899;"></button>
+          <button class="color-swatch" data-color="#000000" style="background:#000;"></button>
+          <button class="color-swatch" data-color="#ffffff" style="background:#fff; border-color:#d1d5db;"></button>
+          <button class="color-swatch custom" title="Custom color"><input type="color" id="customColor" value="#8b5cf6" /></button>
+        </div>
+        <div class="pe-slider-row" style="margin-top:14px;">
+          <div class="pe-slider"><label>Size <span class="val" id="brushSizeVal">6px</span></label><input type="range" id="brushSize" min="1" max="60" value="6" /></div>
+          <div class="pe-slider"><label>Opacity <span class="val" id="brushOpacityVal">100%</span></label><input type="range" id="brushOpacity" min="10" max="100" value="100" /></div>
+        </div>
+        <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+          <label class="pe-toggle" id="fillToggle"><span class="switch"></span><span>Fill shapes</span><input type="checkbox" id="fillShapes" hidden /></label>
+        </div>
+        <span class="pe-section-label">Actions</span>
+        <div class="pe-btns">
+          <button class="pe-btn" id="undoBtn">↶ Undo</button>
+          <button class="pe-btn danger" id="clearDrawBtn">🗑 Clear drawings</button>
+        </div>
+      </div>
+
+      <!-- BACKGROUND -->
+      <div class="pe-pane" data-pane="background">
+
+        <div id="collageControls" hidden>
+          <span class="pe-section-label">🧩 Collage layout</span>
+          <div class="layout-grid" id="layoutGrid">
+            <button class="layout-tile active" data-layout="1x2" title="2 side by side" style="grid-template-columns: 1fr 1fr;">
+              <div class="cell"></div><div class="cell"></div>
+            </button>
+            <button class="layout-tile" data-layout="2x1" title="2 stacked" style="grid-template-columns: 1fr; grid-template-rows: 1fr 1fr;">
+              <div class="cell"></div><div class="cell"></div>
+            </button>
+            <button class="layout-tile" data-layout="2x2" title="2x2 grid" style="grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;">
+              <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            </button>
+            <button class="layout-tile" data-layout="3x3" title="3x3 grid" style="grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr;">
+              <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+              <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+              <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            </button>
+            <button class="layout-tile" data-layout="hero-left" title="1 big + 2 small" style="grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr;">
+              <div class="cell" style="grid-row: span 2;"></div><div class="cell"></div><div class="cell"></div>
+            </button>
+            <button class="layout-tile" data-layout="hero-right" title="2 small + 1 big" style="grid-template-columns: 1fr 2fr; grid-template-rows: 1fr 1fr;">
+              <div class="cell"></div><div class="cell" style="grid-row: span 2;"></div><div class="cell"></div>
+            </button>
+            <button class="layout-tile" data-layout="1x3" title="3 side by side" style="grid-template-columns: 1fr 1fr 1fr;">
+              <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            </button>
+            <button class="layout-tile" data-layout="3x1" title="3 stacked" style="grid-template-columns: 1fr; grid-template-rows: 1fr 1fr 1fr;">
+              <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+            </button>
+            <!-- FREESTYLE -->
+            <button class="layout-tile free" data-layout="freestyle" title="Freestyle — drag, resize &amp; rotate" style="position: relative;">
+              <div class="cell" style="position: absolute; width: 55%; height: 45%; top: 8%; left: 10%; transform: rotate(-8deg);"></div>
+              <div class="cell" style="position: absolute; width: 45%; height: 40%; top: 40%; left: 45%; transform: rotate(12deg); background: linear-gradient(135deg, #ec4899, #8b5cf6);"></div>
+              <div class="cell" style="position: absolute; width: 40%; height: 32%; top: 55%; left: 12%; transform: rotate(5deg); background: linear-gradient(135deg, #f59e0b, #ef4444);"></div>
+            </button>
+          </div>
+
+          <!-- Grid mode controls -->
+          <div id="gridControls">
+            <div class="pe-slider-row" style="margin-top:14px;">
+              <div class="pe-slider"><label>Gap <span class="val" id="collageGapVal">8 px</span></label><input type="range" id="collageGap" min="0" max="60" value="8" /></div>
+              <div class="pe-slider"><label>Tile radius <span class="val" id="tileRadiusVal">0 px</span></label><input type="range" id="tileRadius" min="0" max="60" value="0" /></div>
+            </div>
+            <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+              <label class="pe-toggle" id="coverToggle">
+                <span class="switch"></span><span>Cover (fill cell)</span>
+                <input type="checkbox" id="coverMode" checked hidden />
+              </label>
+            </div>
+          </div>
+
+          <!-- Freestyle controls -->
+          <div id="freeControls" hidden>
+            <div class="pe-slider-row" style="margin-top:14px;">
+              <div class="pe-slider"><label>Global radius <span class="val" id="freeRadiusVal">12 px</span></label><input type="range" id="freeRadius" min="0" max="80" value="12" /></div>
+              <div class="pe-slider"><label>Global shadow <span class="val" id="freeShadowVal">20</span></label><input type="range" id="freeShadow" min="0" max="60" value="20" /></div>
+            </div>
+
+            <span class="pe-section-label">Arrange</span>
+            <div class="pe-btns">
+              <button class="pe-btn" id="freeShuffleBtn">🎲 Shuffle</button>
+              <button class="pe-btn" id="freeCenterBtn">🎯 Stack center</button>
+              <button class="pe-btn" id="freeResetBtn">↺ Reset positions</button>
+            </div>
+
+            <span class="pe-section-label">How it works</span>
+            <div style="padding:12px 14px; border-radius:12px;
+              background:rgba(139,92,246,.08); border:1.5px solid rgba(139,92,246,.2);
+              font-size:.78rem; line-height:1.5; color:var(--p-800);">
+              <strong>👆 Click any image</strong> to select it, then <strong>drag to move</strong>.
+              Use the <strong>corner handles</strong> to resize and the <strong>top handle</strong> to rotate.
+              You can also use the sliders below when an image is selected.
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected item toolbar (freestyle only) -->
+        <div class="item-toolbar" id="itemToolbar" hidden>
+          <span class="it-label">Selected</span>
+          <div class="pe-slider-row" style="grid-column: 1 / -1; grid-template-columns: 1fr 1fr; gap: 10px 14px;">
+            <div class="pe-slider"><label>Size <span class="val" id="itSizeVal">—</span></label><input type="range" id="itSize" min="5" max="200" value="40" /></div>
+            <div class="pe-slider"><label>Rotation <span class="val" id="itRotVal">0°</span></label><input type="range" id="itRot" min="-180" max="180" value="0" /></div>
+            <div class="pe-slider"><label>Radius <span class="val" id="itRadiusVal">12 px</span></label><input type="range" id="itRadius" min="0" max="80" value="12" /></div>
+            <div class="pe-slider"><label>Opacity <span class="val" id="itOpacityVal">100%</span></label><input type="range" id="itOpacity" min="10" max="100" value="100" /></div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; grid-column: 1 / -1;">
+            <button class="pe-btn" id="itFront">⬆ Front</button>
+            <button class="pe-btn" id="itBack">⬇ Back</button>
+            <button class="pe-btn" id="itDup">⧉ Duplicate</button>
+            <button class="pe-btn danger" id="itDel">🗑 Remove</button>
+          </div>
+        </div>
+
+        <span class="pe-section-label">Solid colors</span>
+        <div class="bg-grid" id="bgColors">
+          <button class="bg-tile active" data-bg="transparent" title="Transparent" style="background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 12px 12px;"></button>
+          <button class="bg-tile" data-bg="#ffffff" style="background:#fff;"></button>
+          <button class="bg-tile" data-bg="#000000" style="background:#000;"></button>
+          <button class="bg-tile" data-bg="#8b5cf6" style="background:#8b5cf6;"></button>
+          <button class="bg-tile" data-bg="#ec4899" style="background:#ec4899;"></button>
+          <button class="bg-tile" data-bg="#3b82f6" style="background:#3b82f6;"></button>
+          <button class="bg-tile" data-bg="#10b981" style="background:#10b981;"></button>
+          <button class="bg-tile" data-bg="#f59e0b" style="background:#f59e0b;"></button>
+          <button class="bg-tile" data-bg="#ef4444" style="background:#ef4444;"></button>
+          <button class="bg-tile" data-bg="#1e293b" style="background:#1e293b;"></button>
+          <button class="bg-tile" data-bg="#f5f5f5" style="background:#f5f5f5;"></button>
+          <button class="bg-tile" data-bg="#fef3c7" style="background:#fef3c7;"></button>
+        </div>
+
+        <span class="pe-section-label">Gradients</span>
+        <div class="bg-grid" id="bgGradients">
+          <button class="bg-tile" data-bg="linear-gradient(135deg, #8b5cf6, #ec4899)" style="background:linear-gradient(135deg, #8b5cf6, #ec4899);"></button>
+          <button class="bg-tile" data-bg="linear-gradient(135deg, #f97316, #ef4444)" style="background:linear-gradient(135deg, #f97316, #ef4444);"></button>
+          <button class="bg-tile" data-bg="linear-gradient(135deg, #06b6d4, #3b82f6)" style="background:linear-gradient(135deg, #06b6d4, #3b82f6);"></button>
+          <button class="bg-tile" data-bg="linear-gradient(135deg, #10b981, #84cc16)" style="background:linear-gradient(135deg, #10b981, #84cc16);"></button>
+          <button class="bg-tile" data-bg="linear-gradient(135deg, #1e293b, #0f172a)" style="background:linear-gradient(135deg, #1e293b, #0f172a);"></button>
+          <button class="bg-tile" data-bg="linear-gradient(135deg, #fbbf24, #f97316)" style="background:linear-gradient(135deg, #fbbf24, #f97316);"></button>
+          <button class="bg-tile" data-bg="linear-gradient(135deg, #c026d3, #7c3aed)" style="background:linear-gradient(135deg, #c026d3, #7c3aed);"></button>
+          <button class="bg-tile" data-bg="linear-gradient(135deg, #fce7f3, #ddd6fe)" style="background:linear-gradient(135deg, #fce7f3, #ddd6fe);"></button>
+        </div>
+
+        <span class="pe-section-label">Patterns</span>
+        <div class="bg-grid" id="bgPatterns">
+          <button class="bg-tile" data-bg="dots" title="Dots" style="background:#fff; background-image: radial-gradient(#8b5cf6 1.5px, transparent 1.5px); background-size: 12px 12px;"></button>
+          <button class="bg-tile" data-bg="stripes" title="Stripes" style="background: repeating-linear-gradient(45deg, #8b5cf6 0 6px, #ddd6fe 6px 12px);"></button>
+          <button class="bg-tile" data-bg="checker" title="Checker" style="background: repeating-conic-gradient(#8b5cf6 0% 25%, #fff 0% 50%) 50% / 14px 14px;"></button>
+        </div>
+
+        <span class="pe-section-label">Frame &amp; shape</span>
+        <div class="pe-slider-row">
+          <div class="pe-slider"><label>Frame padding <span class="val" id="paddingVal">0 px</span></label><input type="range" id="padding" min="0" max="200" value="0" /></div>
+          <div class="pe-slider"><label>Corner radius <span class="val" id="radiusVal">0 px</span></label><input type="range" id="radius" min="0" max="100" value="0" /></div>
+        </div>
+
+        <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
+          <label class="pe-toggle" id="shadowToggle">
+            <span class="switch"></span><span>Drop shadow</span>
+            <input type="checkbox" id="dropShadow" hidden />
+          </label>
+        </div>
+      </div>
+
+      <div class="pe-actions">
+        <button class="btn btn-ghost" id="previewBtn">👁 Preview</button>
+        <button class="btn btn-ghost" id="resetAllBtn">↺ Reset</button>
+        <button class="btn btn-primary" id="downloadBtn">⬇ Download</button>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<footer class="site-footer">100% client-side photo editing · Files never leave your device.</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="preview-modal" id="previewModal">
+  <div class="preview-modal-content">
+    <div class="preview-header">
+      <h3 id="previewTitle">Preview &amp; details</h3>
+      <button class="preview-close" id="previewClose" aria-label="Close">✕</button>
+    </div>
+    <div class="preview-body">
+      <div class="compare" id="compare">
+        <img id="cmpBefore" alt="Before" />
+        <div class="after-wrap" id="afterWrap"><img id="cmpAfter" alt="After" /></div>
+        <div class="divider" id="divider"><div class="knob">⇄</div></div>
+        <div class="lbl left">Original</div>
+        <div class="lbl right">Edited</div>
+      </div>
+      <div class="details">
+        <div class="detail-card"><div class="d-label">Original</div><div class="d-value" id="dOrigSize">—</div><div class="d-sub" id="dOrigDim">—</div></div>
+        <div class="detail-card good"><div class="d-label">Edited</div><div class="d-value" id="dNewSize">—</div><div class="d-sub" id="dNewDim">—</div></div>
+        <div class="detail-card"><div class="d-label">Adjustments</div><div class="d-value" id="dFilters">—</div><div class="d-sub" id="dFiltersSub">—</div></div>
+        <div class="detail-card"><div class="d-label">Canvas</div><div class="d-value" id="dCanvas">—</div><div class="d-sub" id="dCanvasSub">—</div></div>
+      </div>
+    </div>
+    <div class="preview-footer">
+      <button class="btn btn-ghost" id="previewCancel">Close</button>
+      <button class="btn btn-primary" id="previewDownload">⬇ Download edited image</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const $ = (s, c = document) => c.querySelector(s);
+  const $$ = (s, c = document) => Array.prototype.slice.call(c.querySelectorAll(s));
+
+  let toastTimer = null;
+  function toast(m){
+    const el = $('#toast');
+    el.textContent = m;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+  }
+  function fmtSize(b){
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(2) + ' MB';
+  }
+  function val(id){ const el = $('#' + id); return el ? el.value : 0; }
+  function setText(id, txt){ const el = $('#' + id); if (el) el.textContent = txt; }
+
+  /* ============================================================
+     STATE
+     ============================================================ */
+  const state = {
+    images: [],
+    activeIdx: 0,
+    mode: 'single',
+    layout: '1x2',
+    collageGap: 8,
+    tileRadius: 0,
+    coverMode: true,
+    // Freestyle
+    freeItems: [],           // [{ id, imgIdx, x, y, w, h, rotation, z, radius, opacity }]
+    freeRadius: 12,
+    freeShadow: 20,
+    selectedItemId: null,
+    activeTab: 'adjust',
+    // Transforms
+    rotation: 0, flipH: 1, flipV: 1,
+    // Draw
+    tool: 'pen', color: '#ef4444', brushSize: 6, brushOpacity: 1, fillShapes: false,
+    drawings: [],
+    // Background
+    bg: 'transparent', padding: 0, radius: 0, shadow: false,
+    // Live interaction
+    drawing: false, drawStart: null, drawCurrent: null, drawPoints: [],
+    // Freestyle drag state
+    dragging: false,
+    dragMode: null,        // 'move' | 'resize' | 'rotate'
+    dragStart: null,
+    dragOrigin: null,
+    dragHandle: null
+  };
+
+  const canvas = $('#editCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const adjustSliders = ['brightness','contrast','saturation','hue','grayscale','sepia','invert','blur'];
+  const advancedSliders = ['exposure','temperature','vignette','grain'];
+  const proSliders = ['highlights','shadows','vibrance','fade','sharpen','clarity'];
+  const sliderDefaults = {
+    brightness:100, contrast:100, saturation:100, hue:0, grayscale:0, sepia:0, invert:0, blur:0,
+    exposure:0, temperature:0, vignette:0, grain:0,
+    highlights:0, shadows:0, vibrance:0, fade:0, sharpen:0, clarity:0
+  };
+
+  const PRESETS = {
+    none:      { brightness:100, contrast:100, saturation:100, hue:0, grayscale:0, sepia:0, invert:0, blur:0, exposure:0, temperature:0, vignette:0, grain:0, highlights:0, shadows:0, vibrance:0, fade:0 },
+    bw:        { brightness:105, contrast:120, saturation:0,   hue:0, grayscale:100, sepia:0, invert:0, blur:0, exposure:5,  temperature:0, vignette:25, grain:10, highlights:0, shadows:0, vibrance:0, fade:0 },
+    sepia:     { brightness:105, contrast:110, saturation:85,  hue:0, grayscale:0, sepia:75, invert:0, blur:0, exposure:0,  temperature:20, vignette:35, grain:20, highlights:0, shadows:0, vibrance:0, fade:0 },
+    cinematic: { brightness:95,  contrast:130, saturation:80,  hue:-5, grayscale:0, sepia:0, invert:0, blur:0, exposure:-10, temperature:-25, vignette:55, grain:15, highlights:-20, shadows:15, vibrance:0, fade:0 },
+    cool:      { brightness:105, contrast:105, saturation:110, hue:-10, grayscale:0, sepia:0, invert:0, blur:0, exposure:0, temperature:-40, vignette:15, grain:0, highlights:0, shadows:0, vibrance:0, fade:0 },
+    warm:      { brightness:105, contrast:105, saturation:115, hue:5, grayscale:0, sepia:15, invert:0, blur:0, exposure:5, temperature:40, vignette:15, grain:0, highlights:0, shadows:0, vibrance:0, fade:0 },
+    dramatic:  { brightness:90,  contrast:160, saturation:120, hue:0, grayscale:0, sepia:0, invert:0, blur:0, exposure:-15, temperature:-10, vignette:70, grain:25, highlights:-30, shadows:-10, vibrance:20, fade:0 },
+    fade:      { brightness:115, contrast:80,  saturation:80,  hue:0, grayscale:0, sepia:20, invert:0, blur:0, exposure:10, temperature:10, vignette:20, grain:20, highlights:0, shadows:0, vibrance:0, fade:35 },
+    vivid:     { brightness:105, contrast:125, saturation:170, hue:0, grayscale:0, sepia:0, invert:0, blur:0, exposure:10, temperature:0, vignette:15, grain:0, highlights:0, shadows:0, vibrance:30, fade:0 }
+  };
+
+  const REF_SIZE = 1000;   // Freestyle virtual canvas is REF_SIZE × REF_SIZE
+
+  /* ============================================================
+     FILES
+     ============================================================ */
+  async function addFiles(list){
+    try {
+      const files = Array.from(list).filter(f => f.type.startsWith('image/'));
+      if (!files.length){ toast('Please choose image files'); return; }
+
+      for (const f of files){
+        const url = await new Promise(r => {
+          const fr = new FileReader();
+          fr.onload = e => r(e.target.result);
+          fr.readAsDataURL(f);
+        });
+        const img = await new Promise((res, rej) => {
+          const i = new Image();
+          i.onload = () => res(i);
+          i.onerror = () => rej(new Error('Cannot decode ' + f.name));
+          i.src = url;
+        });
+        state.images.push({
+          id: Math.random().toString(36).slice(2),
+          name: f.name, size: f.size, img, url
+        });
+      }
+      state.activeIdx = 0;
+
+      if (state.images.length <= files.length){
+        state.rotation = 0; state.flipH = 1; state.flipV = 1;
+        state.drawings = [];
+        state.bg = 'transparent'; state.padding = 0; state.radius = 0; state.shadow = false;
+        resetSliders(); resetBackgroundUI(); resetDrawUI();
+        state.freeItems = [];
+        state.selectedItemId = null;
+      }
+
+      updateFileChip();
+      renderImageStrip();
+      $('#uploadStage').hidden = true;
+      $('#editorWrap').hidden = false;
+      if (state.images.length > 1) $('#stripWrap').hidden = false;
+
+      // Rebuild free items if we're in freestyle
+      if (state.layout === 'freestyle'){
+        initFreeItems();
+      }
+
+      render();
+      toast(files.length + ' image(s) loaded ✓');
+    } catch (err){
+      console.error('addFiles error:', err);
+      toast('Failed to load: ' + err.message);
+    }
+  }
+
+  function updateFileChip(){
+    const active = state.images[state.activeIdx];
+    if (!active) return;
+    $('#thumbImg').src = active.url;
+    $('#fileNm').textContent = active.name;
+    $('#fileSz').textContent = active.img.naturalWidth + ' × ' + active.img.naturalHeight + ' px · ' + fmtSize(active.size);
+  }
+
+  function renderImageStrip(){
+    const strip = $('#imgStrip');
+    strip.innerHTML = '';
+    state.images.forEach((im, i) => {
+      const el = document.createElement('div');
+      el.className = 'img-thumb' + (i === state.activeIdx ? ' active' : '');
+      el.innerHTML =
+        '<img src="' + im.url + '" alt="" />' +
+        '<span class="idx">' + (i + 1) + '</span>' +
+        '<button class="rm" data-id="' + im.id + '" aria-label="Remove">✕</button>';
+      el.addEventListener('click', e => {
+        if (e.target.closest('.rm')) return;
+        state.activeIdx = i;
+        updateFileChip(); renderImageStrip(); render();
+      });
+      strip.appendChild(el);
+    });
+    const add = document.createElement('div');
+    add.className = 'add-more';
+    add.textContent = '+';
+    add.title = 'Add more images';
+    add.addEventListener('click', () => $('#fileInput').click());
+    strip.appendChild(add);
+  }
+
+  $('#imgStrip').addEventListener('click', e => {
+    const btn = e.target.closest('.rm');
+    if (!btn) return;
+    state.images = state.images.filter(i => i.id !== btn.dataset.id);
+    state.freeItems = state.freeItems.filter(it => it.imgIdx < state.images.length);
+    if (state.activeIdx >= state.images.length) state.activeIdx = Math.max(0, state.images.length - 1);
+    if (!state.images.length){
+      $('#uploadStage').hidden = false;
+      $('#editorWrap').hidden = true;
+      return;
+    }
+    updateFileChip(); renderImageStrip(); render();
+  });
+
+  /* ============================================================
+     MODE SWITCHING
+     ============================================================ */
+  $$('.mode-bar button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.mode = btn.dataset.mode;
+      $$('.mode-bar button').forEach(b => b.classList.toggle('active', b === btn));
+      $('#collageControls').hidden = state.mode !== 'collage';
+      $('#stripWrap').hidden = state.images.length <= 1 && state.mode !== 'collage';
+      if (state.mode === 'collage' && !$('.pe-pane[data-pane="background"]').classList.contains('active')){
+        $$('.pe-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'background'));
+        $$('.pe-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === 'background'));
+        state.activeTab = 'background';
+      }
+      render();
+    });
+  });
+
+  /* ============================================================
+     FREESTYLE — initial placement of items
+     ============================================================ */
+  function initFreeItems(){
+    if (!state.images.length) return;
+    const n = state.images.length;
+    state.freeItems = state.images.map((im, i) => {
+      const baseSize = 55; // % of REF_SIZE
+      const ar = im.img.naturalWidth / im.img.naturalHeight;
+      const w = baseSize * (ar > 1 ? 1 : ar);
+      const h = baseSize * (ar > 1 ? 1 / ar : 1);
+      // Staggered grid
+      const cols = Math.ceil(Math.sqrt(n));
+      const rows = Math.ceil(n / cols);
+      const cellW = 100 / cols;
+      const cellH = 100 / rows;
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      return {
+        id: Math.random().toString(36).slice(2),
+        imgIdx: i,
+        x: (col + 0.5) * cellW + (Math.random() - 0.5) * 4,  // % of REF_SIZE
+        y: (row + 0.5) * cellH + (Math.random() - 0.5) * 4,
+        w: w,
+        h: h,
+        rotation: (Math.random() - 0.5) * 20,   // -10..10 deg
+        z: i + 1,
+        radius: state.freeRadius,
+        opacity: 1
+      };
+    });
+    state.selectedItemId = null;
+    updateItemToolbar();
+  }
+
+  /* ============================================================
+     LAYOUT CALC
+     ============================================================ */
+  function computeLayout(){
+    if (state.mode === 'single'){
+      const active = state.images[state.activeIdx];
+      if (!active) return null;
+      const iw = active.img.naturalWidth, ih = active.img.naturalHeight;
+      const rad = state.rotation * Math.PI / 180;
+      const cos = Math.abs(Math.cos(rad)), sin = Math.abs(Math.sin(rad));
+      const rotatedW = iw * cos + ih * sin;
+      const rotatedH = iw * sin + ih * cos;
+      return { totalW: rotatedW + state.padding * 2, totalH: rotatedH + state.padding * 2,
+        rotatedW, rotatedH, rad, iw, ih, cells: null, freestyle: false };
+    } else {
+      if (state.layout === 'freestyle'){
+        const W = 800, H = 800;
+        return { totalW: W + state.padding * 2, totalH: H + state.padding * 2,
+          collageW: W, collageH: H, rotatedW: W, rotatedH: H, rad: 0,
+          iw: W, ih: H, cells: null, freestyle: true };
+      }
+      const cells = getLayoutCells(state.layout, state.images.length);
+      const baseW = 1200;
+      const maxRow = Math.max(...cells.map(c => c.r + c.rs));
+      const maxCol = Math.max(...cells.map(c => c.c + c.cs));
+      const baseH = Math.round(baseW * maxRow / maxCol);
+      return { totalW: baseW + state.padding * 2, totalH: baseH + state.padding * 2,
+        collageW: baseW, collageH: baseH, cells, gridCols: maxCol, gridRows: maxRow,
+        rotatedW: baseW, rotatedH: baseH, rad: 0, iw: baseW, ih: baseH, freestyle: false };
+    }
+  }
+
+  function getLayoutCells(layout, count){
+    const patterns = {
+      '1x2':        [[0,0,1,1],[1,0,1,1]],
+      '2x1':        [[0,0,1,1],[0,1,1,1]],
+      '2x2':        [[0,0,1,1],[1,0,1,1],[0,1,1,1],[1,1,1,1]],
+      '3x3':        Array.from({length:9}, (_,i)=>[i%3, Math.floor(i/3), 1, 1]),
+      'hero-left':  [[0,0,1,2],[1,0,1,1],[1,1,1,1]],
+      'hero-right': [[0,0,1,1],[0,1,1,1],[1,0,1,2]],
+      '1x3':        [[0,0,1,1],[1,0,1,1],[2,0,1,1]],
+      '3x1':        [[0,0,1,1],[0,1,1,1],[0,2,1,1]]
+    };
+    const base = patterns[layout] || patterns['2x2'];
+    if (count > base.length){
+      const cols = Math.ceil(Math.sqrt(count));
+      const grid = [];
+      for (let i = 0; i < count; i++) grid.push([i % cols, Math.floor(i / cols), 1, 1]);
+      return grid.map(([c, r, cs, rs]) => ({c, r, cs, rs}));
+    }
+    return base.slice(0, count).map(([c, r, cs, rs]) => ({c, r, cs, rs}));
+  }
+
+  function fitCanvas(){
+    const L = computeLayout();
+    if (!L) return;
+    const maxW = Math.min(900, window.innerWidth - 40);
+    const maxH = Math.min(window.innerHeight * 0.6, 700);
+    const scale = Math.min(1, maxW / L.totalW, maxH / L.totalH);
+    canvas.width = Math.max(1, Math.round(L.totalW * scale));
+    canvas.height = Math.max(1, Math.round(L.totalH * scale));
+  }
+
+  /* ============================================================
+     FILTER STRING
+     ============================================================ */
+  function buildFilter(){
+    return 'brightness(' + val('brightness') + '%) contrast(' + val('contrast') + '%) ' +
+           'saturate(' + val('saturation') + '%) hue-rotate(' + val('hue') + 'deg) ' +
+           'grayscale(' + val('grayscale') + '%) sepia(' + val('sepia') + '%) ' +
+           'invert(' + val('invert') + '%) blur(' + val('blur') + 'px)';
+  }
+
+  /* ============================================================
+     RENDER
+     ============================================================ */
+  function render(){
+    const L = computeLayout();
+    if (!L) return;
+    fitCanvas();
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    drawBackground(ctx, W, H);
+
+    const scale = W / L.totalW;
+    const drawW = L.rotatedW * scale;
+    const drawH = L.rotatedH * scale;
+    const rx = state.padding * scale;
+    const ry = state.padding * scale;
+
+    // Draw main frame
+    ctx.save();
+    if (state.shadow){
+      ctx.shadowColor = 'rgba(0,0,0,0.35)';
+      ctx.shadowBlur = 24 * scale;
+      ctx.shadowOffsetY = 8 * scale;
+    }
+    ctx.beginPath();
+    roundRect(ctx, rx, ry, drawW, drawH, state.radius * scale);
+    ctx.clip();
+    ctx.shadowColor = 'transparent';
+
+    if (state.mode === 'single'){
+      const active = state.images[state.activeIdx];
+      if (active){
+        ctx.save();
+        ctx.translate(rx + drawW / 2, ry + drawH / 2);
+        ctx.rotate(L.rad);
+        ctx.scale(state.flipH, state.flipV);
+        ctx.filter = buildFilter();
+        ctx.drawImage(active.img, -L.iw * scale / 2, -L.ih * scale / 2, L.iw * scale, L.ih * scale);
+        ctx.filter = 'none';
+        ctx.restore();
+      }
+    } else if (L.freestyle){
+      ctx.filter = buildFilter();
+      drawFreestyleItems(ctx, rx, ry, drawW, drawH, scale);
+      ctx.filter = 'none';
+    } else {
+      ctx.filter = buildFilter();
+      drawCollage(ctx, rx, ry, drawW, drawH, scale, L);
+      ctx.filter = 'none';
+    }
+
+    applyAdvancedEffects(ctx, rx, ry, drawW, drawH);
+
+    ctx.restore();
+    ctx.restore();
+
+    // Freestyle selection handles drawn OVER the clip, so they're visible
+    if (state.mode === 'collage' && L.freestyle){
+      drawFreeformHandles(ctx, rx, ry, drawW, drawH, scale);
+    }
+
+    drawDrawings(ctx, scale, rx, ry);
+    if (state.drawing) drawActive(ctx, scale, rx, ry);
+
+    canvas.classList.toggle('freeform', state.mode === 'collage' && L.freestyle && state.activeTab !== 'draw');
+  }
+
+  /* ============================================================
+     FREESTYLE RENDER
+     ============================================================ */
+  function drawFreestyleItems(c, rx, ry, drawW, drawH, scale){
+    const items = state.freeItems.slice().sort((a, b) => a.z - b.z);
+    items.forEach(it => {
+      const im = state.images[it.imgIdx];
+      if (!im) return;
+      // Convert % → px on canvas
+      const cx = rx + (it.x / 100) * drawW;
+      const cy = ry + (it.y / 100) * drawH;
+      const w = (it.w / 100) * drawW;
+      const h = (it.h / 100) * drawH;
+
+      c.save();
+      c.globalAlpha = it.opacity;
+      c.translate(cx, cy);
+      c.rotate(it.rotation * Math.PI / 180);
+
+      // Shadow
+      const sBlur = state.freeShadow * scale;
+      if (sBlur > 0){
+        c.shadowColor = 'rgba(0,0,0,0.4)';
+        c.shadowBlur = sBlur;
+        c.shadowOffsetY = sBlur * 0.35;
+      }
+
+      // Clip to rounded rect
+      c.beginPath();
+      roundRect(c, -w / 2, -h / 2, w, h, it.radius * scale);
+      c.fillStyle = '#000';
+      c.fill();
+      c.shadowColor = 'transparent';
+
+      // Draw image with cover fit inside the rect
+      c.save();
+      c.beginPath();
+      roundRect(c, -w / 2, -h / 2, w, h, it.radius * scale);
+      c.clip();
+      const ar = im.img.naturalWidth / im.img.naturalHeight;
+      const boxAr = w / h;
+      let dw, dh, dx, dy;
+      if (ar > boxAr){
+        dh = h; dw = h * ar;
+        dx = -dw / 2; dy = -h / 2;
+      } else {
+        dw = w; dh = w / ar;
+        dx = -w / 2; dy = -dh / 2;
+      }
+      c.drawImage(im.img, dx, dy, dw, dh);
+      c.restore();
+
+      c.restore();
+    });
+  }
+
+  /* ============================================================
+     FREESTYLE — selection handles
+     ============================================================ */
+  function getItemRectsOnCanvas(rx, ry, drawW, drawH){
+    return state.freeItems.map(it => {
+      const cx = rx + (it.x / 100) * drawW;
+      const cy = ry + (it.y / 100) * drawH;
+      const w = (it.w / 100) * drawW;
+      const h = (it.h / 100) * drawH;
+      return { item: it, cx, cy, w, h };
+    });
+  }
+
+  function drawFreeformHandles(c, rx, ry, drawW, drawH, scale){
+    const sel = state.freeItems.find(it => it.id === state.selectedItemId);
+    if (!sel) return;
+    const rects = getItemRectsOnCanvas(rx, ry, drawW, drawH);
+    const r = rects.find(x => x.item.id === sel.id);
+    if (!r) return;
+
+    c.save();
+    c.translate(r.cx, r.cy);
+    c.rotate(sel.rotation * Math.PI / 180);
+
+    // Dashed outline
+    c.strokeStyle = '#8b5cf6';
+    c.lineWidth = 2;
+    c.setLineDash([6, 4]);
+    c.strokeRect(-r.w / 2, -r.h / 2, r.w, r.h);
+    c.setLineDash([]);
+
+    // Corner handles
+    const hs = 10;
+    const corners = [
+      [-r.w / 2, -r.h / 2],
+      [ r.w / 2, -r.h / 2],
+      [ r.w / 2,  r.h / 2],
+      [-r.w / 2,  r.h / 2]
+    ];
+    corners.forEach(([cx, cy]) => {
+      c.fillStyle = '#fff';
+      c.strokeStyle = '#8b5cf6';
+      c.lineWidth = 2;
+      c.beginPath();
+      c.rect(cx - hs / 2, cy - hs / 2, hs, hs);
+      c.fill();
+      c.stroke();
+    });
+
+    // Rotate handle (above top-center)
+    const rotY = -r.h / 2 - 30;
+    c.beginPath();
+    c.moveTo(0, -r.h / 2);
+    c.lineTo(0, rotY);
+    c.strokeStyle = '#8b5cf6';
+    c.lineWidth = 2;
+    c.stroke();
+
+    c.fillStyle = 'rgba(139,92,246,.95)';
+    c.beginPath();
+    c.arc(0, rotY, 12, 0, Math.PI * 2);
+    c.fill();
+    c.strokeStyle = '#fff';
+    c.lineWidth = 2;
+    c.stroke();
+
+    c.fillStyle = '#fff';
+    c.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText('↻', 0, rotY + 1);
+
+    c.restore();
+  }
+
+  /* ============================================================
+     FREESTYLE — hit testing
+     ============================================================ */
+  function pointerCanvasPos(e){
+    const r = canvas.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (cx - r.left) * (canvas.width / r.width),
+      y: (cy - r.top) * (canvas.height / r.height)
+    };
+  }
+
+  function hitTestFreestyle(px, py, rx, ry, drawW, drawH){
+    const rects = getItemRectsOnCanvas(rx, ry, drawW, drawH);
+    // Reverse order (top first)
+    const sorted = rects.slice().sort((a, b) => b.item.z - a.item.z);
+
+    // First check rotate handle + corner handles for the SELECTED item
+    const sel = state.freeItems.find(it => it.id === state.selectedItemId);
+    if (sel){
+      const r = sorted.find(x => x.item.id === sel.id);
+      if (r){
+        // Rotate handle
+        const rotX = 0, rotY = -r.h / 2 - 30;
+        // In item's local space
+        const cos = Math.cos(sel.rotation * Math.PI / 180);
+        const sin = Math.sin(sel.rotation * Math.PI / 180);
+        // World-space handle position
+        const wRotX = r.cx + (rotX * cos - rotY * sin);
+        const wRotY = r.cy + (rotX * sin + rotY * cos);
+        if (Math.hypot(px - wRotX, py - wRotY) < 16){
+          return { type: 'rotate', item: sel };
+        }
+
+        // Corner handles
+        const corners = [
+          [-r.w / 2, -r.h / 2, 'tl'],
+          [ r.w / 2, -r.h / 2, 'tr'],
+          [ r.w / 2,  r.h / 2, 'br'],
+          [-r.w / 2,  r.h / 2, 'bl']
+        ];
+        for (const [lx, ly, tag] of corners){
+          const wx = r.cx + (lx * cos - ly * sin);
+          const wy = r.cy + (lx * sin + ly * cos);
+          if (Math.hypot(px - wx, py - wy) < 16){
+            return { type: 'resize', item: sel, handle: tag };
+          }
+        }
+      }
+    }
+
+    // Now check for body hits (top to bottom)
+    for (const r of sorted){
+      const dx = px - r.cx, dy = py - r.cy;
+      const cos = Math.cos(-r.item.rotation * Math.PI / 180);
+      const sin = Math.sin(-r.item.rotation * Math.PI / 180);
+      const lx = dx * cos - dy * sin;
+      const ly = dx * sin + dy * cos;
+      if (Math.abs(lx) <= r.w / 2 && Math.abs(ly) <= r.h / 2){
+        return { type: 'body', item: r.item };
+      }
+    }
+    return null;
+  }
+
+  /* ============================================================
+     FREESTYLE — pointer handlers
+     ============================================================ */
+  function startFreestyleDrag(e){
+    const L = computeLayout();
+    if (!L || !L.freestyle) return false;
+    const scale = canvas.width / L.totalW;
+    const drawW = L.rotatedW * scale;
+    const drawH = L.rotatedH * scale;
+    const rx = state.padding * scale;
+    const ry = state.padding * scale;
+    const p = pointerCanvasPos(e);
+    const hit = hitTestFreestyle(p.x, p.y, rx, ry, drawW, drawH);
+
+    if (!hit){
+      // Deselect
+      state.selectedItemId = null;
+      updateItemToolbar();
+      render();
+      return false;
+    }
+
+    // Select the hit item
+    state.selectedItemId = hit.item.id;
+    updateItemToolbar();
+    // Bring to front on interaction
+    if (hit.type === 'body'){
+      const maxZ = Math.max(...state.freeItems.map(it => it.z));
+      hit.item.z = maxZ + 1;
+    }
+
+    state.dragging = true;
+    state.dragMode = hit.type;
+    state.dragStart = { x: p.x, y: p.y };
+    state.dragOrigin = {
+      x: hit.item.x, y: hit.item.y,
+      w: hit.item.w, h: hit.item.h,
+      rotation: hit.item.rotation
+    };
+    state.dragHandle = hit.handle || null;
+    canvas.classList.add('dragging');
+    render();
+    return true;
+  }
+
+  function moveFreestyleDrag(e){
+    if (!state.dragging) return;
+    const L = computeLayout();
+    if (!L) return;
+    const scale = canvas.width / L.totalW;
+    const drawW = L.rotatedW * scale;
+    const drawH = L.rotatedH * scale;
+    const rx = state.padding * scale;
+    const ry = state.padding * scale;
+
+    const p = pointerCanvasPos(e);
+    const it = state.freeItems.find(x => x.id === state.selectedItemId);
+    if (!it) return;
+
+    // Convert drag to layout percentages
+    const dxPct = ((p.x - state.dragStart.x) / drawW) * 100;
+    const dyPct = ((p.y - state.dragStart.y) / drawH) * 100;
+
+    if (state.dragMode === 'move'){
+      it.x = state.dragOrigin.x + dxPct;
+      it.y = state.dragOrigin.y + dyPct;
+    } else if (state.dragMode === 'rotate'){
+      // Compute angle from item center to pointer
+      const cx = rx + (it.x / 100) * drawW;
+      const cy = ry + (it.y / 100) * drawH;
+      const ang = Math.atan2(p.y - cy, p.x - cx) * 180 / Math.PI;
+      it.rotation = Math.round(ang + 90); // offset because rotate handle is at top
+      if (it.rotation > 180) it.rotation -= 360;
+      if (it.rotation < -180) it.rotation += 360;
+    } else if (state.dragMode === 'resize'){
+      // Resize using corner handle
+      const cx = rx + (it.x / 100) * drawW;
+      const cy = ry + (it.y / 100) * drawH;
+      // Distance from center
+      const dist = Math.hypot(p.x - cx, p.y - cy);
+      const origDist = Math.hypot(
+        ((state.dragStart.x - cx)), ((state.dragStart.y - cy))
+      );
+      const factor = dist / Math.max(1, origDist);
+      it.w = Math.max(8, Math.min(200, state.dragOrigin.w * factor));
+      // Preserve aspect ratio
+      const im = state.images[it.imgIdx];
+      const ar = im ? im.img.naturalWidth / im.img.naturalHeight : 1;
+      // item w/h in canvas is roughly proportional; keep visible aspect
+      it.h = Math.max(8, Math.min(200, state.dragOrigin.h * factor));
+    }
+
+    updateItemToolbarValues();
+    render();
+  }
+
+  function endFreestyleDrag(){
+    if (state.dragging){
+      state.dragging = false;
+      state.dragMode = null;
+      state.dragStart = null;
+      state.dragOrigin = null;
+      state.dragHandle = null;
+      canvas.classList.remove('dragging');
+    }
+  }
+
+  /* ============================================================
+     MAIN DRAW/CANVAS INTERACTION
+     ============================================================ */
+  function startDraw(e){
+    if (!state.images.length) return;
+    const L = computeLayout();
+    if (!L) return;
+
+    // Freestyle: if not on the draw tab, use pointer for item manipulation
+    if (L.freestyle && state.activeTab !== 'draw'){
+      e.preventDefault();
+      if (startFreestyleDrag(e)) return;
+      return;
+    }
+
+    // Normal drawing
+    e.preventDefault();
+    state.drawing = true;
+    state.drawStart = canvasPos(e);
+    state.drawCurrent = state.drawStart;
+    state.drawPoints = [state.drawStart];
+
+    if (state.tool === 'text'){
+      const text = prompt('Enter text:');
+      if (text && text.trim()){
+        state.drawings.push({
+          type: 'text', x1: state.drawStart.x, y1: state.drawStart.y,
+          text: text.trim(), color: state.color, size: state.brushSize, opacity: state.brushOpacity
+        });
+      }
+      state.drawing = false; state.drawStart = null; render();
+    } else render();
+  }
+
+  function moveDraw(e){
+    const L = computeLayout();
+    if (!L) return;
+
+    if (L.freestyle && state.dragging){
+      e.preventDefault();
+      moveFreestyleDrag(e);
+      return;
+    }
+
+    if (!state.drawing) return;
+    e.preventDefault();
+    const p = canvasPos(e);
+    state.drawCurrent = p;
+    if (state.tool === 'pen' || state.tool === 'eraser') state.drawPoints.push(p);
+    render();
+  }
+
+  function endDraw(){
+    if (state.dragging){
+      endFreestyleDrag();
+      return;
+    }
+    if (!state.drawing) return;
+    state.drawing = false;
+    const s = state.drawStart, c = state.drawCurrent || s;
+    if (state.tool === 'pen' || state.tool === 'eraser'){
+      if (state.drawPoints.length > 1){
+        state.drawings.push({ type: state.tool, points: state.drawPoints.slice(),
+          color: state.color, size: state.brushSize, opacity: state.brushOpacity });
+      }
+    } else {
+      if (Math.abs(c.x - s.x) > 3 || Math.abs(c.y - s.y) > 3){
+        state.drawings.push({ type: state.tool, x1: s.x, y1: s.y, x2: c.x, y2: c.y,
+          color: state.color, size: state.brushSize, opacity: state.brushOpacity, fill: state.fillShapes });
+      }
+    }
+    state.drawStart = null; state.drawCurrent = null; state.drawPoints = [];
+    render();
+  }
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', moveDraw);
+  window.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('touchstart', startDraw, { passive: false });
+  canvas.addEventListener('touchmove', moveDraw, { passive: false });
+  window.addEventListener('touchend', endDraw);
+
+  function canvasPos(e){
+    const r = canvas.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    const x = (cx - r.left) * (canvas.width / r.width);
+    const y = (cy - r.top) * (canvas.height / r.height);
+    const L = computeLayout();
+    if (!L) return { x: 0, y: 0 };
+    const scale = canvas.width / L.totalW;
+    return { x: x / scale - state.padding, y: y / scale - state.padding };
+  }
+
+  /* ============================================================
+     BACKGROUND
+     ============================================================ */
+  function drawBackground(c, W, H){
+    if (state.bg === 'transparent') return;
+    if (state.bg.startsWith('linear-gradient')){
+      const m = state.bg.match(/linear-gradient\(([^,]+),\s*(#[0-9a-fA-F]+),\s*(#[0-9a-fA-F]+)\)/);
+      if (m){
+        const angle = parseFloat(m[1]);
+        const c1 = m[2], c2 = m[3];
+        const rad = (angle - 90) * Math.PI / 180;
+        const x1 = W/2 - Math.cos(rad)*W/2, y1 = H/2 - Math.sin(rad)*H/2;
+        const x2 = W/2 + Math.cos(rad)*W/2, y2 = H/2 + Math.sin(rad)*H/2;
+        const g = c.createLinearGradient(x1, y1, x2, y2);
+        g.addColorStop(0, c1); g.addColorStop(1, c2);
+        c.fillStyle = g;
+      }
+    } else if (state.bg === 'dots'){
+      c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H);
+      c.fillStyle = '#8b5cf6';
+      for (let y = 0; y < H; y += 16) for (let x = 0; x < W; x += 16){
+        c.beginPath(); c.arc(x, y, 2, 0, Math.PI * 2); c.fill();
+      }
+      return;
+    } else if (state.bg === 'stripes'){
+      c.fillStyle = '#ddd6fe'; c.fillRect(0, 0, W, H);
+      c.strokeStyle = '#8b5cf6'; c.lineWidth = 8;
+      for (let i = -H; i < W + H; i += 20){
+        c.beginPath(); c.moveTo(i, 0); c.lineTo(i + H, H); c.stroke();
+      }
+      return;
+    } else if (state.bg === 'checker'){
+      const size = 18;
+      for (let y = 0; y < H; y += size) for (let x = 0; x < W; x += size){
+        c.fillStyle = ((x/size + y/size) % 2 === 0) ? '#8b5cf6' : '#ffffff';
+        c.fillRect(x, y, size, size);
+      }
+      return;
+    } else {
+      c.fillStyle = state.bg;
+    }
+    c.fillRect(0, 0, W, H);
+  }
+
+  /* ============================================================
+     HELPERS
+     ============================================================ */
+  function roundRect(c, x, y, w, h, r){
+    r = Math.max(0, Math.min(r, w / 2, h / 2));
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  function drawCollage(c, rx, ry, drawW, drawH, scale, L){
+    const gap = state.collageGap * scale;
+    const cells = L.cells;
+    const totalCols = L.gridCols, totalRows = L.gridRows;
+    const cellW = (drawW - gap * (totalCols - 1)) / totalCols;
+    const cellH = (drawH - gap * (totalRows - 1)) / totalRows;
+    const radius = state.tileRadius * scale;
+
+    cells.forEach((cell, i) => {
+      const im = state.images[i % state.images.length];
+      if (!im) return;
+      const cx = rx + cell.c * (cellW + gap);
+      const cy = ry + cell.r * (cellH + gap);
+      const cw = cellW * cell.cs + gap * (cell.cs - 1);
+      const ch = cellH * cell.rs + gap * (cell.rs - 1);
+      c.save();
+      c.beginPath();
+      roundRect(c, cx, cy, cw, ch, radius);
+      c.clip();
+      const imgRatio = im.img.naturalWidth / im.img.naturalHeight;
+      const cellRatio = cw / ch;
+      let dw, dh, dx, dy;
+      if (state.coverMode){
+        if (imgRatio > cellRatio){ dh = ch; dw = ch * imgRatio; dx = cx + (cw - dw)/2; dy = cy; }
+        else { dw = cw; dh = cw / imgRatio; dx = cx; dy = cy + (ch - dh)/2; }
+      } else {
+        if (imgRatio > cellRatio){ dw = cw; dh = cw / imgRatio; dx = cx; dy = cy + (ch - dh)/2; }
+        else { dh = ch; dw = ch * imgRatio; dx = cx + (cw - dw)/2; dy = cy; }
+      }
+      c.drawImage(im.img, dx, dy, dw, dh);
+      c.restore();
+    });
+  }
+
+  function applyAdvancedEffects(c, rx, ry, drawW, drawH){
+    const high = parseInt(val('highlights'), 10);
+    if (high !== 0){
+      const g = c.createLinearGradient(0, ry, 0, ry + drawH);
+      if (high > 0){ g.addColorStop(0, 'rgba(255,255,255,' + (high/180) + ')'); g.addColorStop(0.5, 'rgba(255,255,255,0)'); }
+      else { g.addColorStop(0, 'rgba(0,0,0,' + (-high/180) + ')'); g.addColorStop(0.5, 'rgba(0,0,0,0)'); }
+      c.fillStyle = g; c.fillRect(rx, ry, drawW, drawH);
+    }
+    const shad = parseInt(val('shadows'), 10);
+    if (shad !== 0){
+      const g = c.createLinearGradient(0, ry, 0, ry + drawH);
+      if (shad > 0){ g.addColorStop(0.5, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,255,255,' + (shad/180) + ')'); }
+      else { g.addColorStop(0.5, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,' + (-shad/180) + ')'); }
+      c.fillStyle = g; c.fillRect(rx, ry, drawW, drawH);
+    }
+    const exposure = parseInt(val('exposure'), 10);
+    if (exposure !== 0){
+      c.fillStyle = exposure > 0 ? 'rgba(255,255,255,' + (exposure/200) + ')' : 'rgba(0,0,0,' + (-exposure/200) + ')';
+      c.fillRect(rx, ry, drawW, drawH);
+    }
+    const vibrance = parseInt(val('vibrance'), 10);
+    if (vibrance !== 0){
+      c.globalCompositeOperation = vibrance > 0 ? 'overlay' : 'soft-light';
+      c.fillStyle = 'rgba(139, 92, 246, ' + (Math.abs(vibrance)/400) + ')';
+      c.fillRect(rx, ry, drawW, drawH);
+      c.globalCompositeOperation = 'source-over';
+    }
+    const fade = parseInt(val('fade'), 10);
+    if (fade > 0){
+      c.fillStyle = 'rgba(220, 215, 235, ' + (fade/200) + ')';
+      c.fillRect(rx, ry, drawW, drawH);
+    }
+    const clarity = parseInt(val('clarity'), 10);
+    if (clarity !== 0){
+      c.globalCompositeOperation = clarity > 0 ? 'overlay' : 'soft-light';
+      c.fillStyle = clarity > 0 ? 'rgba(255,255,255,' + (clarity/400) + ')' : 'rgba(0,0,0,' + (-clarity/400) + ')';
+      c.fillRect(rx, ry, drawW, drawH);
+      c.globalCompositeOperation = 'source-over';
+    }
+    const temp = parseInt(val('temperature'), 10);
+    if (temp !== 0){
+      c.globalCompositeOperation = 'overlay';
+      c.fillStyle = temp > 0 ? 'rgba(255, 160, 60, ' + (temp/250) + ')' : 'rgba(60, 160, 255, ' + (-temp/250) + ')';
+      c.fillRect(rx, ry, drawW, drawH);
+      c.globalCompositeOperation = 'source-over';
+    }
+    const vig = parseInt(val('vignette'), 10);
+    if (vig > 0){
+      const g = c.createRadialGradient(
+        rx + drawW/2, ry + drawH/2, Math.min(drawW, drawH) * 0.15,
+        rx + drawW/2, ry + drawH/2, Math.max(drawW, drawH) * 0.75
+      );
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, 'rgba(0,0,0,' + (vig/130) + ')');
+      c.fillStyle = g; c.fillRect(rx, ry, drawW, drawH);
+    }
+    const grain = parseInt(val('grain'), 10);
+    if (grain > 0){
+      const gc = document.createElement('canvas');
+      gc.width = 200; gc.height = 200;
+      const gctx = gc.getContext('2d');
+      const id = gctx.createImageData(200, 200);
+      for (let i = 0; i < 200*200; i++){
+        const v = Math.random() * 255 | 0;
+        id.data[i*4] = id.data[i*4+1] = id.data[i*4+2] = v;
+        id.data[i*4+3] = Math.random() * 255 | 0;
+      }
+      gctx.putImageData(id, 0, 0);
+      const pat = c.createPattern(gc, 'repeat');
+      c.globalCompositeOperation = 'overlay';
+      c.globalAlpha = grain / 200;
+      c.fillStyle = pat;
+      c.fillRect(rx, ry, drawW, drawH);
+      c.globalAlpha = 1;
+      c.globalCompositeOperation = 'source-over';
+    }
+  }
+
+  /* ============================================================
+     DRAWINGS
+     ============================================================ */
+  function drawDrawings(c, scale, ox, oy){
+    state.drawings.forEach(d => drawItem(c, d, scale, ox, oy));
+  }
+  function drawItem(c, d, scale, ox, oy){
+    c.save();
+    c.globalAlpha = d.opacity;
+    c.strokeStyle = d.color;
+    c.fillStyle = d.color;
+    c.lineWidth = d.size * scale;
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    const X = v => ox + v * scale;
+    const Y = v => oy + v * scale;
+    if (d.type === 'pen' || d.type === 'eraser'){
+      if (d.type === 'eraser'){ c.globalCompositeOperation = 'destination-out'; c.lineWidth = d.size * scale * 2; }
+      c.beginPath();
+      d.points.forEach((p, i) => { if (i === 0) c.moveTo(X(p.x), Y(p.y)); else c.lineTo(X(p.x), Y(p.y)); });
+      c.stroke();
+    } else if (d.type === 'line'){
+      c.beginPath(); c.moveTo(X(d.x1), Y(d.y1)); c.lineTo(X(d.x2), Y(d.y2)); c.stroke();
+    } else if (d.type === 'arrow'){
+      const x1 = X(d.x1), y1 = Y(d.y1), x2 = X(d.x2), y2 = Y(d.y2);
+      c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+      const ang = Math.atan2(y2 - y1, x2 - x1);
+      const headLen = Math.max(12, d.size * scale * 3);
+      c.beginPath();
+      c.moveTo(x2, y2);
+      c.lineTo(x2 - headLen * Math.cos(ang - Math.PI/6), y2 - headLen * Math.sin(ang - Math.PI/6));
+      c.lineTo(x2 - headLen * Math.cos(ang + Math.PI/6), y2 - headLen * Math.sin(ang + Math.PI/6));
+      c.closePath(); c.fill();
+    } else if (d.type === 'rect'){
+      const x = X(Math.min(d.x1, d.x2)), y = Y(Math.min(d.y1, d.y2));
+      const w = Math.abs(X(d.x2) - X(d.x1)), h = Math.abs(Y(d.y2) - Y(d.y1));
+      if (d.fill) c.fillRect(x, y, w, h); else c.strokeRect(x, y, w, h);
+    } else if (d.type === 'circle'){
+      const cx = X(d.x1), cy = Y(d.y1);
+      const r = Math.hypot(X(d.x2) - cx, Y(d.y2) - cy);
+      c.beginPath(); c.arc(cx, cy, r, 0, Math.PI * 2);
+      if (d.fill) c.fill(); else c.stroke();
+    } else if (d.type === 'text'){
+      c.font = 'bold ' + (d.size * scale * 4) + 'px "Plus Jakarta Sans", sans-serif';
+      c.textBaseline = 'top';
+      c.fillText(d.text, X(d.x1), Y(d.y1));
+    }
+    c.restore();
+  }
+  function drawActive(c, scale, ox, oy){
+    const d = buildPreviewItem();
+    if (d) drawItem(c, d, scale, ox, oy);
+  }
+  function buildPreviewItem(){
+    if (!state.drawStart) return null;
+    const s = state.drawStart, c = state.drawCurrent || s;
+    if (state.tool === 'pen' || state.tool === 'eraser'){
+      return { type: state.tool, points: state.drawPoints, color: state.color, size: state.brushSize, opacity: state.brushOpacity };
+    }
+    if (state.tool === 'text') return null;
+    return { type: state.tool, x1: s.x, y1: s.y, x2: c.x, y2: c.y, color: state.color, size: state.brushSize, opacity: state.brushOpacity, fill: state.fillShapes };
+  }
+
+  /* ============================================================
+     SLIDER LISTENERS
+     ============================================================ */
+  adjustSliders.forEach(id => {
+    const el = $('#' + id); if (!el) return;
+    el.addEventListener('input', () => {
+      const v = el.value;
+      const suffix = (id === 'hue') ? '°' : (id === 'blur' ? 'px' : '%');
+      setText(id + 'Val', v + suffix); render();
+    });
+  });
+  advancedSliders.forEach(id => {
+    const el = $('#' + id); if (!el) return;
+    el.addEventListener('input', () => {
+      const v = el.value;
+      const suffix = (id === 'exposure' || id === 'temperature') ? '' : '%';
+      setText(id + 'Val', v + suffix); render();
+    });
+  });
+  proSliders.forEach(id => {
+    const el = $('#' + id); if (!el) return;
+    el.addEventListener('input', () => {
+      const v = el.value;
+      const suffix = (id === 'fade' || id === 'sharpen') ? '%' : '';
+      setText(id + 'Val', v + suffix); render();
+    });
+  });
+
+  /* ============================================================
+     TRANSFORMS
+     ============================================================ */
+  $('#rotL').addEventListener('click', () => { state.rotation = (state.rotation - 90) % 360; render(); });
+  $('#rotR').addEventListener('click', () => { state.rotation = (state.rotation + 90) % 360; render(); });
+  $('#flipH').addEventListener('click', () => { state.flipH *= -1; render(); });
+  $('#flipV').addEventListener('click', () => { state.flipV *= -1; render(); });
+
+  /* ============================================================
+     PRESETS
+     ============================================================ */
+  $$('.pe-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const preset = PRESETS[btn.dataset.preset];
+      if (!preset) return;
+      $$('.pe-preset').forEach(b => b.classList.toggle('active', b === btn));
+      applyPreset(preset);
+      render();
+    });
+  });
+  function applyPreset(preset){
+    const all = [...adjustSliders, ...advancedSliders, ...proSliders];
+    all.forEach(id => {
+      if (preset[id] !== undefined && $('#' + id)){
+        $('#' + id).value = preset[id];
+        const suffix = (id === 'hue') ? '°' : (id === 'blur') ? 'px' : (id === 'sharpen' || id === 'fade') ? '%'
+                     : (id === 'exposure' || id === 'temperature' || id === 'highlights' || id === 'shadows' || id === 'vibrance' || id === 'clarity') ? '' : '%';
+        setText(id + 'Val', preset[id] + suffix);
+      }
+    });
+  }
+
+  /* ============================================================
+     AUTO-ENHANCE
+     ============================================================ */
+  $('#autoEnhanceBtn').addEventListener('click', () => {
+    if (!state.images.length){ toast('Load an image first'); return; }
+    const active = state.images[state.activeIdx];
+    const tmp = document.createElement('canvas');
+    tmp.width = 200; tmp.height = 200;
+    const tctx = tmp.getContext('2d');
+    tctx.drawImage(active.img, 0, 0, 200, 200);
+    const data = tctx.getImageData(0, 0, 200, 200).data;
+    let minL = 255, maxL = 0, sumL = 0, sumR = 0, sumG = 0, sumB = 0;
+    const N = 200 * 200;
+    for (let i = 0; i < N; i++){
+      const r = data[i*4], g = data[i*4+1], b = data[i*4+2];
+      const l = 0.299*r + 0.587*g + 0.114*b;
+      if (l < minL) minL = l;
+      if (l > maxL) maxL = l;
+      sumL += l; sumR += r; sumG += g; sumB += b;
+    }
+    const avgL = sumL / N, range = maxL - minL;
+    let brightness = Math.max(80, Math.min(140, Math.round(100 * (128 / Math.max(40, avgL)))));
+    let contrast = range < 200 ? Math.max(100, Math.min(145, Math.round(100 * (255 / Math.max(60, range))))) : 100;
+    let saturation = 115;
+    if (avgL < 100) { /* shadows up */ }
+    const shadows = avgL < 100 ? 25 : 0;
+    const highlights = avgL > 170 ? -20 : 0;
+
+    $('#' + 'brightness').value = brightness; setText('brightnessVal', brightness + '%');
+    $('#' + 'contrast').value = contrast; setText('contrastVal', contrast + '%');
+    $('#' + 'saturation').value = saturation; setText('saturationVal', saturation + '%');
+    $('#' + 'shadows').value = shadows; setText('shadowsVal', shadows + '');
+    $('#' + 'highlights').value = highlights; setText('highlightsVal', highlights + '');
+    $('#' + 'clarity').value = 20; setText('clarityVal', '20');
+    $('#' + 'sharpen').value = 30; setText('sharpenVal', '30%');
+    $('#' + 'vibrance').value = 15; setText('vibranceVal', '15');
+    render();
+    toast('✨ Auto-enhanced!');
+  });
+
+  /* ============================================================
+     DRAW TOOLS
+     ============================================================ */
+  $$('.tool-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      state.tool = chip.dataset.tool;
+      $$('.tool-chip').forEach(c => c.classList.toggle('active', c === chip));
+    });
+  });
+  $$('#colorSwatches .color-swatch[data-color]').forEach(sw => {
+    sw.addEventListener('click', () => {
+      state.color = sw.dataset.color;
+      $$('#colorSwatches .color-swatch').forEach(s => s.classList.toggle('active', s === sw));
+    });
+  });
+  $('#customColor').addEventListener('input', e => {
+    state.color = e.target.value;
+    $$('#colorSwatches .color-swatch').forEach(s => s.classList.remove('active'));
+    e.target.parentElement.classList.add('active');
+  });
+  $('#brushSize').addEventListener('input', e => {
+    state.brushSize = parseInt(e.target.value, 10);
+    setText('brushSizeVal', state.brushSize + 'px');
+  });
+  $('#brushOpacity').addEventListener('input', e => {
+    state.brushOpacity = parseInt(e.target.value, 10) / 100;
+    setText('brushOpacityVal', e.target.value + '%');
+  });
+  $('#fillToggle').addEventListener('click', () => {
+    const cb = $('#fillShapes');
+    cb.checked = !cb.checked;
+    state.fillShapes = cb.checked;
+    $('#fillToggle').classList.toggle('checked', cb.checked);
+  });
+  $('#undoBtn').addEventListener('click', () => {
+    if (state.drawings.length){ state.drawings.pop(); render(); }
+  });
+  $('#clearDrawBtn').addEventListener('click', () => {
+    state.drawings = []; render(); toast('Drawings cleared');
+  });
+
+  /* ============================================================
+     BACKGROUND UI
+     ============================================================ */
+  $$('#bgColors .bg-tile, #bgGradients .bg-tile, #bgPatterns .bg-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      state.bg = tile.dataset.bg;
+      $$('#bgColors .bg-tile, #bgGradients .bg-tile, #bgPatterns .bg-tile')
+        .forEach(t => t.classList.toggle('active', t === tile));
+      render();
+    });
+  });
+  $('#padding').addEventListener('input', e => {
+    state.padding = parseInt(e.target.value, 10);
+    setText('paddingVal', state.padding + ' px'); render();
+  });
+  $('#radius').addEventListener('input', e => {
+    state.radius = parseInt(e.target.value, 10);
+    setText('radiusVal', state.radius + ' px'); render();
+  });
+  $('#shadowToggle').addEventListener('click', () => {
+    const cb = $('#dropShadow');
+    cb.checked = !cb.checked;
+    state.shadow = cb.checked;
+    $('#shadowToggle').classList.toggle('checked', cb.checked);
+    render();
+  });
+
+  /* ============================================================
+     COLLAGE UI
+     ============================================================ */
+  $$('.layout-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const layout = tile.dataset.layout;
+      state.layout = layout;
+      $$('.layout-tile').forEach(t => t.classList.toggle('active', t === tile));
+
+      const isFree = layout === 'freestyle';
+      $('#gridControls').hidden = isFree;
+      $('#freeControls').hidden = !isFree;
+      state.selectedItemId = null;
+
+      if (isFree){
+        if (!state.freeItems.length) initFreeItems();
+      }
+      updateItemToolbar();
+      render();
+    });
+  });
+
+  $('#collageGap').addEventListener('input', e => {
+    state.collageGap = parseInt(e.target.value, 10);
+    setText('collageGapVal', state.collageGap + ' px'); render();
+  });
+  $('#tileRadius').addEventListener('input', e => {
+    state.tileRadius = parseInt(e.target.value, 10);
+    setText('tileRadiusVal', state.tileRadius + ' px'); render();
+  });
+  $('#coverToggle').addEventListener('click', () => {
+    const cb = $('#coverMode');
+    cb.checked = !cb.checked;
+    state.coverMode = cb.checked;
+    $('#coverToggle').classList.toggle('checked', cb.checked);
+    render();
+  });
+
+  /* Freestyle global sliders */
+  $('#freeRadius').addEventListener('input', e => {
+    const v = parseInt(e.target.value, 10);
+    state.freeRadius = v;
+    setText('freeRadiusVal', v + ' px');
+    state.freeItems.forEach(it => it.radius = v);
+    render();
+  });
+  $('#freeShadow').addEventListener('input', e => {
+    const v = parseInt(e.target.value, 10);
+    state.freeShadow = v;
+    setText('freeShadowVal', v + '');
+    render();
+  });
+
+  /* Freestyle arrange buttons */
+  $('#freeShuffleBtn').addEventListener('click', () => {
+    if (!state.freeItems.length) initFreeItems();
+    state.freeItems.forEach((it, i) => {
+      it.x = 15 + Math.random() * 70;
+      it.y = 15 + Math.random() * 70;
+      it.rotation = (Math.random() - 0.5) * 40;
+      it.z = i + 1;
+    });
+    state.selectedItemId = null;
+    updateItemToolbar();
+    render();
+    toast('Shuffled 🎲');
+  });
+
+  $('#freeCenterBtn').addEventListener('click', () => {
+    if (!state.freeItems.length) initFreeItems();
+    state.freeItems.forEach((it, i) => {
+      const offset = (i - (state.freeItems.length - 1) / 2) * 3;
+      it.x = 50 + offset;
+      it.y = 50 + offset;
+      it.z = i + 1;
+    });
+    state.selectedItemId = null;
+    updateItemToolbar();
+    render();
+    toast('Stacked at center 🎯');
+  });
+
+  $('#freeResetBtn').addEventListener('click', () => {
+    initFreeItems();
+    render();
+    toast('Positions reset');
+  });
+
+  /* ============================================================
+     ITEM TOOLBAR (freestyle selection)
+     ============================================================ */
+  function updateItemToolbar(){
+    const sel = state.freeItems.find(it => it.id === state.selectedItemId);
+    if (!sel){
+      $('#itemToolbar').hidden = true;
+      return;
+    }
+    $('#itemToolbar').hidden = false;
+    updateItemToolbarValues();
+  }
+
+  function updateItemToolbarValues(){
+    const sel = state.freeItems.find(it => it.id === state.selectedItemId);
+    if (!sel) return;
+    const avgSize = Math.round((sel.w + sel.h) / 2);
+    setText('itSizeVal', avgSize + '%');
+    $('#itSize').value = Math.max(5, Math.min(200, avgSize));
+    setText('itRotVal', Math.round(sel.rotation) + '°');
+    $('#itRot').value = Math.max(-180, Math.min(180, Math.round(sel.rotation)));
+    setText('itRadiusVal', Math.round(sel.radius) + ' px');
+    $('#itRadius').value = Math.max(0, Math.min(80, Math.round(sel.radius)));
+    setText('itOpacityVal', Math.round(sel.opacity * 100) + '%');
+    $('#itOpacity').value = Math.round(sel.opacity * 100);
+  }
+
+  $('#itSize').addEventListener('input', e => {
+    const sel = state.freeItems.find(it => it.id === state.selectedItemId);
+    if (!sel) return;
+    const v = parseInt(e.target.value, 10);
+    const ratio = sel.h / sel.w;
+    sel.w = v;
+    sel.h = v * ratio;
+    setText('itSizeVal', v + '%');
+    render();
+  });
+  $('#itRot').addEventListener('input', e => {
+    const sel = state.freeItems.find(it => it.id === state.selectedItemId);
+    if (!sel) return;
+    sel.rotation = parseInt(e.target.value, 10);
+    setText('itRotVal', sel.rotation + '°');
+    render();
+  });
+  $('#itRadius').addEventListener('input', e => {
+    const sel = state.freeItems.find(it => it.id === state.selectedItemId);
+    if (!sel) return;
+    sel.radius = parseInt(e.target.value, 10);
+    setText('itRadiusVal', sel.radius + ' px');
+    render();
+  });
+  $('#itOpacity').addEventListener('input', e => {
+    const sel = state.freeItems.find(it => it.id === state.selectedItemId);
+    if (!sel) return;
+    sel.opacity = parseInt(e.target.value, 10) / 100;
+    setText('itOpacityVal', e.target.value + '%');
+    render();
+  });
+
+  $('#itFront').addEventListener('click', () => {
+    const sel = state.freeItems.find(it => it.id === state.selectedItemId);
+    if (!sel) return;
+    sel.z = Math.max(...state.freeItems.map(it => it.z)) + 1;
+    render();
+  });
+  $('#itBack').addEventListener('click', () => {
+    const sel = state.freeItems.find(it => it.id === state.selectedItemId);
+    if (!sel) return;
+    sel.z = Math.min(...state.freeItems.map(it => it.z)) - 1;
+    render();
+  });
+  $('#itDup').addEventListener('click', () => {
+    const sel = state.freeItems.find(it => it.id === state.selectedItemId);
+    if (!sel) return;
+    const copy = { ...sel, id: Math.random().toString(36).slice(2),
+      x: sel.x + 4, y: sel.y + 4,
+      z: Math.max(...state.freeItems.map(it => it.z)) + 1 };
+    state.freeItems.push(copy);
+    state.selectedItemId = copy.id;
+    updateItemToolbar();
+    render();
+  });
+  $('#itDel').addEventListener('click', () => {
+    state.freeItems = state.freeItems.filter(it => it.id !== state.selectedItemId);
+    state.selectedItemId = null;
+    updateItemToolbar();
+    render();
+  });
+
+  /* ============================================================
+     TABS
+     ============================================================ */
+  $$('.pe-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const name = tab.dataset.tab;
+      state.activeTab = name;
+      $$('.pe-tab').forEach(t => t.classList.toggle('active', t === tab));
+      $$('.pe-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === name));
+      // Update cursor hint when entering/leaving draw
+      render();
+    });
+  });
+
+  /* ============================================================
+     RESET
+     ============================================================ */
+  function resetSliders(){
+    const all = [...adjustSliders, ...advancedSliders, ...proSliders];
+    all.forEach(id => {
+      if (!$('#' + id)) return;
+      $('#' + id).value = sliderDefaults[id];
+      const suffix = (id === 'hue') ? '°' : (id === 'blur') ? 'px' : (id === 'sharpen' || id === 'fade') ? '%'
+                   : (id === 'exposure' || id === 'temperature' || id === 'highlights' || id === 'shadows' || id === 'vibrance' || id === 'clarity') ? '' : '%';
+      setText(id + 'Val', sliderDefaults[id] + suffix);
+    });
+    $$('.pe-preset').forEach(p => p.classList.toggle('active', p.dataset.preset === 'none'));
+  }
+  function resetBackgroundUI(){
+    state.bg = 'transparent';
+    state.padding = 0; state.radius = 0; state.shadow = false;
+    $('#padding').value = 0; setText('paddingVal', '0 px');
+    $('#radius').value = 0; setText('radiusVal', '0 px');
+    $('#dropShadow').checked = false;
+    $('#shadowToggle').classList.remove('checked');
+    $$('#bgColors .bg-tile, #bgGradients .bg-tile, #bgPatterns .bg-tile').forEach(t => t.classList.toggle('active', t.dataset.bg === 'transparent'));
+  }
+  function resetDrawUI(){
+    state.tool = 'pen'; state.color = '#ef4444'; state.brushSize = 6; state.brushOpacity = 1; state.fillShapes = false; state.drawings = [];
+    $$('.tool-chip').forEach(c => c.classList.toggle('active', c.dataset.tool === 'pen'));
+    $$('#colorSwatches .color-swatch').forEach(s => s.classList.toggle('active', s.dataset.color === '#ef4444'));
+    $('#brushSize').value = 6; setText('brushSizeVal', '6px');
+    $('#brushOpacity').value = 100; setText('brushOpacityVal', '100%');
+    $('#fillShapes').checked = false;
+    $('#fillToggle').classList.remove('checked');
+  }
+  $('#resetAllBtn').addEventListener('click', () => {
+    state.rotation = 0; state.flipH = 1; state.flipV = 1;
+    resetSliders(); resetBackgroundUI(); resetDrawUI();
+    if (state.layout === 'freestyle') initFreeItems();
+    render();
+    toast('Reset done');
+  });
+
+  /* ============================================================
+     EXPORT + DOWNLOAD
+     ============================================================ */
+  function renderExportCanvas(){
+    const L = computeLayout();
+    if (!L) return null;
+    const W = Math.round(L.totalW), H = Math.round(L.totalH);
+    const ec = document.createElement('canvas');
+    ec.width = W; ec.height = H;
+    const c = ec.getContext('2d');
+
+    drawBackground(c, W, H);
+    const scale = W / L.totalW;
+    const drawW = L.rotatedW * scale, drawH = L.rotatedH * scale;
+    const rx = state.padding * scale, ry = state.padding * scale;
+
+    c.save();
+    if (state.shadow){
+      c.shadowColor = 'rgba(0,0,0,0.35)';
+      c.shadowBlur = 24 * scale;
+      c.shadowOffsetY = 8 * scale;
+    }
+    c.beginPath();
+    roundRect(c, rx, ry, drawW, drawH, state.radius * scale);
+    c.clip();
+    c.shadowColor = 'transparent';
+
+    if (state.mode === 'single'){
+      const active = state.images[state.activeIdx];
+      if (active){
+        c.save();
+        c.translate(rx + drawW / 2, ry + drawH / 2);
+        c.rotate(L.rad);
+        c.scale(state.flipH, state.flipV);
+        c.filter = buildFilter();
+        c.drawImage(active.img, -L.iw * scale / 2, -L.ih * scale / 2, L.iw * scale, L.ih * scale);
+        c.filter = 'none';
+        c.restore();
+      }
+    } else if (L.freestyle){
+      c.filter = buildFilter();
+      drawFreestyleItems(c, rx, ry, drawW, drawH, scale);
+      c.filter = 'none';
+    } else {
+      c.filter = buildFilter();
+      drawCollage(c, rx, ry, drawW, drawH, scale, L);
+      c.filter = 'none';
+    }
+
+    applyAdvancedEffects(c, rx, ry, drawW, drawH);
+    c.restore();
+    c.restore();
+
+    drawDrawings(c, scale, rx, ry);
+    return ec;
+  }
+
+  async function downloadImage(){
+    const ec = renderExportCanvas();
+    if (!ec){ toast('Nothing to download'); return; }
+    try {
+      const blob = await new Promise(res => ec.toBlob(b => res(b), 'image/png'));
+      const active = state.images[state.activeIdx];
+      const baseName = state.mode === 'collage'
+        ? (state.layout === 'freestyle' ? 'freestyle-collage' : 'collage-' + state.images.length + '-images')
+        : (active ? active.name.replace(/\.[^.]+$/, '') : 'edited');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'edited-' + baseName + '.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+      toast('Downloaded 🎉');
+    } catch (err){ console.error(err); toast('Download failed'); }
+  }
+  $('#downloadBtn').addEventListener('click', downloadImage);
+  $('#previewDownload').addEventListener('click', async () => {
+    $('#previewModal').classList.remove('show'); await downloadImage();
+  });
+
+  /* ============================================================
+     PREVIEW MODAL
+     ============================================================ */
+  async function openPreview(){
+    if (!state.images.length){ toast('Load an image first'); return; }
+    const beforeUrl = state.images[state.activeIdx] ? state.images[state.activeIdx].url : '';
+    const ec = renderExportCanvas();
+    if (!ec) return;
+    const editedBlob = await new Promise(res => ec.toBlob(b => res(b), 'image/png'));
+    const editedUrl = URL.createObjectURL(editedBlob);
+
+    $('#previewTitle').textContent = state.mode === 'collage'
+      ? (state.layout === 'freestyle' ? ('Freestyle collage · ' + state.freeItems.length + ' items')
+         : ('Collage · ' + state.images.length + ' images'))
+      : (state.images[state.activeIdx] ? state.images[state.activeIdx].name : 'Preview');
+
+    $('#cmpBefore').src = beforeUrl;
+    $('#cmpAfter').src = editedUrl;
+    setSlider(50);
+
+    const active = state.images[state.activeIdx];
+    const origSize = state.mode === 'collage'
+      ? state.images.reduce((s, im) => s + im.size, 0)
+      : (active ? active.size : 0);
+    const origDim = state.mode === 'collage'
+      ? state.images.length + ' images'
+      : (active ? active.img.naturalWidth + ' × ' + active.img.naturalHeight + ' px' : '—');
+    $('#dOrigSize').textContent = fmtSize(origSize);
+    $('#dOrigDim').textContent = origDim;
+    $('#dNewSize').textContent = fmtSize(editedBlob.size);
+    $('#dNewDim').textContent = ec.width + ' × ' + ec.height + ' px · PNG';
+
+    const activeList = [];
+    const all = [...adjustSliders, ...advancedSliders, ...proSliders];
+    all.forEach(id => { if (parseInt(val(id), 10) !== sliderDefaults[id]) activeList.push(id.charAt(0).toUpperCase() + id.slice(1)); });
+    if (state.rotation !== 0) activeList.push('Rotate');
+    if (state.flipH === -1) activeList.push('Flip H');
+    if (state.flipV === -1) activeList.push('Flip V');
+    $('#dFilters').textContent = activeList.length ? activeList.length + ' active' : 'None';
+    $('#dFiltersSub').textContent = activeList.slice(0, 4).join(', ') + (activeList.length > 4 ? '…' : '') || 'No adjustments';
+
+    const bgLabel = state.bg === 'transparent' ? 'Transparent'
+      : state.bg.startsWith('linear-gradient') ? 'Gradient'
+      : state.bg === 'dots' ? 'Dots' : state.bg === 'stripes' ? 'Stripes' : state.bg === 'checker' ? 'Checker' : state.bg;
+    $('#dCanvas').textContent = state.mode === 'collage'
+      ? (state.layout === 'freestyle' ? 'Freestyle' : 'Collage · ' + state.layout)
+      : 'Single';
+    $('#dCanvasSub').textContent = 'Bg: ' + bgLabel + (state.drawings.length ? ' · ' + state.drawings.length + ' drawing(s)' : '');
+
+    $('#previewModal').classList.add('show');
+  }
+  $('#previewBtn').addEventListener('click', openPreview);
+
+  function setSlider(percent){
+    percent = Math.max(0, Math.min(100, percent));
+    $('#afterWrap').style.clipPath = 'inset(0 ' + (100 - percent) + '% 0 0)';
+    $('#divider').style.left = percent + '%';
+  }
+  (function initSlider(){
+    const wrap = $('#compare');
+    let dragging = false;
+    function posFromEvent(e){
+      const rect = wrap.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      return ((clientX - rect.left) / rect.width) * 100;
+    }
+    function start(e){ dragging = true; setSlider(posFromEvent(e)); e.preventDefault(); }
+    function move(e){ if (!dragging) return; setSlider(posFromEvent(e)); e.preventDefault(); }
+    function end(){ dragging = false; }
+    wrap.addEventListener('mousedown', start);
+    wrap.addEventListener('touchstart', start, { passive: false });
+    window.addEventListener('mousemove', move);
+    window.addEventListener('touchmove', move, { passive: false });
+    window.addEventListener('mouseup', end);
+    window.addEventListener('touchend', end);
+  })();
+
+  $('#previewClose').addEventListener('click', () => $('#previewModal').classList.remove('show'));
+  $('#previewCancel').addEventListener('click', () => $('#previewModal').classList.remove('show'));
+  $('#previewModal').addEventListener('click', e => { if (e.target === $('#previewModal')) $('#previewModal').classList.remove('show'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#previewModal').classList.remove('show'); });
+
+  /* ============================================================
+     RESET FILE
+     ============================================================ */
+  $('#resetBtn').addEventListener('click', () => {
+    state.images = []; state.activeIdx = 0; state.freeItems = []; state.selectedItemId = null;
+    $('#uploadStage').hidden = false;
+    $('#editorWrap').hidden = true;
+  });
+
+  /* ============================================================
+     DROPZONE
+     ============================================================ */
+  const dz = $('#dropzone');
+  const fi = $('#fileInput');
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); fi.click(); } });
+  fi.addEventListener('change', () => { if (fi.files && fi.files.length) addFiles(fi.files); fi.value = ''; });
+  ['dragenter','dragover'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(evt => dz.addEventListener(evt, e => {
+    e.preventDefault(); e.stopPropagation();
+    if (evt === 'dragleave' && dz.contains(e.relatedTarget)) return;
+    dz.classList.remove('dragover');
+    if (evt === 'drop' && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  }));
+  window.addEventListener('dragover', e => { if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
+  window.addEventListener('drop', e => { if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
+
+  window.addEventListener('resize', () => { if (state.images.length) render(); });
+})();
+</script>
+</body>
+</html>
