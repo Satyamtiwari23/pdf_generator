@@ -32,8 +32,15 @@ async function connectDB() {
 // MIDDLEWARE
 // ============================================================
 
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: false
+}));
+app.use(express.json({
+  limit: '200kb'
+}));
 
 
 // ============================================================
@@ -59,6 +66,13 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true
+    },
+
+    // Compressed profile picture
+    // Stored as a small WebP data URL
+    profilePicture: {
+      type: String,
+      default: null
     },
 
     // Last successful login
@@ -215,7 +229,8 @@ app.post('/api/auth/signup', async (req, res) => {
       user: {
         id: newUser._id,
         name: newUser.name,
-        email: newUser.email
+        email: newUser.email,
+        profilePicture: newUser.profilePicture || null
       }
 
     });
@@ -298,7 +313,8 @@ app.post('/api/auth/login', async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        profilePicture: user.profilePicture || null
       }
 
     });
@@ -586,6 +602,94 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 
 });
 
+
+// ============================================================
+// UPDATE PROFILE PICTURE
+// ============================================================
+
+app.put('/api/auth/profile-picture', authenticateToken, async (req, res) => {
+
+  try {
+
+    await connectDB();
+
+    const { profilePicture } = req.body;
+
+    // Remove profile picture
+    if (profilePicture === null || profilePicture === '') {
+
+      const user = await User.findByIdAndUpdate(
+        req.user.id,
+        {
+          profilePicture: null
+        },
+        {
+          new: true
+        }
+      ).select('-password');
+
+      return res.json({
+        message: 'Profile picture removed',
+        user
+      });
+    }
+
+    // Validate format
+    if (
+      typeof profilePicture !== 'string' ||
+      !profilePicture.startsWith('data:image/webp;base64,')
+    ) {
+
+      return res.status(400).json({
+        message: 'Invalid profile picture format'
+      });
+
+    }
+
+    // Safety limit.
+    // The frontend compresses the image heavily before sending it.
+    if (profilePicture.length > 100000) {
+
+      return res.status(400).json({
+        message: 'Profile picture is too large'
+      });
+
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        profilePicture
+      },
+      {
+        new: true
+      }
+    ).select('-password');
+
+    if (!user) {
+
+      return res.status(404).json({
+        message: 'User not found'
+      });
+
+    }
+
+    res.json({
+      message: 'Profile picture updated successfully',
+      user
+    });
+
+  } catch (error) {
+
+    console.error('Profile picture update error:', error);
+
+    res.status(500).json({
+      message: 'Unable to update profile picture'
+    });
+
+  }
+
+});
 
 app.get('/', (req, res) => {
   res.status(200).json({
