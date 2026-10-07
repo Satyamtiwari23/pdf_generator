@@ -69,7 +69,8 @@
 
           <div class="password-wrapper">
 
-            <input type="password" id="password" placeholder="••••••••" required minlength="6" />
+            <input type="password" id="password" placeholder="••••••••" required minlength="8" maxlength="64"
+              autocomplete="new-password" />
 
             <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password">
 
@@ -87,6 +88,7 @@
           </div>
 
         </div>
+        <div id="passwordMessage" class="password-message"></div>
 
 
         <!-- =========================
@@ -99,8 +101,8 @@
 
           <div class="password-wrapper">
 
-            <input type="password" id="confirmPassword" placeholder="••••••••" required minlength="6" />
-
+            <input type="password" id="confirmPassword" placeholder="••••••••" required minlength="8" maxlength="64"
+              autocomplete="new-password" />
             <button type="button" class="password-toggle" id="confirmPasswordToggle" aria-label="Show password">
 
               <svg class="eye-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -117,6 +119,9 @@
           </div>
 
         </div>
+
+
+
 
 
         <!-- =========================
@@ -166,12 +171,91 @@
     const confirmPasswordInput =
       document.getElementById('confirmPassword');
 
-
     const passwordToggle =
       document.getElementById('passwordToggle');
 
     const confirmPasswordToggle =
       document.getElementById('confirmPasswordToggle');
+
+
+    const passwordMessage =
+      document.getElementById('passwordMessage');
+
+
+
+    function validatePassword(password) {
+
+      if (password.length < 8) {
+        return {
+          valid: false,
+          message: 'Password must be at least 8 characters.'
+        };
+      }
+
+      if (password.length > 64) {
+        return {
+          valid: false,
+          message: 'Password must not exceed 64 characters.'
+        };
+      }
+
+      if (!/[A-Z]/.test(password)) {
+        return {
+          valid: false,
+          message: 'Password must contain at least one uppercase letter.'
+        };
+      }
+
+      if (!/[a-z]/.test(password)) {
+        return {
+          valid: false,
+          message: 'Password must contain at least one lowercase letter.'
+        };
+      }
+
+      if (!/[0-9]/.test(password)) {
+        return {
+          valid: false,
+          message: 'Password must contain at least one number.'
+        };
+      }
+
+      if (!/[^A-Za-z0-9\s]/.test(password)) {
+        return {
+          valid: false,
+          message: 'Password must contain at least one special character.'
+        };
+      }
+
+      return {
+        valid: true,
+        message: 'Strong password — all requirements are met.'
+      };
+    }
+
+
+
+    passwordInput?.addEventListener('input', function () {
+
+      const result =
+        validatePassword(passwordInput.value);
+
+      if (!passwordInput.value) {
+        passwordMessage.textContent = '';
+        passwordMessage.className = 'password-message';
+        return;
+      }
+
+      passwordMessage.textContent =
+        result.message;
+
+      passwordMessage.className =
+        result.valid
+          ? 'password-message success'
+          : 'password-message error';
+
+    });
+
 
 
     /* ==========================================================
@@ -328,31 +412,35 @@
           confirmPasswordInput.value;
 
 
-        /* ------------------------------------------
-           PASSWORD MATCH CHECK
-        ------------------------------------------ */
+        // ------------------------------------------
+        // PASSWORD VALIDATION
+        // ------------------------------------------
+
+        const passwordResult =
+          validatePassword(password);
+
+        if (!passwordResult.valid) {
+
+          passwordMessage.textContent =
+            passwordResult.message;
+
+          passwordMessage.className =
+            'password-message error';
+
+          return;
+        }
+
+
+        // ------------------------------------------
+        // PASSWORD MATCH CHECK
+        // ------------------------------------------
 
         if (password !== confirmPassword) {
 
           errorMsg.textContent =
-            'Passwords do not match';
+            'Passwords do not match.';
 
           return;
-
-        }
-
-
-        /* ------------------------------------------
-           PASSWORD LENGTH CHECK
-        ------------------------------------------ */
-
-        if (password.length < 6) {
-
-          errorMsg.textContent =
-            'Password must be at least 6 characters';
-
-          return;
-
         }
 
 

@@ -628,6 +628,35 @@ textarea:focus{
   min-height: 20px;
 }
 
+.password-message {
+    min-height: 20px;
+    margin-top: 8px;
+
+    font-size: 0.78rem;
+    font-weight: 600;
+
+    line-height: 1.4;
+
+    transition:
+        color 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.password-message.error {
+    color: #b91c1c;
+}
+
+.password-message.success {
+    color: #15803d;
+}
+
+body.dark-theme .password-message.error {
+    color: #f87171;
+}
+
+body.dark-theme .password-message.success {
+    color: #4ade80;
+}
 
 /* ============================================================
    PROFILE + THEME CONTROLS
@@ -843,6 +872,218 @@ textarea:focus{
   background: rgba(214, 69, 69, .08);
 }
 
+
+/* ============================================================
+   PROFILE PHOTO INSIDE DROPDOWN
+   ============================================================ */
+
+.profile-photo-section {
+  display: flex;
+  justify-content: center;
+  padding: 14px 0 8px;
+}
+
+.profile-photo-wrapper {
+  position: relative;
+  width: 82px;
+  height: 82px;
+}
+
+.profile-photo-circle {
+  width: 82px;
+  height: 82px;
+
+  border-radius: 50%;
+
+  display: grid;
+  place-items: center;
+
+  overflow: hidden;
+
+  background: linear-gradient(
+    140deg,
+    var(--p-500),
+    var(--p-800)
+  );
+
+  color: #fff;
+
+  font-size: 2rem;
+  font-weight: 800;
+
+  border: 3px solid rgba(255,255,255,.85);
+
+  box-shadow:
+    0 8px 25px rgba(125, 70, 220, .35);
+}
+
+.dropdown-profile-avatar {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  display: none;
+}
+
+
+/* ============================================================
+   PENCIL BUTTON
+   ============================================================ */
+
+.profile-edit-btn {
+  position: absolute;
+
+  right: -3px;
+  bottom: -3px;
+
+  width: 28px;
+  height: 28px;
+
+  border: 2px solid #181321;
+
+  border-radius: 50%;
+
+  display: grid;
+  place-items: center;
+
+  background: #ffffff;
+
+  color: #6d35d9;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow: 0 5px 15px rgba(0,0,0,.25);
+
+  transition:
+    transform .18s ease,
+    background .18s ease;
+}
+
+.profile-edit-btn:hover {
+  transform: scale(1.08);
+
+  background: #f3edff;
+}
+
+
+/* ============================================================
+   PHOTO EDIT MENU
+   ============================================================ */
+
+.profile-photo-menu {
+  position: absolute;
+
+  top: 92px;
+  left: 50%;
+
+  transform: translateX(-50%) translateY(-5px);
+
+  width: 155px;
+
+  padding: 6px;
+
+  background: #181321;
+
+  border: 1px solid #3b2c50;
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 15px 35px rgba(0,0,0,.35);
+
+  opacity: 0;
+  visibility: hidden;
+
+  pointer-events: none;
+
+  transition:
+    opacity .18s ease,
+    transform .18s ease,
+    visibility .18s ease;
+
+  z-index: 200;
+}
+
+.profile-photo-menu.show {
+  opacity: 1;
+  visibility: visible;
+
+  pointer-events: auto;
+
+  transform: translateX(-50%) translateY(0);
+}
+
+.profile-photo-menu button {
+  width: 100%;
+
+  border: none;
+  background: transparent;
+
+  color: #f5f2ff;
+
+  text-align: left;
+
+  padding: 9px 10px;
+
+  border-radius: 8px;
+
+  font-family: inherit;
+
+  font-size: .78rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: background .15s ease;
+}
+
+.profile-photo-menu button:hover {
+  background: rgba(255,255,255,.08);
+}
+
+.profile-photo-menu .delete-photo-option {
+  color: #f87171;
+}
+
+.profile-photo-menu .delete-photo-option:hover {
+  background: rgba(248,113,113,.10);
+}
+
+
+/* ============================================================
+   PROFILE INFO
+   ============================================================ */
+
+.profile-dropdown .profile-info {
+  text-align: center;
+
+  padding: 10px 12px 12px;
+}
+
+.profile-dropdown .profile-name {
+  font-size: .95rem;
+}
+
+.profile-dropdown .profile-email {
+  font-size: .76rem;
+}
+
+
+/* ============================================================
+   LOGOUT
+   ============================================================ */
+
+.profile-dropdown .profile-logout {
+  text-align: center;
+
+  padding: 12px;
+
+  font-size: .85rem;
+}
 
 /* ============================================================
    DARK THEME
@@ -2005,44 +2246,6 @@ body.dark-theme.has-custom-cursor .cursor-ring {
   display: none;
 }
 
-
-/* ============================================================
-   PROFILE SETTINGS BUTTON
-   ============================================================ */
-
-.profile-bottom-actions {
-  display: flex;
-  justify-content: flex-end;
-  padding: 2px 0;
-}
-
-.profile-settings {
-  border: none;
-  background: transparent;
-
-  color: #625875;
-
-  padding: 9px 10px;
-
-  border-radius: 10px;
-
-  font-family: inherit;
-  font-size: .82rem;
-  font-weight: 700;
-
-  cursor: pointer;
-
-  transition:
-    background .18s ease,
-    color .18s ease;
-}
-
-.profile-settings:hover {
-  background: rgba(124, 58, 237, .10);
-  color: #6d28d9;
-}
-
-
 /* ============================================================
    SETTINGS MODAL
    ============================================================ */
@@ -2358,4 +2561,35 @@ body.dark-theme .remove-picture-btn {
 
 body.dark-theme .profile-picture-status {
   color: #aaa0ba;
+}
+
+/* ============================================================
+   Cursor avatar — image variant (when profile picture is set)
+   ============================================================ */
+body.has-custom-cursor .cursor-avatar-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+
+/* Slightly thicker inner ring when a photo is loaded */
+body.has-custom-cursor .cursor-avatar:has(.cursor-avatar-img) {
+  box-shadow:
+    0 10px 24px -10px var(--p-700),
+    0 0 0 2.5px rgba(255,255,255,.95),
+    0 0 0 4px rgba(139,92,246,.22);
+}
+body.dark-theme.has-custom-cursor .cursor-avatar:has(.cursor-avatar-img) {
+  box-shadow:
+    0 10px 26px -10px rgba(139,92,246,.85),
+    0 0 0 2.5px rgba(27,22,36,.95),
+    0 0 0 4px rgba(170,130,255,.25);
 }

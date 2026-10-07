@@ -129,7 +129,8 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Logging in...';
 
-            const email = document.getElementById('email').value;
+            const email =
+                document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
 
             try {

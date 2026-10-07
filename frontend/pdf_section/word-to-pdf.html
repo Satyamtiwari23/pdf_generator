@@ -260,33 +260,94 @@
     })();
 
     /* ==========================================================
-   CUSTOM CURSOR — user initial badge that follows the mouse
+   CUSTOM CURSOR — user initial OR profile picture
    ========================================================== */
     (function initCustomCursor() {
+      // Only run on pages that opted-in via body.has-custom-cursor
+      if (!document.body.classList.contains('has-custom-cursor')) return;
+
       // Don't run on touch devices
       if (window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
 
-      // Read user initial from localStorage
-      const user = JSON.parse(localStorage.getItem('user') || 'null');
-      const initial = (user && user.name && user.name.trim())
-        ? user.name.trim().charAt(0).toUpperCase()
-        : '✦';
+      /* --------------------------------------------------------
+         Build the avatar content from localStorage
+         - If profilePicture is set → show the image
+         - Otherwise → show the first letter of the name
+         -------------------------------------------------------- */
+      function getAvatarHTML() {
+        let u = null;
+        try {
+          u = JSON.parse(localStorage.getItem('user') || 'null');
+        } catch (err) {
+          u = null;
+        }
 
-      // Create the cursor elements
+        const hasPicture =
+          u &&
+          typeof u.profilePicture === 'string' &&
+          u.profilePicture.startsWith('data:image/');
+
+        if (hasPicture) {
+          // Escape the src just in case (data URLs are safe, but be tidy)
+          const safeSrc = u.profilePicture.replace(/"/g, '&quot;');
+          return '<img class="cursor-avatar-img" src="' + safeSrc + '" alt="" />';
+        }
+
+        const initial =
+          u && u.name && u.name.trim()
+            ? u.name.trim().charAt(0).toUpperCase()
+            : '✦';
+
+        return initial;
+      }
+
+      /* --------------------------------------------------------
+         Create the cursor elements
+         -------------------------------------------------------- */
       const cursor = document.createElement('div');
       cursor.className = 'custom-cursor';
-      cursor.innerHTML = '<div class="cursor-avatar">' + initial + '</div>';
+
+      const avatarEl = document.createElement('div');
+      avatarEl.className = 'cursor-avatar';
+      avatarEl.innerHTML = getAvatarHTML();
+
+      cursor.appendChild(avatarEl);
       document.body.appendChild(cursor);
 
       const ring = document.createElement('div');
       ring.className = 'cursor-ring';
       document.body.appendChild(ring);
 
+      /* --------------------------------------------------------
+         Expose a global so other parts of the app can refresh
+         the cursor after the profile picture changes.
+         -------------------------------------------------------- */
+      window.refreshCustomCursorAvatar = function () {
+        avatarEl.innerHTML = getAvatarHTML();
+      };
+
+      /* --------------------------------------------------------
+         Auto-refresh when the header avatar changes
+         (fires when renderProfile() updates it)
+         -------------------------------------------------------- */
+      const headerAvatar = document.getElementById('profileAvatar');
+      if (headerAvatar && typeof MutationObserver !== 'undefined') {
+        const obs = new MutationObserver(function () {
+          window.refreshCustomCursorAvatar();
+        });
+        obs.observe(headerAvatar, {
+          attributes: true,
+          attributeFilter: ['src', 'style']
+        });
+      }
+
+      /* --------------------------------------------------------
+         Movement tracking
+         -------------------------------------------------------- */
       let mx = -100, my = -100;
       let rx = mx, ry = my;
       let moved = false;
 
-      // Move the main cursor immediately
       document.addEventListener('mousemove', function (e) {
         mx = e.clientX;
         my = e.clientY;
@@ -301,11 +362,11 @@
           'translate3d(' + mx + 'px, ' + my + 'px, 0) translate(-50%, -50%)';
       }, { passive: true });
 
-      // Hide when the mouse leaves the window
       document.addEventListener('mouseleave', function () {
         cursor.classList.remove('visible');
         ring.classList.remove('visible');
       });
+
       document.addEventListener('mouseenter', function () {
         if (moved) {
           cursor.classList.add('visible');
@@ -313,8 +374,11 @@
         }
       });
 
-      // Trailing ring — lerp toward the mouse position
+      /* --------------------------------------------------------
+         Trailing ring
+         -------------------------------------------------------- */
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
       if (!prefersReduced) {
         (function tick() {
           rx += (mx - rx) * 0.18;
@@ -330,7 +394,9 @@
         }, { passive: true });
       }
 
-      // Hover state — glow on interactive elements
+      /* --------------------------------------------------------
+         Hover / text-mode / click states
+         -------------------------------------------------------- */
       const INTERACTIVE = 'a, button, [role="button"], .tool-card, .section-toggle, .theme-toggle, .profile-btn, .stat';
       const TEXT_INPUTS = 'input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="search"], input[type="tel"], input[type="url"], textarea';
 
@@ -351,16 +417,12 @@
         if (!to.closest(TEXT_INPUTS)) cursor.classList.remove('text-mode');
       });
 
-      // Click feedback
       document.addEventListener('mousedown', function () {
         cursor.classList.add('clicking');
       });
       document.addEventListener('mouseup', function () {
         cursor.classList.remove('clicking');
       });
-
-      // Also handle the case where the user opens the profile dropdown
-      // so the cursor stays on top of it (z-index 99999 handles it anyway)
     })();
   </script>
 </body>
