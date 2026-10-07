@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../tool-bridge.js"></script>
 
   <style>
     /* ============================================================
@@ -742,6 +743,25 @@
       updateBgSwatchesUI();
     }
 
+    /* ==== Tool Bridge: receive incoming image ==== */
+    (async function bridgeReceiveIncoming() {
+      try {
+        if (!window.ToolBridge) return;
+
+        const incoming = await window.ToolBridge.consumeIncoming();
+        if (!incoming) return;
+
+        const file = new File([incoming.blob], incoming.fileName, {
+          type: incoming.mimeType || incoming.blob.type
+        });
+
+        await addFile([file]);
+
+        try { toast('📥 Received from another tool'); } catch (_) { }
+      } catch (err) {
+        console.error('[bridge] receive failed:', err);
+      }
+    })();
     /* ============================================================
        STEP 2 — REMOVE BACKGROUND
        ============================================================ */
@@ -773,6 +793,28 @@
         // 2) Apply chosen background (transparent by default)
         state.finalBlob = aiBlob;
         await applyBackground();
+
+        /* ==== Tool Bridge: expose background-removed image ==== */
+        if (window.ToolBridge) {
+          const target =
+            document.querySelector('.act-row') ||
+            document.querySelector('.actions');
+
+          if (target) {
+            window.ToolBridge.injectSendToButton(target, function () {
+              if (!state.finalBlob) return null;
+
+              return {
+                blob: state.finalBlob,
+                fileName:
+                  'no-background-' +
+                  state.file.name.replace(/\.[^.]+$/, '') +
+                  '.png',
+                mimeType: state.finalBlob.type || 'image/png'
+              };
+            });
+          }
+        }
 
         state.processingTimeMs = performance.now() - t0;
 

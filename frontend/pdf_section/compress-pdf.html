@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../tool-bridge.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -102,6 +103,26 @@
         } catch (err) { console.error(err); toast('Could not read that PDF'); }
       }
 
+      /* ==== Tool Bridge: receive incoming PDF ==== */
+      (async function bridgeReceiveIncoming() {
+        try {
+          if (!window.ToolBridge) return;
+
+          const incoming = await window.ToolBridge.consumeIncoming();
+          if (!incoming) return;
+
+          const file = new File([incoming.blob], incoming.fileName, {
+            type: incoming.mimeType || incoming.blob.type
+          });
+
+          await addFile([file]);
+
+          try { toast('📥 Received from another tool'); } catch (_) { }
+        } catch (err) {
+          console.error('[bridge] receive failed:', err);
+        }
+      })();
+
       function renderFile() {
         const list = $('#fileList'); list.innerHTML = '';
         if (!state.file) { $('#optionsBlock').hidden = true; $('#compressBtn').disabled = true; return; }
@@ -160,6 +181,25 @@
           }
 
           const out = doc.output('blob');
+
+          /* ==== Tool Bridge: expose compressed PDF ==== */
+          if (window.ToolBridge) {
+            const footer = document.querySelector('.actions');
+
+            if (footer) {
+              window.ToolBridge.injectSendToButton(footer, function () {
+                return {
+                  blob: out,
+                  fileName:
+                    'PDFnest-compressed-' +
+                    new Date().toISOString().slice(0, 10) +
+                    '.pdf',
+                  mimeType: 'application/pdf'
+                };
+              });
+            }
+          }
+
           const url = URL.createObjectURL(out);
           const a = document.createElement('a');
           a.href = url;

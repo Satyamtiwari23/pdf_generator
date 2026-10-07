@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../tool-bridge.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pica@9.0.1/dist/pica.min.js"></script>
 
   <style>
@@ -985,6 +986,26 @@
         updateEstimate();
       }
 
+      /* ==== Tool Bridge: receive incoming image ==== */
+      (async function bridgeReceiveIncoming() {
+        try {
+          if (!window.ToolBridge) return;
+
+          const incoming = await window.ToolBridge.consumeIncoming();
+          if (!incoming) return;
+
+          const file = new File([incoming.blob], incoming.fileName, {
+            type: incoming.mimeType || incoming.blob.type
+          });
+
+          await addFile([file]);
+
+          try { toast('📥 Received from another tool'); } catch (_) { }
+        } catch (err) {
+          console.error('[bridge] receive failed:', err);
+        }
+      })();
+
       /* ============================================================
          TARGET & ESTIMATE
          ============================================================ */
@@ -1251,6 +1272,29 @@
           });
 
           state.resultBlob = blob;
+
+          /* ==== Tool Bridge: expose upscaled result ==== */
+          if (window.ToolBridge) {
+            const footer = document.querySelector('.preview-footer');
+
+            if (footer) {
+              window.ToolBridge.injectSendToButton(footer, function () {
+                const baseName = state.file.name.replace(/\.[^.]+$/, '');
+
+                return {
+                  blob: state.resultBlob,
+                  fileName:
+                    'upscaled-' +
+                    canvas.width +
+                    'px-' +
+                    baseName +
+                    '.png',
+                  mimeType: 'image/png'
+                };
+              });
+            }
+          }
+
           if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
           state.resultUrl = URL.createObjectURL(blob);
           state.resultW = canvas.width;

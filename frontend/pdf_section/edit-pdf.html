@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../tool-bridge.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
@@ -1593,6 +1594,26 @@
       function redo() { if (S.redo.length) { const j = S.redo.pop(); S.hist.push(j); restore(j); } }
       function btns() { $('#bUndo').disabled = S.hist.length < 2; $('#bRedo').disabled = !S.redo.length; }
 
+      /* ==== Tool Bridge: receive incoming PDF ==== */
+      (async function bridgeReceiveIncoming() {
+        try {
+          if (!window.ToolBridge) return;
+
+          const incoming = await window.ToolBridge.consumeIncoming();
+          if (!incoming) return;
+
+          const file = new File([incoming.blob], incoming.fileName, {
+            type: incoming.mimeType || incoming.blob.type
+          });
+
+          await loadPdf([file]);
+
+          try { toast('📥 Received from another tool'); } catch (_) { }
+        } catch (err) {
+          console.error('[bridge] receive failed:', err);
+        }
+      })();
+
       /* ---------- load & render ---------- */
       async function loadPdf(files) {
         const f = Array.from(files).find(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
@@ -2085,7 +2106,46 @@
       async function exportPdf() {
         if (!S.buf) return; const btn = $('#bExport'); btn.disabled = true; btn.textContent = 'Exporting…';
         try {
-          const doc = await build(), bytes = await doc.save(), url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' })), a = document.createElement('a');
+          const doc = await build();
+          const bytes = await doc.save();
+          const blob = new Blob([bytes], { type: 'application/pdf' });
+
+          /* ==== Tool Bridge: expose edited PDF ==== */
+          if (window.ToolBridge) {
+            const target = document.querySelector('#actionsBlock');
+
+            if (target) {
+              window.ToolBridge.injectSendToButton(target, function () {
+                return {
+                  blob: blob,
+                  fileName:
+                    state.name.replace(/\.pdf$/i, '') +
+                    '-edited.pdf',
+                  mimeType: 'application/pdf'
+                };
+              });
+            }
+          }
+
+          /* ==== Tool Bridge: expose edited PDF ==== */
+          if (window.ToolBridge) {
+            const target = document.querySelector('.actions');
+
+            if (target) {
+              window.ToolBridge.injectSendToButton(target, function () {
+                return {
+                  blob: blob,
+                  fileName:
+                    S.name.replace(/\.pdf$/i, '') +
+                    '-edited.pdf',
+                  mimeType: 'application/pdf'
+                };
+              });
+            }
+          }
+
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
           a.href = url; a.download = S.name.replace(/\.pdf$/i, '') + '-edited.pdf'; document.body.appendChild(a); a.click(); a.remove();
           setTimeout(() => URL.revokeObjectURL(url), 4000); toast('Edited PDF downloaded 🎉');
         } catch (err) { console.error(err); toast('Export failed — ' + err.message); }

@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../tool-bridge.js"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -226,7 +228,41 @@
             y += spaceAfter(fs);
           }
 
-          doc.save('PDFnest-word-' + new Date().toISOString().slice(0, 10) + '.pdf');
+          const pdfBlob = doc.output('blob');
+
+          /* ==== Tool Bridge: expose Word-to-PDF result ==== */
+          if (window.ToolBridge) {
+            const target =
+              document.querySelector('.actions') ||
+              document.querySelector('.preview-footer');
+
+            if (target) {
+              window.ToolBridge.injectSendToButton(target, function () {
+                return {
+                  blob: pdfBlob,
+                  fileName:
+                    'PDFnest-word-' +
+                    new Date().toISOString().slice(0, 10) +
+                    '.pdf',
+                  mimeType: 'application/pdf'
+                };
+              });
+            }
+          }
+
+          const url = URL.createObjectURL(pdfBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download =
+            'PDFnest-word-' +
+            new Date().toISOString().slice(0, 10) +
+            '.pdf';
+
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+
+          setTimeout(() => URL.revokeObjectURL(url), 4000);
           toast('PDF downloaded 🎉');
         } catch (err) { console.error(err); toast('Conversion failed — try again'); }
         finally { btn.disabled = false; btn.textContent = '📄 Convert & download'; }

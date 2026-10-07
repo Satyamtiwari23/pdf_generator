@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../tool-bridge.js"></script>
 
   <style>
     .num-input {
@@ -845,7 +846,7 @@
       }
 
       /* ---------- Render result card ---------- */
-      function renderResult(r) {
+      let renderResult = function (r) {
         const delta = r.originalSize - r.newSize;
         const savedPct = Math.max(0, Math.round((1 - r.newSize / r.originalSize) * 100));
 
@@ -873,7 +874,7 @@
       }
 
       /* ---------- Preview modal ---------- */
-      function openPreview(id) {
+      let openPreview = function (id) {
         const r = state.results.find(x => x.id === id);
         if (!r) return;
 
@@ -1010,6 +1011,78 @@
       window.addEventListener('drop', e => {
         if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault();
       });
+
+
+      /* ============================================================
+   TOOL BRIDGE INTEGRATION
+   ============================================================ */
+
+      // 1) Auto-receive files sent from another tool
+      (async function receiveIncoming() {
+        try {
+          const incoming = await window.ToolBridge?.consumeIncoming?.();
+          if (!incoming) return;
+
+          // Build a File from the incoming blob
+          const file = new File([incoming.blob], incoming.fileName, {
+            type: incoming.mimeType || 'image/jpeg'
+          });
+
+          // Feed it to the existing addFiles pipeline
+          await addFiles([file]);
+          toast('📥 Received from another tool');
+        } catch (e) {
+          console.error('Incoming receive failed', e);
+        }
+      })();
+
+      // 2) Inject "Send to" button into each result preview modal
+      //    and into each result card's action row
+      function injectSendToButtons() {
+        // We'll add a "Send to" button to the preview modal footer
+        const footer = document.querySelector('.preview-footer');
+        if (!footer || footer.querySelector('.send-to-wrap')) return;
+
+        window.ToolBridge.injectSendToButton(footer, function () {
+          // Called when the menu opens; return the current preview output
+          const id = footer.dataset.currentId;
+          const r = state.results.find(x => x.id === id);
+          if (!r) return null;
+          return {
+            blob: r.blob,
+            fileName: 'compressed-' + r.name.replace(/\.[^.]+$/, '.jpg'),
+            mimeType: r.blob.type || 'image/jpeg'
+          };
+        });
+      }
+
+      // Track which result is open in the preview
+      const _openPreview = openPreview;
+      openPreview = function (id) {
+        _openPreview(id);
+        const footer = document.querySelector('.preview-footer');
+        if (footer) footer.dataset.currentId = id;
+        injectSendToButtons();
+      };
+
+      // Also inject into each result card
+      const _renderResult = renderResult;
+      renderResult = function (r) {
+        _renderResult(r);
+        // add a "Send to" button next to the download link
+        const card = $('#resultsList').lastElementChild;
+        if (!card || card.querySelector('.send-to-wrap')) return;
+        const actions = card.querySelector('.result-actions');
+        if (!actions) return;
+
+        window.ToolBridge.injectSendToButton(actions, function () {
+          return {
+            blob: r.blob,
+            fileName: 'compressed-' + r.name.replace(/\.[^.]+$/, '.jpg'),
+            mimeType: r.blob.type || 'image/jpeg'
+          };
+        });
+      };
 
       $('#compressBtn').addEventListener('click', compressAll);
     })();

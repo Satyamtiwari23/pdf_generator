@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../tool-bridge.js"></script>
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <!-- pdf.js is used to get image dimensions -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -141,6 +142,26 @@
         renderFiles();
       }
 
+      /* ==== Tool Bridge: receive incoming PDF/image ==== */
+      (async function bridgeReceiveIncoming() {
+        try {
+          if (!window.ToolBridge) return;
+
+          const incoming = await window.ToolBridge.consumeIncoming();
+          if (!incoming) return;
+
+          const file = new File([incoming.blob], incoming.fileName, {
+            type: incoming.mimeType || incoming.blob.type
+          });
+
+          await addFiles([file]);
+
+          try { toast('📥 Received from another tool'); } catch (_) { }
+        } catch (err) {
+          console.error('[bridge] receive failed:', err);
+        }
+      })();
+
       function renderFiles() {
         const list = $('#fileList'); list.innerHTML = '';
         state.files.forEach(f => {
@@ -227,6 +248,22 @@
 
           const bytes = await out.save();
           const blob = new Blob([bytes], { type: 'application/pdf' });
+          /* ==== Tool Bridge: expose merged PDF ==== */
+          if (window.ToolBridge) {
+            const footer = document.querySelector('.actions');
+            if (footer) {
+              window.ToolBridge.injectSendToButton(footer, function () {
+                return {
+                  blob: blob,
+                  fileName:
+                    'PDFnest-merged-' +
+                    new Date().toISOString().slice(0, 10) +
+                    '.pdf',
+                  mimeType: 'application/pdf'
+                };
+              });
+            }
+          }
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;

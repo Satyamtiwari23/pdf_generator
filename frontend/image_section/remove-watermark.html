@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../tool-bridge.js"></script>
 
   <style>
     /* ============================================================
@@ -1029,6 +1030,26 @@
         redraw();
       }
 
+      /* ==== Tool Bridge: receive incoming image ==== */
+      (async function bridgeReceiveIncoming() {
+        try {
+          if (!window.ToolBridge) return;
+
+          const incoming = await window.ToolBridge.consumeIncoming();
+          if (!incoming) return;
+
+          const file = new File([incoming.blob], incoming.fileName, {
+            type: incoming.mimeType || incoming.blob.type
+          });
+
+          await addFile([file]);
+
+          try { toast('📥 Received from another tool'); } catch (_) { }
+        } catch (err) {
+          console.error('[bridge] receive failed:', err);
+        }
+      })();
+
       /* ============================================================
          MODE SWITCHING
          ============================================================ */
@@ -1676,6 +1697,26 @@
           sctx.putImageData(imgData, 0, 0);
 
           state.resultBlob = await new Promise(res => src.toBlob(b => res(b), 'image/png'));
+
+          /* ==== Tool Bridge: expose cleaned image ==== */
+          if (window.ToolBridge) {
+            const footer = document.querySelector('.cmp-footer');
+
+            if (footer) {
+              window.ToolBridge.injectSendToButton(footer, function () {
+                if (!state.resultBlob) return null;
+
+                return {
+                  blob: state.resultBlob,
+                  fileName:
+                    'no-watermark-' +
+                    state.fileName.replace(/\.[^.]+$/, '') +
+                    '.png',
+                  mimeType: state.resultBlob.type || 'image/png'
+                };
+              });
+            }
+          }
           if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
           state.resultUrl = URL.createObjectURL(state.resultBlob);
 
