@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { google } = require('googleapis');
-
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
@@ -33,15 +33,34 @@ async function connectDB() {
 // ============================================================
 
 app.use(cors({
-    origin: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: false
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
 }));
 app.use(express.json({
   limit: '200kb'
 }));
+// ============================================================
+// AUTH RATE LIMITER
+// ============================================================
 
+const authLimiter = rateLimit({
+
+  windowMs: 15 * 60 * 1000, // 15 minutes
+
+  max: 10,
+
+  standardHeaders: true,
+
+  legacyHeaders: false,
+
+  message: {
+    message:
+      'Too many authentication attempts. Please try again after 15 minutes.'
+  }
+
+});
 
 // ============================================================
 // USER MODEL
@@ -168,18 +187,39 @@ function authenticateToken(req, res, next) {
 // SIGNUP
 // ============================================================
 
-app.post('/api/auth/signup', async (req, res) => {
+app.post('/api/auth/signup', authLimiter, async (req, res) => {
+
+
 
   try {
     await connectDB();
 
     const { name, email, password } = req.body;
 
-    // Basic validation
     if (!name || !email || !password) {
+
       return res.status(400).json({
         message: 'Name, email and password are required'
       });
+
+    }
+
+    const passwordValid =
+      typeof password === 'string' &&
+      password.length >= 8 &&
+      password.length <= 64 &&
+      /[A-Z]/.test(password) &&
+      /[a-z]/.test(password) &&
+      /[0-9]/.test(password) &&
+      /[^A-Za-z0-9\s]/.test(password);
+
+    if (!passwordValid) {
+
+      return res.status(400).json({
+        message:
+          'Password must be 8-64 characters and contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
+      });
+
     }
 
     // Check if user already exists
@@ -252,7 +292,7 @@ app.post('/api/auth/signup', async (req, res) => {
 // LOGIN
 // ============================================================
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authLimiter, async (req, res) => {
 
   try {
 
@@ -336,7 +376,7 @@ app.post('/api/auth/login', async (req, res) => {
 // FORGOT PASSWORD
 // ============================================================
 
-app.post('/api/auth/forgot-password', async (req, res) => {
+app.post('/api/auth/forgot-password', authLimiter, async (req, res) => {
 
   try {
 
@@ -491,7 +531,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 // RESET PASSWORD
 // ============================================================
 
-app.post('/api/auth/reset-password', async (req, res) => {
+app.post('/api/auth/reset-password',authLimiter, async (req, res) => {
 
   try {
 
@@ -508,11 +548,23 @@ app.post('/api/auth/reset-password', async (req, res) => {
       });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({
-        message: 'Password must be at least 6 characters'
-      });
-    }
+    const passwordValid =
+    typeof password === 'string' &&
+    password.length >= 8 &&
+    password.length <= 64 &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[^A-Za-z0-9\s]/.test(password);
+
+if (!passwordValid) {
+
+    return res.status(400).json({
+        message:
+            'Password must be 8-64 characters and contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
+    });
+
+}
 
     // Hash token received from email
     const hashedToken = crypto
