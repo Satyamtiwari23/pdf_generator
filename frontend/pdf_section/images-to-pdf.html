@@ -164,7 +164,8 @@
         renderUploads();
       }
 
-      /* ==== Tool Bridge: receive incoming image/PDF ==== */
+
+      /* ==== Tool Bridge: receive single or batch images ==== */
       (async function bridgeReceiveIncoming() {
         try {
           if (!window.ToolBridge) return;
@@ -172,17 +173,35 @@
           const incoming = await window.ToolBridge.consumeIncoming();
           if (!incoming) return;
 
-          const file = new File([incoming.blob], incoming.fileName, {
-            type: incoming.mimeType || incoming.blob.type
+          const incomingFiles = incoming.files || [
+            {
+              blob: incoming.blob,
+              fileName: incoming.fileName,
+              mimeType: incoming.mimeType
+            }
+          ];
+
+          const files = incomingFiles.map(item => {
+            return new File(
+              [item.blob],
+              item.fileName || 'compressed-image.jpg',
+              {
+                type: item.mimeType ||
+                  item.blob.type ||
+                  'image/jpeg'
+              }
+            );
           });
 
-          await addFiles([file]);
+          await addFiles(files);
+          toast('📥 Received ' + files.length + ' image(s)');
 
-          try { toast('📥 Received from another tool'); } catch (_) { }
         } catch (err) {
-          console.error('[bridge] receive failed:', err);
+          console.error('[bridge] batch receive failed:', err);
+          toast('Could not receive images');
         }
       })();
+
 
 
       function renderUploads() {

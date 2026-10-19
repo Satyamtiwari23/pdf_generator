@@ -108,6 +108,13 @@
       font-weight: 800;
     }
 
+    /* ===== Hero gradient text follows the cursor ===== */
+    .hero h1 .grad {
+      display: inline-block;
+      will-change: transform;
+      transition: transform 0.12s ease-out;
+    }
+
     .result-meta .unchanged {
       color: #f59e0b;
       font-weight: 800;
@@ -518,10 +525,157 @@
         flex-direction: column;
       }
     }
+
+    /* ===== Selected image previews ===== */
+    .selected-files {
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid rgba(167, 139, 250, .35);
+      border-radius: 16px;
+      background: rgba(139, 92, 246, .06);
+    }
+
+    .selected-files-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+      color: var(--ink);
+      font-size: .88rem;
+    }
+
+    .selected-count {
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(139, 92, 246, .16);
+      border: 1px solid rgba(167, 139, 250, .35);
+      color: #b58cff;
+      font-size: .72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .selected-images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .selected-image-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      padding: 9px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid rgba(167, 139, 250, .22);
+    }
+
+    .selected-image-item img {
+      width: 58px;
+      height: 58px;
+      flex: none;
+      object-fit: cover;
+      border-radius: 9px;
+      background: #211a2d;
+    }
+
+    .selected-image-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .selected-image-name {
+      color: var(--ink);
+      font-size: .78rem;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .selected-image-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: .7rem;
+      line-height: 1.4;
+    }
+
+    .selected-image-remove {
+      flex: none;
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 8px;
+      background: rgba(248, 113, 113, .10);
+      color: #f87171;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .selected-image-remove:hover {
+      background: rgba(248, 113, 113, .22);
+    }
+
+    @media (max-width: 639px) {
+      .selected-images-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ===== Cursor-following purple gradient ===== */
+    .cursor-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(480px circle at var(--glow-x, 50%) var(--glow-y, 30%),
+          rgba(139, 92, 246, .13),
+          rgba(192, 38, 211, .06) 35%,
+          transparent 72%);
+      opacity: 0;
+      transition: opacity .3s ease;
+    }
+
+    .cursor-glow.active {
+      opacity: 1;
+    }
+
+    /* Keep the interface above the decorative glow. */
+    .site-header,
+    main,
+    .site-footer {
+      position: relative;
+      z-index: 1;
+    }
+
+    .toast,
+    .preview-modal,
+    .custom-cursor,
+    .cursor-ring {
+      z-index: 1000;
+    }
+
+    .custom-cursor {
+      z-index: 99999;
+    }
+
+    .cursor-ring {
+      z-index: 99998;
+    }
+
+    @media (hover: none),
+    (pointer: coarse),
+    (prefers-reduced-motion: reduce) {
+      .cursor-glow {
+        display: none;
+      }
+    }
   </style>
 </head>
 
 <body class="has-custom-cursor">
+  <div class="cursor-glow" aria-hidden="true"></div>
 
   <header class="site-header">
     <div class="header-inner">
@@ -548,6 +702,13 @@
           <div class="dz-sub">or <span class="link">browse files</span> · JPG, PNG, WEBP</div>
         </div>
         <input type="file" id="fileInput" accept="image/*" multiple hidden />
+        <div class="selected-files" id="selectedFilesWrap" hidden>
+          <div class="selected-files-head">
+            <strong>Selected images</strong>
+            <span class="selected-count" id="selectedCount">0 images</span>
+          </div>
+          <div class="selected-images-grid" id="selectedImages"></div>
+        </div>
       </div>
 
       <div class="options">
@@ -581,12 +742,21 @@
       </div>
 
       <div id="resultsWrap" hidden>
+
         <div class="results-head">
           <h3>Results <span class="count-pill" id="resultsCount">0</span></h3>
-          <button class="btn btn-ghost" id="downloadAllBtn" style="padding:9px 16px; font-size:.82rem;">
-            ⬇ Download All
-          </button>
+
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <button class="btn btn-ghost" id="sendAllBtn" style="padding:9px 16px; font-size:.82rem;">
+              📤 Send all to…
+            </button>
+
+            <button class="btn btn-ghost" id="downloadAllBtn" style="padding:9px 16px; font-size:.82rem;">
+              ⬇ Download All
+            </button>
+          </div>
         </div>
+
         <div id="infoBannerWrap"></div>
         <div class="file-list" id="resultsList"></div>
       </div>
@@ -693,7 +863,74 @@
           });
         }
         $('#compressBtn').disabled = false;
+
+        renderSelectedFiles();
+
         toast(files.length + ' image(s) added');
+      }
+
+      function renderSelectedFiles() {
+        const wrap = $('#selectedFilesWrap');
+        const grid = $('#selectedImages');
+        const count = $('#selectedCount');
+
+        grid.innerHTML = '';
+        count.textContent =
+          state.files.length + (state.files.length === 1 ? ' image' : ' images');
+
+        wrap.hidden = state.files.length === 0;
+
+        state.files.forEach(entry => {
+          const item = document.createElement('div');
+          item.className = 'selected-image-item';
+
+          const img = document.createElement('img');
+          img.src = entry.originalUrl;
+          img.alt = entry.name;
+
+          const info = document.createElement('div');
+          info.className = 'selected-image-info';
+
+          const name = document.createElement('div');
+          name.className = 'selected-image-name';
+          name.textContent = entry.name;
+
+          const meta = document.createElement('div');
+          meta.className = 'selected-image-meta';
+          meta.textContent =
+            entry.img.naturalWidth + ' × ' +
+            entry.img.naturalHeight + ' px · ' +
+            fmtSize(entry.size);
+
+          info.append(name, meta);
+
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.className = 'selected-image-remove';
+          remove.textContent = '×';
+          remove.title = 'Remove ' + entry.name;
+          remove.setAttribute('aria-label', 'Remove ' + entry.name);
+
+          remove.addEventListener('click', () => {
+            state.files = state.files.filter(file => file.id !== entry.id);
+
+            // Clear old results because the selected inputs changed.
+            state.results.forEach(result => {
+              if (result.newUrl) URL.revokeObjectURL(result.newUrl);
+            });
+
+            state.results = [];
+            $('#resultsList').innerHTML = '';
+            $('#infoBannerWrap').innerHTML = '';
+            $('#resultsWrap').hidden = true;
+
+            renderSelectedFiles();
+            $('#compressBtn').disabled = state.files.length === 0;
+          });
+
+          item.append(img, info, remove);
+          grid.appendChild(item);
+        });
       }
 
       /* ============================================================
@@ -935,6 +1172,259 @@
         if (btn) { openPreview(btn.dataset.id); }
       });
 
+
+
+      /* ---------- Send all compressed images to compatible tools ---------- */
+      (function setupSendAll() {
+        const btn = document.querySelector('#sendAllBtn');
+
+        if (!btn || !window.ToolBridge) return;
+
+        // Remove the previous temporary click handler only.
+        const cleanBtn = btn.cloneNode(true);
+        btn.replaceWith(cleanBtn);
+
+        // Only these two tools support the intended multi-image workflow.
+        const compatibleTargets = [
+          {
+            id: 'pdf_section/images-to-pdf.html',
+            icon: '🖼️',
+            name: 'Images → PDF',
+            desc: 'Combine all images into one PDF'
+          },
+          {
+            id: 'pdf_section/merge-pdf-images.html',
+            icon: '🧩',
+            name: 'Merge PDF + images',
+            desc: 'Add images to a PDF'
+          }
+        ];
+
+        cleanBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+
+          if (!state.results || state.results.length === 0) {
+            toast('Compress images first');
+            return;
+          }
+
+          // Toggle the batch menu.
+          let menu = document.querySelector('#sendAllMenu');
+
+          if (menu) {
+            menu.remove();
+            return;
+          }
+
+
+          menu = document.createElement('div');
+          menu.id = 'sendAllMenu';
+          menu.className = 'send-to-menu show';
+
+          menu.style.cssText = [
+            'position:fixed',
+            'display:block',
+            'box-sizing:border-box',
+            'top:0',
+            'left:0',
+            'bottom:auto',
+            'right:auto',
+            'width:320px',
+            'min-width:280px',
+            'height:auto',
+            'max-height:70vh',
+            'overflow-y:auto',
+            'padding:10px',
+            'background:#211a2d',
+            'color:#f5f2ff',
+            'border:1px solid #68449a',
+            'border-radius:14px',
+            'box-shadow:0 16px 45px rgba(0,0,0,.5)',
+            'opacity:1',
+            'visibility:visible',
+            'transform:none',
+            'z-index:100000'
+          ].join(';');
+
+
+          const head = document.createElement('div');
+          head.className = 'send-to-head';
+          head.innerHTML =
+            '<span class="send-to-head-icon">🖼️</span>' +
+            '<span><strong>Send all images to…</strong>' +
+            '<small>' + state.results.length +
+            ' compressed image(s)</small></span>';
+
+          menu.appendChild(head);
+
+          compatibleTargets.forEach(target => {
+            const item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'send-to-item';
+            item.style.cssText = [
+              'display:flex',
+              'align-items:center',
+              'gap:12px',
+              'width:100%',
+              'box-sizing:border-box',
+              'padding:14px 12px',
+              'margin:4px 0',
+              'background:#302440',
+              'color:#f5f2ff',
+              'border:1px solid #59416f',
+              'border-radius:10px',
+              'text-align:left',
+              'cursor:pointer',
+              'font:inherit',
+              'visibility:visible',
+              'opacity:1'
+            ].join(';');
+
+            item.innerHTML =
+              '<span class="send-to-icon">' + target.icon + '</span>' +
+              '<span class="send-to-info">' +
+              '<span class="send-to-name">' + target.name + '</span>' +
+              '<span class="send-to-desc">' + target.desc + '</span>' +
+              '</span>' +
+              '<span class="send-to-arrow">→</span>';
+
+            item.addEventListener('click', async function (ev) {
+              ev.stopPropagation();
+
+              if (!state.results.length) {
+                toast('Compress images first');
+                menu.remove();
+                return;
+              }
+
+              item.disabled = true;
+              item.querySelector('.send-to-desc').textContent =
+                'Preparing images…';
+
+              try {
+                const files = state.results.map(r => {
+                  const mimeType =
+                    r.blob.type || 'image/jpeg';
+
+                  const extension =
+                    mimeType === 'image/png' ? 'png' :
+                      mimeType === 'image/webp' ? 'webp' : 'jpg';
+
+                  return {
+                    blob: r.blob,
+                    fileName:
+                      'compressed-' +
+                      baseName(r.name) +
+                      '.' + extension,
+                    mimeType
+                  };
+                });
+
+                await window.ToolBridge.sendFilesToTool(
+                  target.id,
+                  files
+                );
+              } catch (err) {
+                console.error('[bridge batch]', err);
+                toast('Could not send images: ' + err.message);
+                menu.remove();
+              }
+            });
+
+            menu.appendChild(item);
+          });
+
+
+          /* Keep the menu attached to Send All while scrolling/resizing. */
+          document.body.appendChild(menu);
+
+          function positionSendAllMenu() {
+            if (!menu.isConnected) return;
+
+            const rect = cleanBtn.getBoundingClientRect();
+            const menuRect = menu.getBoundingClientRect();
+            const gap = 8;
+            const edge = 8;
+
+            // Align the menu's right edge with the button's right edge.
+            let left = rect.right - menuRect.width;
+            left = Math.max(
+              edge,
+              Math.min(left, window.innerWidth - menuRect.width - edge)
+            );
+
+            // Prefer below the button; open above it if there isn't enough room.
+            const spaceBelow = window.innerHeight - rect.bottom - gap - edge;
+            const spaceAbove = rect.top - gap - edge;
+
+            let top;
+
+            if (menuRect.height <= spaceBelow) {
+              top = rect.bottom + gap;
+            } else if (menuRect.height <= spaceAbove) {
+              top = rect.top - menuRect.height - gap;
+            } else {
+              // If neither side has enough room, use the side with more space.
+              top = spaceBelow >= spaceAbove
+                ? rect.bottom + gap
+                : rect.top - menuRect.height - gap;
+            }
+
+            // Keep the menu inside the visible viewport.
+            top = Math.max(
+              edge,
+              Math.min(top, window.innerHeight - menuRect.height - edge)
+            );
+
+            menu.style.left = left + 'px';
+            menu.style.top = top + 'px';
+          }
+
+          // Initial positioning.
+          positionSendAllMenu();
+
+          // Reposition whenever the page or a scrollable container scrolls.
+          window.addEventListener('scroll', positionSendAllMenu, true);
+          window.addEventListener('resize', positionSendAllMenu);
+
+          // Clean up listeners when the menu closes.
+          const menuObserver = new MutationObserver(() => {
+            if (!menu.isConnected) {
+              window.removeEventListener('scroll', positionSendAllMenu, true);
+              window.removeEventListener('resize', positionSendAllMenu);
+              menuObserver.disconnect();
+            }
+          });
+
+          menuObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+          });
+
+
+
+          // Close the menu when clicking elsewhere.
+          setTimeout(() => {
+            function closeMenu(ev) {
+              if (!menu.isConnected) {
+                document.removeEventListener('click', closeMenu);
+                return;
+              }
+
+              if (!menu.contains(ev.target) &&
+                ev.target !== cleanBtn) {
+                menu.remove();
+                document.removeEventListener('click', closeMenu);
+              }
+            }
+
+            document.addEventListener('click', closeMenu);
+          }, 0);
+        });
+      })();
+
+
+
       /* ---------- Download All as ZIP ---------- */
       $('#downloadAllBtn').addEventListener('click', async () => {
         if (!state.results.length) return;
@@ -1087,11 +1577,87 @@
       $('#compressBtn').addEventListener('click', compressAll);
     })();
 
+
+    /* ===== Hero gradient text follows the cursor ===== */
+    (function initHeroParallax() {
+      const grad = document.querySelector('.hero h1 .grad');
+
+      if (!grad) return;
+
+      if (
+        window.matchMedia('(hover: none), (pointer: coarse)').matches
+      ) {
+        return;
+      }
+
+      let raf = null;
+      let mouseX = window.innerWidth / 2;
+      let mouseY = window.innerHeight / 2;
+
+      document.addEventListener('mousemove', function (e) {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+
+        if (raf) return;
+
+        raf = requestAnimationFrame(function () {
+          const x = (mouseX / window.innerWidth - 0.5) * 2;
+          const y = (mouseY / window.innerHeight - 0.5) * 2;
+
+          grad.style.transform =
+            'translate3d(' +
+            (x * 12).toFixed(1) +
+            'px, ' +
+            (y * 12).toFixed(1) +
+            'px, 0)';
+
+          raf = null;
+        });
+      }, { passive: true });
+
+      document.addEventListener('mouseleave', function () {
+        grad.style.transform = 'translate3d(0, 0, 0)';
+      });
+    })();
+
+
+
+    /* ===== Cursor-following background glow ===== */
+    (function initCursorGlow() {
+      const glow = document.querySelector('.cursor-glow');
+
+      if (!glow) return;
+
+      if (
+        window.matchMedia('(hover: none), (pointer: coarse)').matches ||
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ) {
+        return;
+      }
+
+      document.addEventListener('mousemove', function (event) {
+        glow.style.setProperty('--glow-x', event.clientX + 'px');
+        glow.style.setProperty('--glow-y', event.clientY + 'px');
+        glow.classList.add('active');
+      }, { passive: true });
+
+      document.addEventListener('mouseleave', function () {
+        glow.classList.remove('active');
+      });
+
+      document.addEventListener('mouseenter', function () {
+        glow.classList.add('active');
+      });
+    })();
+
+
+
+
     (function initProfessionalCursor() {
       // Create canvas for cursor trail
       const canvas = document.createElement('canvas');
       canvas.id = 'cursor-trail-canvas';
-      canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:99999;';
+      canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483647;';
       document.body.appendChild(canvas);
 
       const ctx = canvas.getContext('2d');
@@ -1113,10 +1679,26 @@
         mouse.y = e.clientY;
       });
 
-      // Hide the default system cursor globally
-      const style = document.createElement('style');
-      style.textContent = `* { cursor: none !important; }`;
-      document.head.appendChild(style);
+
+
+      
+/* Keep the native cursor visible if the custom dot is obscured. */
+const style = document.createElement('style');
+style.textContent = `
+  #sendAllMenu,
+  #sendAllMenu *,
+  .send-to-menu,
+  .send-to-menu *,
+  #sendAllMenu button,
+  .send-to-menu button,
+  .send-to-item {
+    cursor: none !important;
+  }
+`;
+document.head.appendChild(style);
+
+
+
 
       function animate() {
         ctx.clearRect(0, 0, width, height);

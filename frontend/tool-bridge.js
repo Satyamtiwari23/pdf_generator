@@ -190,6 +190,50 @@
             window.location.href = prefix + targetToolId;
         },
 
+
+        /* -- Send multiple files to a compatible tool -- */
+        async sendFilesToTool(targetToolId, files) {
+            if (!Array.isArray(files) || files.length === 0) {
+                throw new Error('No files to send');
+            }
+
+            const id =
+                'pending-' +
+                Date.now() +
+                '-' +
+                Math.random().toString(36).slice(2, 8);
+
+            const batch = files.map(file => {
+                if (!file || !file.blob) {
+                    throw new Error('Invalid file in batch');
+                }
+
+                return {
+                    blob: file.blob,
+                    fileName: file.fileName || 'image.jpg',
+                    mimeType: file.mimeType ||
+                        file.blob.type ||
+                        'image/jpeg'
+                };
+            });
+
+            await dbPut({
+                id,
+                files: batch,
+                createdAt: Date.now()
+            });
+
+            sessionStorage.setItem(FLAG_PREFIX + targetToolId, id);
+
+            const isSubfolder =
+                /\/(image_section|pdf_section|converter_section)\//
+                    .test(window.location.pathname);
+
+            window.location.href =
+                (isSubfolder ? '../' : '') + targetToolId;
+        },
+
+
         /* -- Check for an incoming file on this tool -- */
         async consumeIncoming() {
             const toolId = getCurrentToolId();
@@ -210,11 +254,16 @@
 
             if (!entry) return null;
 
+
             return {
-                blob: entry.blob,
-                fileName: entry.fileName,
-                mimeType: entry.mimeType
+                blob: entry.blob || (entry.files && entry.files[0]?.blob),
+                fileName: entry.fileName ||
+                    (entry.files && entry.files[0]?.fileName),
+                mimeType: entry.mimeType ||
+                    (entry.files && entry.files[0]?.mimeType),
+                files: entry.files || null
             };
+
         },
 
         /* -- List tools that can receive a given output type -- */

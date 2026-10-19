@@ -611,6 +611,13 @@
       color: #fbbf24;
     }
 
+    /* ===== Hero gradient text follows the cursor ===== */
+    .hero h1 .grad {
+      display: inline-block;
+      will-change: transform;
+      transition: transform 0.12s ease-out;
+    }
+
     @media (max-width: 639px) {
       .cmp-summary {
         grid-template-columns: 1fr;
@@ -751,7 +758,7 @@
       </div>
 
       <div class="actions" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-        <button class="btn btn-ghost" id="previewBtn" disabled>👁 Full preview &amp; compare</button>
+        <button class="btn btn-ghost" id="previewBtn" disabled>Preview </button>
         <button class="btn btn-primary" id="resizeBtn" disabled>📐 Resize &amp; download</button>
       </div>
     </section>
@@ -1072,6 +1079,18 @@
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(state.img, 0, 0, wPx, hPx);
 
+
+        canvas.toBlob(blob => {
+          if (!blob) return;
+
+          state.pendingBlob = blob;
+          state.pendingName =
+            'resized-' +
+            (state.file ? state.file.name.replace(/\.[^.]+$/, '') : 'image') +
+            '.png';
+        }, 'image/png');
+
+
         $('#previewImg').src = canvas.toDataURL('image/png');
 
         const unit = $('#unit').value;
@@ -1339,8 +1358,105 @@
         renderFile();
       });
 
+
       $('#resizeBtn').addEventListener('click', doResize);
       $('#previewBtn').addEventListener('click', openCompareModal);
+
+      /* ==========================================================
+         TOOL BRIDGE INTEGRATION
+         ========================================================== */
+
+      // 1. Receive images from other PDFnest tools.
+      (async function receiveIncoming() {
+        try {
+          if (!window.ToolBridge) return;
+
+          const incoming = await window.ToolBridge.consumeIncoming();
+          if (!incoming) return;
+
+          const file = new File(
+            [incoming.blob],
+            incoming.fileName || 'received-image.png',
+            { type: incoming.mimeType || incoming.blob.type || 'image/png' }
+          );
+
+          await addFile([file]);
+          toast('📥 Received from another tool');
+        } catch (err) {
+          console.error('[bridge] Image Resizer receive failed:', err);
+          toast('Could not receive the image');
+        }
+      })();
+
+      // 2. Add the same styled Send to menu to the comparison modal.
+
+      (function setupSendTo() {
+        if (!window.ToolBridge) return;
+
+        function addSendTo(container) {
+          if (!container || container.querySelector('.send-to-wrap')) return;
+
+          window.ToolBridge.injectSendToButton(container, function () {
+            if (!state.pendingBlob) {
+              toast('Please wait for the resized image preview');
+              return null;
+            }
+
+            return {
+              blob: state.pendingBlob,
+              fileName: state.pendingName || 'resized-image.png',
+              mimeType: state.pendingBlob.type || 'image/png'
+            };
+          });
+        }
+
+        // Send to in the normal page, beside the existing buttons.
+        addSendTo(document.querySelector('.actions'));
+
+        // Keep Send to in the comparison modal as well.
+        addSendTo(document.querySelector('.cmp-footer'));
+      })();
+
+
+    })();
+
+
+    /* ===== Hero gradient text follows the cursor ===== */
+    (function initHeroParallax() {
+      const grad = document.querySelector('.hero h1 .grad');
+
+      if (!grad) return;
+
+      if (window.matchMedia('(hover: none), (pointer: coarse)').matches) {
+        return;
+      }
+
+      let raf = null;
+      let mouseX = window.innerWidth / 2;
+      let mouseY = window.innerHeight / 2;
+
+      document.addEventListener('mousemove', function (e) {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+
+        if (raf) return;
+
+        raf = requestAnimationFrame(function () {
+          const x = (mouseX / window.innerWidth - 0.5) * 2;
+          const y = (mouseY / window.innerHeight - 0.5) * 2;
+
+          grad.style.transform =
+            'translate3d(' +
+            (x * 12).toFixed(1) + 'px, ' +
+            (y * 12).toFixed(1) + 'px, 0)';
+
+          raf = null;
+        });
+      }, { passive: true });
+
+      document.addEventListener('mouseleave', function () {
+        grad.style.transform = 'translate3d(0, 0, 0)';
+      });
     })();
 
     (function initProfessionalCursor() {

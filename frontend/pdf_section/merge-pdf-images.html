@@ -142,7 +142,8 @@
         renderFiles();
       }
 
-      /* ==== Tool Bridge: receive incoming PDF/image ==== */
+
+      /* ==== Tool Bridge: receive single or batch images ==== */
       (async function bridgeReceiveIncoming() {
         try {
           if (!window.ToolBridge) return;
@@ -150,17 +151,35 @@
           const incoming = await window.ToolBridge.consumeIncoming();
           if (!incoming) return;
 
-          const file = new File([incoming.blob], incoming.fileName, {
-            type: incoming.mimeType || incoming.blob.type
+          const incomingFiles = incoming.files || [
+            {
+              blob: incoming.blob,
+              fileName: incoming.fileName,
+              mimeType: incoming.mimeType
+            }
+          ];
+
+          const files = incomingFiles.map(item => {
+            return new File(
+              [item.blob],
+              item.fileName || 'compressed-image.jpg',
+              {
+                type: item.mimeType ||
+                  item.blob.type ||
+                  'image/jpeg'
+              }
+            );
           });
 
-          await addFiles([file]);
+          await addFiles(files);
+          toast('📥 Received ' + files.length + ' image(s)');
 
-          try { toast('📥 Received from another tool'); } catch (_) { }
         } catch (err) {
-          console.error('[bridge] receive failed:', err);
+          console.error('[bridge] batch receive failed:', err);
+          toast('Could not receive images');
         }
       })();
+
 
       function renderFiles() {
         const list = $('#fileList'); list.innerHTML = '';
@@ -309,77 +328,77 @@
     })();
 
     (function initProfessionalCursor() {
-  // Create canvas for cursor trail
-  const canvas = document.createElement('canvas');
-  canvas.id = 'cursor-trail-canvas';
-  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:99999;';
-  document.body.appendChild(canvas);
+      // Create canvas for cursor trail
+      const canvas = document.createElement('canvas');
+      canvas.id = 'cursor-trail-canvas';
+      canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:99999;';
+      document.body.appendChild(canvas);
 
-  const ctx = canvas.getContext('2d');
-  let width, height;
+      const ctx = canvas.getContext('2d');
+      let width, height;
 
-  function resize() {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-  }
-  window.addEventListener('resize', resize);
-  resize();
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
 
-  let mouse = { x: -100, y: -100 };
-  let trail = [];
-  const maxTrail = 15; // Length of the trail
+      let mouse = { x: -100, y: -100 };
+      let trail = [];
+      const maxTrail = 15; // Length of the trail
 
-  document.addEventListener('mousemove', e => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-  });
+      document.addEventListener('mousemove', e => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      });
 
-  // Hide the default system cursor globally
-  const style = document.createElement('style');
-  style.textContent = `* { cursor: none !important; }`;
-  document.head.appendChild(style);
+      // Hide the default system cursor globally
+      const style = document.createElement('style');
+      style.textContent = `* { cursor: none !important; }`;
+      document.head.appendChild(style);
 
-  function animate() {
-    ctx.clearRect(0, 0, width, height);
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
 
-    // Add current position to trail
-    trail.push({ x: mouse.x, y: mouse.y });
-    if (trail.length > maxTrail) {
-      trail.shift();
-    }
+        // Add current position to trail
+        trail.push({ x: mouse.x, y: mouse.y });
+        if (trail.length > maxTrail) {
+          trail.shift();
+        }
 
-    // Draw the trail
-    for (let i = 0; i < trail.length; i++) {
-      const p = trail[i];
-      const ratio = i / trail.length; // 0 at oldest, 1 at newest
-      const radius = 8 * ratio; // Tapering effect
-      
-      if (radius <= 0) continue;
+        // Draw the trail
+        for (let i = 0; i < trail.length; i++) {
+          const p = trail[i];
+          const ratio = i / trail.length; // 0 at oldest, 1 at newest
+          const radius = 8 * ratio; // Tapering effect
 
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-      
-      // Soft purple glow for the trail
-      ctx.fillStyle = `rgba(139, 92, 246, ${ratio * 0.5})`;
-      ctx.fill();
-    }
+          if (radius <= 0) continue;
 
-    // Draw the main glowing dot
-    ctx.beginPath();
-    ctx.arc(mouse.x, mouse.y, 5, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
 
-    // Outer glow for main dot
-    ctx.beginPath();
-    ctx.arc(mouse.x, mouse.y, 12, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(139, 92, 246, 0.4)';
-    ctx.fill();
+          // Soft purple glow for the trail
+          ctx.fillStyle = `rgba(139, 92, 246, ${ratio * 0.5})`;
+          ctx.fill();
+        }
 
-    requestAnimationFrame(animate);
-  }
-  animate();
-})();
+        // Draw the main glowing dot
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+
+        // Outer glow for main dot
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 12, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(139, 92, 246, 0.4)';
+        ctx.fill();
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
   </script>
 </body>
 
