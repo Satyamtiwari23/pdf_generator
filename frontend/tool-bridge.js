@@ -119,6 +119,15 @@
             }
         ],
 
+        text: [
+            {
+                id: 'pdf_section/text-to-pdf.html',
+                icon: '📝',
+                name: 'Text to PDF',
+                desc: 'Turn extracted text into a PDF'
+            }
+        ],
+
         pdf: [
             {
                 id: 'pdf_section/merge-pdf.html',
@@ -303,9 +312,19 @@
                     return;
                 }
 
-                // Decide category from mime type
+                // Select destinations based on the actual output type.
                 const type = (output.mimeType || output.blob.type || '').toLowerCase();
-                const cat = type.startsWith('image/') ? 'image' : 'pdf';
+
+                let cat;
+
+                if (type.startsWith('image/')) {
+                    cat = 'image';
+                } else if (type.startsWith('text/')) {
+                    cat = 'text';
+                } else {
+                    cat = 'pdf';
+                }
+
                 const targets = bridge.listTargets(cat);
 
                 menu.innerHTML = '';

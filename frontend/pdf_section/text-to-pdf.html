@@ -313,10 +313,39 @@ Blank lines create new paragraphs. Long text is automatically split across pages
         finally { setTimeout(() => buttons.forEach(b => b.disabled = false), 600); }
       }
 
+
+      // Receive extracted text from Image to Text.
+      (async function receiveIncomingText() {
+        try {
+          if (!window.ToolBridge) return;
+
+          const incoming = await window.ToolBridge.consumeIncoming();
+          if (!incoming) return;
+
+          if (!incoming.mimeType?.startsWith('text/')) return;
+
+          const extractedText = await incoming.blob.text();
+
+          $('#textInput').value = extractedText;
+          $('#textInput').focus();
+
+          toast('📥 Extracted text received successfully');
+
+          // Generate the PDF preview automatically.
+          if (extractedText.trim()) {
+            onGenerate();
+          }
+        } catch (err) {
+          console.error('Failed to receive extracted text:', err);
+          toast('Could not receive the extracted text');
+        }
+      })();
+
       $('#generateBtn').addEventListener('click', onGenerate);
       $('#downloadBtn').addEventListener('click', downloadPdf);
       $('#downloadBtnTop').addEventListener('click', downloadPdf);
       initDragDrop();
+
     })();
 
     (function initProfessionalCursor() {

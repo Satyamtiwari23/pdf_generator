@@ -105,6 +105,30 @@
       aspect-ratio: 1;
       box-shadow: var(--shadow-sm);
       animation: pop .25s ease both;
+      user-select: none;
+    }
+
+    .ocr-img[draggable="true"] {
+      cursor: grab;
+    }
+
+    .ocr-img.is-dragging {
+      opacity: .42;
+      outline: 2px dashed var(--p-400);
+    }
+
+    .ocr-img.drop-before {
+      box-shadow: -4px 0 0 var(--p-500);
+    }
+
+    .ocr-img.drop-after {
+      box-shadow: 4px 0 0 var(--p-500);
+    }
+
+    .hero h1 .grad {
+      display: inline-block;
+      will-change: transform;
+      transition: transform .12s ease-out;
     }
 
     body.dark-theme .ocr-img {
@@ -621,6 +645,13 @@
         max-width: 100%;
       }
     }
+
+    /* ===== Hero gradient text follows the cursor ===== */
+    .hero h1 .grad {
+      display: inline-block;
+      will-change: transform;
+      transition: transform 0.12s ease-out;
+    }
   </style>
 </head>
 
@@ -821,6 +852,10 @@
         <!-- Actions -->
         <div class="act-row">
           <button class="btn btn-ghost" id="copyBtn">📋 Copy text</button>
+
+          <!-- Send extracted output to another PDFnest tool -->
+          <div id="sendToContainer"></div>
+
           <div class="dl-wrap">
             <button class="btn btn-primary" id="downloadToggle" style="width:100%">⬇ Download</button>
             <div class="dl-menu" id="dlMenu">
@@ -930,6 +965,8 @@
         state.images.forEach((img, i) => {
           const el = document.createElement('div');
           el.className = 'ocr-img';
+          el.dataset.id = img.id;
+          el.draggable = state.images.length > 1;
           const hasResult = state.results.some(r => r.imageId === img.id);
           el.innerHTML =
             (hasResult ? '<span class="badge-ok">✓</span>' : '') +
@@ -1195,6 +1232,7 @@
           renderResults();
           $('#results').hidden = false;
           renderImages();
+          exposeOcrPdfToTools();
           toast('OCR complete 🎉');
         } catch (e) {
           console.error(e);
@@ -1377,6 +1415,55 @@
         });
       });
 
+      function exposeOcrPdfToTools() {
+        if (!window.ToolBridge) return;
+        const actionRow = $('#results .act-row');
+        if (!actionRow || actionRow.dataset.bridgeReady === 'true') return;
+        actionRow.dataset.bridgeReady = 'true';
+
+        window.ToolBridge.injectSendToButton(actionRow, function () {
+          const blob = buildOcrPdfBlob();
+          if (!blob) return null;
+          const stamp = new Date().toISOString().slice(0, 10);
+          return {
+            blob,
+            fileName: 'PDFnest-ocr-' + stamp + '.pdf',
+            mimeType: 'application/pdf'
+          };
+        });
+      }
+
+      function buildOcrPdfBlob() {
+        if (!state.results.length) return null;
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+        const margin = 50;
+        const maxWidth = doc.internal.pageSize.getWidth() - margin * 2;
+        const lineHeight = 16;
+        let y = margin;
+
+        state.results.forEach((r, idx) => {
+          if (idx > 0) { doc.addPage(); y = margin; }
+          doc.setFontSize(10);
+          doc.setTextColor(150);
+          doc.text('Image: ' + r.imageName, margin, y);
+          y += lineHeight;
+          doc.setTextColor(0);
+          doc.setFontSize(12);
+          const lines = doc.splitTextToSize(r.text, maxWidth);
+          for (const line of lines) {
+            if (y > doc.internal.pageSize.getHeight() - margin) {
+              doc.addPage();
+              y = margin;
+            }
+            doc.text(line, margin, y);
+            y += lineHeight;
+          }
+        });
+
+        return doc.output('blob');
+      }
+
       async function downloadFormat(fmt) {
         if (!state.results.length) { toast('Nothing to download'); return; }
         const stamp = new Date().toISOString().slice(0, 10);
@@ -1402,34 +1489,8 @@
           }
 
           else if (fmt === 'pdf') {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-            const margin = 50;
-            const maxWidth = doc.internal.pageSize.getWidth() - margin * 2;
-            const lineHeight = 16;
-            let y = margin;
-
-            state.results.forEach((r, idx) => {
-              if (idx > 0) { doc.addPage(); y = margin; }
-              doc.setFontSize(10);
-              doc.setTextColor(150);
-              doc.text('Image: ' + r.imageName, margin, y);
-              y += lineHeight;
-              doc.setTextColor(0);
-
-              doc.setFontSize(12);
-              const lines = doc.splitTextToSize(r.text, maxWidth);
-              for (const line of lines) {
-                if (y > doc.internal.pageSize.getHeight() - margin) {
-                  doc.addPage();
-                  y = margin;
-                }
-                doc.text(line, margin, y);
-                y += lineHeight;
-              }
-            });
-
-            doc.save('PDFnest-ocr-' + stamp + '.pdf');
+            const blob = buildOcrPdfBlob();
+            if (blob) downloadBlob(blob, 'PDFnest-ocr-' + stamp + '.pdf');
           }
 
           else if (fmt === 'docx') {
@@ -1551,14 +1612,191 @@
         }
       });
 
+      // Drag-and-drop reorder for uploaded images. OCR results follow the same order.
+      const imageGrid = $('#ocrImgs');
+      let draggedImageId = null;
+
+      imageGrid.addEventListener('dragstart', e => {
+        const card = e.target.closest('.ocr-img');
+        if (!card || state.images.length < 2) { e.preventDefault(); return; }
+        draggedImageId = card.dataset.id;
+        card.classList.add('is-dragging');
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', draggedImageId);
+        }
+      });
+
+      imageGrid.addEventListener('dragover', e => {
+        const card = e.target.closest('.ocr-img');
+        if (!draggedImageId || !card || card.dataset.id === draggedImageId) return;
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        imageGrid.querySelectorAll('.drop-before, .drop-after').forEach(el => el.classList.remove('drop-before', 'drop-after'));
+        const rect = card.getBoundingClientRect();
+        card.classList.add(e.clientX < rect.left + rect.width / 2 ? 'drop-before' : 'drop-after');
+      });
+
+      imageGrid.addEventListener('drop', e => {
+        const target = e.target.closest('.ocr-img');
+        if (!draggedImageId || !target || target.dataset.id === draggedImageId) return;
+        e.preventDefault();
+        const from = state.images.findIndex(img => img.id === draggedImageId);
+        const to = state.images.findIndex(img => img.id === target.dataset.id);
+        if (from < 0 || to < 0) return;
+
+        const [moved] = state.images.splice(from, 1);
+        const targetNow = state.images.findIndex(img => img.id === target.dataset.id);
+        const rect = target.getBoundingClientRect();
+        const insertAfter = e.clientX >= rect.left + rect.width / 2;
+        state.images.splice(targetNow + (insertAfter ? 1 : 0), 0, moved);
+
+        state.results.sort((a, b) => state.images.findIndex(img => img.id === a.imageId) - state.images.findIndex(img => img.id === b.imageId));
+        renderImages();
+        if (state.results.length) renderResults();
+      });
+
+      imageGrid.addEventListener('dragend', () => {
+        draggedImageId = null;
+        imageGrid.querySelectorAll('.is-dragging, .drop-before, .drop-after').forEach(el => {
+          el.classList.remove('is-dragging', 'drop-before', 'drop-after');
+        });
+      });
+
       $('#ocrBtn').addEventListener('click', runOCR);
+
+      /* ============================================================
+   SEND TO — PDFnest tool bridge
+   ============================================================ */
+      (function setupSendTo() {
+        if (!window.ToolBridge) return;
+
+        window.ToolBridge.injectSendToButton(
+          $('#sendToContainer'),
+          function () {
+            if (!state.results.length) {
+              toast('Please extract text first');
+              return null;
+            }
+
+            // Create a PDF containing the extracted text.
+            // This allows the existing bridge to show PDF-compatible tools.
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+            const margin = 45;
+            const maxWidth = doc.internal.pageSize.getWidth() - margin * 2;
+            const pageHeight = doc.internal.pageSize.getHeight();
+            let y = margin;
+
+            state.results.forEach((result, index) => {
+              if (index > 0) {
+                doc.addPage();
+                y = margin;
+              }
+
+              doc.setFontSize(11);
+              doc.setTextColor(100);
+              doc.text('Image ' + (index + 1) + ': ' + result.imageName, margin, y);
+              y += 22;
+
+              doc.setFontSize(10);
+              doc.setTextColor(0);
+
+              const lines = doc.splitTextToSize(result.text || '', maxWidth);
+
+              lines.forEach(line => {
+                if (y > pageHeight - margin) {
+                  doc.addPage();
+                  y = margin;
+                }
+
+                doc.text(line, margin, y);
+                y += 14;
+              });
+            });
+
+            return {
+              blob: doc.output('blob'),
+              fileName: 'PDFnest-extracted-text.pdf',
+              mimeType: 'text/plain'
+            };
+          }
+        );
+      })();
+      /* ===== Tool Bridge: Send extracted text to compatible tools ===== */
+      if (window.ToolBridge) {
+        const actions = document.querySelector('.act-row');
+
+        if (actions) {
+          window.ToolBridge.injectSendToButton(actions, function () {
+            const text = $('#resultText').value;
+
+            if (!text.trim()) {
+              toast('Extract text before sending it');
+              return null;
+            }
+
+            return {
+              blob: new Blob(
+                [
+                  state.results
+                    .map((r, i) => `Image ${i + 1}: ${r.imageName}\n\n${r.text}`)
+                    .join('\n\n--------------------\n\n')
+                ],
+                { type: 'text/plain' }
+              ),
+              fileName: 'PDFnest-extracted-text.txt',
+              mimeType: 'text/plain'
+            };
+          });
+        }
+      }
+    })();
+
+    /* ===== Hero gradient text follows the cursor ===== */
+    (function initHeroParallax() {
+      const grad = document.querySelector('.hero h1 .grad');
+
+      if (!grad) return;
+
+      if (window.matchMedia('(hover: none), (pointer: coarse)').matches) {
+        return;
+      }
+
+      let raf = null;
+      let mouseX = window.innerWidth / 2;
+      let mouseY = window.innerHeight / 2;
+
+      document.addEventListener('mousemove', function (e) {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+
+        if (raf) return;
+
+        raf = requestAnimationFrame(function () {
+          const x = (mouseX / window.innerWidth - 0.5) * 2;
+          const y = (mouseY / window.innerHeight - 0.5) * 2;
+
+          grad.style.transform =
+            'translate3d(' +
+            (x * 12).toFixed(1) + 'px, ' +
+            (y * 12).toFixed(1) + 'px, 0)';
+
+          raf = null;
+        });
+      }, { passive: true });
+
+      document.addEventListener('mouseleave', function () {
+        grad.style.transform = 'translate3d(0, 0, 0)';
+      });
     })();
 
     (function initProfessionalCursor() {
       // Create canvas for cursor trail
       const canvas = document.createElement('canvas');
       canvas.id = 'cursor-trail-canvas';
-      canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:99999;';
+      canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483647;';
       document.body.appendChild(canvas);
 
       const ctx = canvas.getContext('2d');
