@@ -55,9 +55,21 @@ async function connectDB() {
 // ============================================================
 // MIDDLEWARE
 // ============================================================
+const allowedOrigins = [
+  'https://satyamtiwari23.github.io',
+  'http://localhost:5500',
+  'http://127.0.0.1:5500'
+];
 
 app.use(cors({
-  origin: true,
+  origin: function (origin, callback) {
+    // Allow requests without an Origin header, such as server-to-server calls.
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Origin not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: false
