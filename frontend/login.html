@@ -106,27 +106,12 @@
             </form>
 
             <!-- Google Login -->
-            <!-- Google Login -->
             <div class="google-login-section">
                 <div class="google-divider">
                     <span>OR</span>
                 </div>
 
-                <div id="g_id_onload" data-callback="handleGoogleCredential" data-auto_prompt="false">
-                </div>
-
-                <button type="button" class="google-circle-btn" id="googleLoginBtn" aria-label="Continue with Google"
-                    title="Continue with Google">
-                    <svg viewBox="0 0 48 48" aria-hidden="true">
-                        <path fill="#4285F4"
-                            d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15Z" />
-                        <path fill="#34A853"
-                            d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z" />
-                        <path fill="#FBBC05" d="M12.6 27.7a12 12 0 0 1 0-7.4V15H5.8a20 20 0 0 0 0 18Z" />
-                        <path fill="#EA4335"
-                            d="M24 12.1c3 0 5.7 1 7.8 3.1l5.8-5.8A19.4 19.4 0 0 0 24 4 20 20 0 0 0 5.8 15l6.8 5.3C14.2 15.7 18.7 12.1 24 12.1Z" />
-                    </svg>
-                </button>
+                <div id="googleButtonContainer"></div>
             </div>
 
 
@@ -138,37 +123,6 @@
 
     <script>
         const API_URL = 'https://pdf-generator-ochre-two.vercel.app/api/auth';
-        let googleClientId = null;
-
-        async function loadGoogleConfiguration() {
-            try {
-                const response = await fetch(
-                    'https://pdf-generator-ochre-two.vercel.app/api/config'
-                );
-
-                if (!response.ok) {
-                    throw new Error('Could not load Google configuration');
-                }
-
-                const config = await response.json();
-                googleClientId = config.googleClientId;
-
-                if (!googleClientId) {
-                    throw new Error('Google Client ID is missing on the server');
-                }
-
-                // Initialize Google Identity Services
-                google.accounts.id.initialize({
-                    client_id: googleClientId,
-                    callback: window.handleGoogleCredential,
-                    auto_select: false
-                });
-
-            } catch (error) {
-                console.error('Google configuration error:', error);
-                errorMsg.textContent = 'Google sign-in is temporarily unavailable.';
-            }
-        }
         const form = document.getElementById('loginForm');
         const errorMsg = document.getElementById('errorMsg');
         const submitBtn = document.getElementById('submitBtn');
@@ -177,17 +131,12 @@
 
 
 
-        /* ============================================================
-           GOOGLE LOGIN
-           ============================================================ */
+        let googleInitialized = false;
 
         window.handleGoogleCredential = async function (response) {
             errorMsg.textContent = '';
 
             try {
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Signing in with Google...';
-
                 const res = await fetch(`${API_URL}/google`, {
                     method: 'POST',
                     headers: {
@@ -201,41 +150,87 @@
                 const data = await res.json();
 
                 if (!res.ok) {
-                    throw new Error(data.message || 'Google login failed');
+                    throw new Error(data.message || 'Google login failed.');
                 }
 
-                // Use the same session format as normal login
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
 
                 window.location.replace('index.html');
-
-            } catch (err) {
-                console.error('Google login error:', err);
-                errorMsg.textContent = err.message || 'Google login failed';
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Log In';
+            } catch (error) {
+                console.error('Google login error:', error);
+                errorMsg.textContent = error.message || 'Google login failed.';
             }
         };
 
+        async function loadGoogleConfiguration() {
+            try {
+                const response = await fetch(
+                    'https://pdf-generator-ochre-two.vercel.app/api/config'
+                );
 
+                if (!response.ok) {
+                    throw new Error(`Configuration request failed: ${response.status}`);
+                }
 
-        document.getElementById('googleLoginBtn').addEventListener('click', () => {
-            if (!window.google?.accounts?.id) {
-                errorMsg.textContent = 'Google sign-in is still loading. Please try again.';
-                return;
+                const config = await response.json();
+
+                if (!config.googleClientId) {
+                    throw new Error('Google Client ID is missing.');
+                }
+
+                if (!window.google?.accounts?.id) {
+                    throw new Error('Google Identity Services has not loaded.');
+                }
+
+                window.google.accounts.id.initialize({
+                    client_id: config.googleClientId,
+                    callback: window.handleGoogleCredential,
+                    auto_select: false
+                });
+
+                window.google.accounts.id.renderButton(
+                    document.getElementById('googleButtonContainer'),
+                    {
+                        type: 'icon',
+                        shape: 'circle',
+                        theme: 'outline',
+                        size: 'large'
+                    }
+                );
+
+                googleInitialized = true;
+                console.log('Google Sign-In initialized successfully.');
+            } catch (error) {
+                googleInitialized = false;
+                console.error('Google configuration error:', error);
+                errorMsg.textContent =
+                    'Google sign-in is unavailable. Please reload the page.';
             }
+        }
 
-            if (!googleClientId) {
-                errorMsg.textContent = 'Google sign-in is still loading. Please try again.';
-                return;
-            }
 
-            window.google.accounts.id.prompt();
 
-            window.google.accounts.id.prompt();
-        });
+        const googleScript = document.querySelector(
+            'script[src="https://accounts.google.com/gsi/client"]'
+        );
+
+        if (window.google?.accounts?.id) {
+            loadGoogleConfiguration();
+        } else if (googleScript) {
+            googleScript.addEventListener(
+                'load',
+                loadGoogleConfiguration,
+                { once: true }
+            );
+
+            googleScript.addEventListener('error', () => {
+                console.error('Google Identity Services failed to load.');
+                errorMsg.textContent =
+                    'Could not load Google Sign-In. Please try again.';
+            }, { once: true });
+        }
+
 
 
         passwordToggle.addEventListener('click', () => {
@@ -333,17 +328,6 @@
                 errorMsg.textContent = err.message;
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Log In';
-            }
-        });
-
-
-        window.addEventListener('load', () => {
-            if (window.google?.accounts?.id) {
-                loadGoogleConfiguration();
-            } else {
-                document.querySelector(
-                    'script[src="https://accounts.google.com/gsi/client"]'
-                )?.addEventListener('load', loadGoogleConfiguration, { once: true });
             }
         });
     </script>

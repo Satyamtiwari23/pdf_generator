@@ -1,5 +1,13 @@
-require('dotenv').config();
 const express = require('express');
+// ============================================================
+// MIDDLEWARE
+// ============================================================
+const allowedOrigins = [
+  'https://satyamtiwari23.github.io',
+  'http://localhost:5500',
+  'http://127.0.0.1:5500'
+];
+require('dotenv').config();
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
@@ -10,6 +18,21 @@ const { OAuth2Client } = require('google-auth-library');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
+
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests without an Origin header, such as server-to-server calls.
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Origin not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
+}));
 
 // Public Google Sign-In configuration
 app.get('/api/config', (req, res) => {
@@ -27,6 +50,10 @@ app.get('/api/config', (req, res) => {
         googleClientId: clientId
     });
 });
+
+app.use(express.json({
+  limit: '200kb'
+}));
 
 
 // Google Sign-In token verification
@@ -52,31 +79,9 @@ async function connectDB() {
   console.log('MongoDB Atlas Connected');
 }
 
-// ============================================================
-// MIDDLEWARE
-// ============================================================
-const allowedOrigins = [
-  'https://satyamtiwari23.github.io',
-  'http://localhost:5500',
-  'http://127.0.0.1:5500'
-];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests without an Origin header, such as server-to-server calls.
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
 
-    return callback(new Error('Origin not allowed by CORS'));
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false
-}));
-app.use(express.json({
-  limit: '200kb'
-}));
+
 // ============================================================
 // AUTH RATE LIMITER
 // ============================================================
