@@ -6,9 +6,33 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { google } = require('googleapis');
+const { OAuth2Client } = require('google-auth-library');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
+
+// Public Google Sign-In configuration
+app.get('/api/config', (req, res) => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+
+    if (!clientId) {
+        return res.status(500).json({
+            message: 'GOOGLE_CLIENT_ID is not configured on the server'
+        });
+    }
+
+    res.set('Cache-Control', 'no-store');
+
+    return res.json({
+        googleClientId: clientId
+    });
+});
+
+
+// Google Sign-In token verification
+const googleLoginClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID
+);
 
 // ============================================================
 // MONGODB CONNECTION
@@ -369,6 +393,105 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
 
   }
 
+});
+
+
+
+// ============================================================
+// GOOGLE LOGIN / SIGNUP
+// ============================================================
+
+app.post('/api/auth/google', authLimiter, async (req, res) => {
+    try {
+        const { credential } = req.body;
+
+        if (!credential || typeof credential !== 'string') {
+            return res.status(400).json({
+                message: 'Google credential is required'
+            });
+        }
+
+        // Verify the ID token with Google
+        let payload;
+
+        try {
+            const ticket = await googleLoginClient.verifyIdToken({
+                idToken: credential,
+                audience: process.env.GOOGLE_CLIENT_ID
+            });
+
+            payload = ticket.getPayload();
+        } catch (error) {
+            return res.status(401).json({
+                message: 'Google authentication failed'
+            });
+        }
+
+        if (
+            !payload ||
+            !payload.sub ||
+            !payload.email ||
+            payload.email_verified !== true
+        ) {
+            return res.status(401).json({
+                message: 'Google account could not be verified'
+            });
+        }
+
+        await connectDB();
+
+        const email = payload.email.toLowerCase().trim();
+
+        let user = await User.findOne({ email });
+
+        // Create an account for a new Google user
+        if (!user) {
+            const randomPassword = crypto.randomBytes(32).toString('hex');
+            const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+            user = new User({
+                name: payload.name || email.split('@')[0],
+                email,
+                password: hashedPassword,
+                profilePicture: payload.picture || null,
+                lastLoginAt: new Date()
+            });
+
+            await user.save();
+        } else {
+            // Sign in the existing account
+            user.lastLoginAt = new Date();
+
+            if (!user.profilePicture && payload.picture) {
+                user.profilePicture = payload.picture;
+            }
+
+            await user.save();
+        }
+
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
+        );
+
+        return res.json({
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                profilePicture: user.profilePicture || null
+            }
+        });
+
+    } catch (error) {
+        console.error('Google authentication error:', error);
+
+        return res.status(500).json({
+            message: 'Server error during Google authentication'
+        });
+    }
 });
 
 
