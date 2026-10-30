@@ -4,6 +4,16 @@
   const state={files:[],view:"dashboard",filter:"all",search:"",history:[],favorites:[]};
   const input=$("#workspaceFileInput"), drop=$("#workspaceDropzone"), selected=$("#selectedFilesPanel");
   const status=$("#workspaceStatus");
+  if (!input || !drop || !selected || !status) {
+    console.error("[PDFnest] Upload UI is incomplete.", {input:!!input, drop:!!drop, selected:!!selected, status:!!status});
+    return;
+  }
+  if (!window.PDFnestToolRegistry || !window.PDFnestFileDetector) {
+    console.error("[PDFnest] Required tool scripts did not load.", {
+      registry:!!window.PDFnestToolRegistry, detector:!!window.PDFnestFileDetector
+    });
+    return;
+  }
   const user=(()=>{try{return JSON.parse(localStorage.getItem("user")||"{}")}catch{return {}}})();
   const userKey=String(user._id||user.id||user.email||"guest").toLowerCase().replace(/[^a-z0-9_-]/g,"_");
   const HISTORY_KEY=`pdfnest:activity:${userKey}`, FAV_KEY=`pdfnest:favorites:${userKey}`;
@@ -38,14 +48,14 @@
     link.addEventListener("click",()=>addActivity(tool,[]));
     container.appendChild(card);
   }
-  function renderPopular(){const c=$("#popularTools");c.innerHTML="";window.PDFnestToolRegistry.getPopular().forEach(t=>addToolCard(t,c,false));}
+  function renderPopular(){const c=$("#popularTools");if(!c)return;c.innerHTML="";window.PDFnestToolRegistry.getPopular().forEach(t=>addToolCard(t,c,false));}
   function renderAllTools(){
-    const c=$("#allToolsGrid");c.innerHTML="";
+    const c=$("#allToolsGrid");if(!c)return;c.innerHTML="";
     window.PDFnestToolRegistry.getAll().filter(t=>(state.filter==="all"||t.category===state.filter)&&(!state.search||`${t.name} ${t.desc}`.toLowerCase().includes(state.search))).forEach(t=>addToolCard(t,c));
     $("#catalogEmpty").hidden=!!c.children.length;
   }
   function renderFavorites(){
-    const c=$("#favoritesGrid");c.innerHTML="";
+    const c=$("#favoritesGrid");if(!c)return;c.innerHTML="";
     window.PDFnestToolRegistry.getAll().filter(t=>state.favorites.includes(t.id)).forEach(t=>addToolCard(t,c,false));
     $("#favoritesEmpty").hidden=!!c.children.length;
   }
@@ -96,19 +106,34 @@
   // Sidebar navigation and account/profile affordances.
   $$("[data-view]").forEach(btn=>btn.addEventListener("click",()=>setView(btn.dataset.view)));
   $("#mobileMenuBtn").addEventListener("click",()=>$("#appSidebar").classList.toggle("mobile-open"));
-  // Account menu is initialized once by the dedicated script in index.html.
-  // Theme buttons are handled by theme.js to avoid double toggling.
   $("#settingsClearHistory").addEventListener("click",clearHistory);
   $("#clearHistoryBtn").addEventListener("click",clearHistory);
   function clearHistory(){if(!confirm("Clear your recent activity history from this browser?"))return;state.history=[];persistHistory();renderHistory();}
-  $("#browseFilesBtn").addEventListener("click",e=>{e.stopPropagation();input.click();});
-  $("#addMoreFilesBtn").addEventListener("click",()=>input.click());
+  $("#browseFilesBtn").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();input.click();});
+  $("#addMoreFilesBtn").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();input.click();});
   $("#clearFilesBtn").addEventListener("click",()=>{state.files=[];renderSelection();});
-  drop.addEventListener("click",e=>{if(!e.target.closest("button"))input.click();});
+  drop.addEventListener("click",e=>{
+    if(e.target.closest("button")) return;
+    e.preventDefault();
+    input.click();
+  });
   drop.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();input.click();}});
-  input.addEventListener("change",()=>{addFiles(input.files);input.value="";});
-  ["dragenter","dragover"].forEach(evt=>drop.addEventListener(evt,e=>{e.preventDefault();drop.classList.add("dragging");}));
-  ["dragleave","drop"].forEach(evt=>drop.addEventListener(evt,e=>{e.preventDefault();drop.classList.remove("dragging");if(evt==="drop"&&e.dataTransfer.files.length)addFiles(e.dataTransfer.files);}));
+  input.addEventListener("change",()=>{
+    if (input.files && input.files.length) addFiles(input.files);
+    input.value="";
+  });
+  ["dragenter","dragover"].forEach(evt=>drop.addEventListener(evt,e=>{
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect="copy";
+    drop.classList.add("dragging");
+  }));
+  ["dragleave","drop"].forEach(evt=>drop.addEventListener(evt,e=>{
+    e.preventDefault();
+    drop.classList.remove("dragging");
+    if(evt==="drop" && e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+      addFiles(e.dataTransfer.files);
+    }
+  }));
   document.addEventListener("dragover",e=>e.preventDefault());
   document.addEventListener("drop",e=>{if(!drop.contains(e.target))e.preventDefault();});
   $$(".tool-filter").forEach(b=>b.addEventListener("click",()=>{$$(".tool-filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.filter=b.dataset.filter;renderAllTools();}));

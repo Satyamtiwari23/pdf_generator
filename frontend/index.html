@@ -11,9 +11,26 @@
     rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="workspace.css" />
-  <script src="theme.js"></script>
+  <script src="./theme.js"></script>
   <script src="auth-guard.js"></script>
   <script src="tool-bridge.js"></script>
+
+  <style>
+    #workspaceFileInput {
+      position: fixed !important;
+      width: 1px !important;
+      height: 1px !important;
+      opacity: 0 !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      clip-path: inset(50%) !important;
+      white-space: nowrap !important;
+      pointer-events: none !important;
+    }
+    #workspaceDropzone { pointer-events: auto; }
+    #workspaceDropzone button { position: relative; z-index: 2; pointer-events: auto; }
+  </style>
+
 </head>
 
 <body class="has-custom-cursor">
@@ -110,7 +127,7 @@
           <section class="multi-upload-card" aria-label="Upload files">
             <div class="multi-dropzone" id="workspaceDropzone" tabindex="0" role="button"
               aria-label="Choose or drop multiple files">
-              <input id="workspaceFileInput" type="file" multiple hidden />
+              <input id="workspaceFileInput" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp,.avif,.heic,.heif,.doc,.docx,.txt,.rtf,.odt" />
               <div class="upload-cloud-icon">↑</div>
               <h2>Drag &amp; drop your files here</h2>
               <p>or <button type="button" class="text-button" id="browseFilesBtn">select files</button> from your device
@@ -1863,10 +1880,7 @@
         mouse.y = e.clientY;
       });
 
-      // Hide the default system cursor globally
-      const style = document.createElement('style');
-      style.textContent = `* { cursor: none !important; }`;
-      document.head.appendChild(style);
+      // Keep the native cursor visible so file controls and menu interactions remain clear.
 
       function animate() {
         ctx.clearRect(0, 0, width, height);
@@ -1910,9 +1924,9 @@
       animate();
     })();
   </script>
-  <script src="js/file-detector.js"></script>
-  <script src="js/tool-registry.js"></script>
-  <script src="js/workspace.js"></script>
+  <script src="./js/file-detector.js"></script>
+  <script src="./js/tool-registry.js"></script>
+  <script src="./js/workspace.js"></script>
 
   <script>
     (function () {
@@ -1944,11 +1958,25 @@
           menu.style.setProperty('visibility', 'visible', 'important');
           menu.style.setProperty('opacity', '1', 'important');
           menu.style.setProperty('position', 'fixed', 'important');
-          menu.style.setProperty('left', '12px', 'important');
           menu.style.setProperty('right', 'auto', 'important');
           menu.style.setProperty('top', 'auto', 'important');
-          menu.style.setProperty('bottom', '88px', 'important');
+          menu.style.setProperty('bottom', 'auto', 'important');
           menu.style.setProperty('z-index', '2147483000', 'important');
+
+          // Place the menu to the right of the account row so it never covers
+          // the pointer or the account button that opened it.
+          const anchor = trigger.getBoundingClientRect();
+          const menuRect = menu.getBoundingClientRect();
+          const menuWidth = menuRect.width || Math.min(280, window.innerWidth - 24);
+          const menuHeight = menuRect.height || 320;
+          const gap = 12;
+          let left = anchor.right + gap;
+          if (left + menuWidth > window.innerWidth - 12) {
+            left = Math.max(12, anchor.left - menuWidth - gap);
+          }
+          const top = Math.max(12, Math.min(anchor.bottom - menuHeight, window.innerHeight - menuHeight - 12));
+          menu.style.setProperty('left', `${left}px`, 'important');
+          menu.style.setProperty('top', `${top}px`, 'important');
           trigger.setAttribute('aria-expanded', 'true');
         }
 
@@ -1974,13 +2002,14 @@
         });
 
         document.addEventListener('click', function (event) {
-          if (!menu.contains(event.target) && !trigger.contains(event.target)) {
+          if (!menu.contains(event.target) && !trigger.contains(event.target) && !settingsTrigger?.contains(event.target)) {
             closeMenu();
           }
         });
 
         settingsTrigger?.addEventListener('click', function (event) {
           event.preventDefault();
+          event.stopPropagation();
           sidebar?.classList.add('mobile-open');
           openMenu();
         });

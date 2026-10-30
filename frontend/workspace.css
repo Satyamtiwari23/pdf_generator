@@ -1566,3 +1566,15 @@ body > .sidebar-profile-dropdown.show {
     opacity: 1 !important;
     transform: translateY(0) !important;
 }
+
+
+/* Account menu is positioned beside its trigger by the account-menu script. */
+body > .sidebar-profile-dropdown {
+  left: auto !important;
+  right: auto !important;
+  top: 12px !important;
+  bottom: auto !important;
+  width: min(280px, calc(100vw - 24px)) !important;
+  max-height: min(72vh, 520px) !important;
+  z-index: 2147483000 !important;
+}
