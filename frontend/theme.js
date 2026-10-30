@@ -29,7 +29,7 @@
 
   function setTheme(theme) {
     const selected = theme === "dark" ? "dark" : "light";
-    try { localStorage.setItem(STORAGE_KEY, selected); } catch (_) {}
+    try { localStorage.setItem(STORAGE_KEY, selected); } catch (_) { }
     applyTheme(selected);
     window.dispatchEvent(new CustomEvent("pdfnest:themechange", { detail: { theme: selected } }));
   }
