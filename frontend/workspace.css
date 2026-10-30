@@ -1508,85 +1508,13 @@ body:not(.dark-theme) .sidebar-user {
     border-radius: 50%;
 }
 
-
-/* ============================================================
-   PDFNEST ACCOUNT MENU — RELIABLE OPEN/CLOSE + LAYERING
-   ============================================================ */
-.sidebar-account-wrap {
-    position: relative;
-    z-index: 10001;
-}
-
-.sidebar-profile-dropdown {
-    position: fixed !important;
-    left: 12px !important;
-    right: auto !important;
-    top: auto !important;
-    bottom: 88px !important;
-    width: min(260px, calc(100vw - 24px)) !important;
-    max-height: min(72vh, 520px);
-    overflow-y: auto;
-    z-index: 10000 !important;
-    pointer-events: auto;
-}
-
-.sidebar-profile-dropdown.show {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-#sidebarProfileBtn {
-    position: relative;
-    z-index: 10002;
-    pointer-events: auto;
-}
-
-#openProfileSettings {
-    cursor: pointer;
-}
-
-/* PDFnest account menu: rendered under <body> to avoid sidebar clipping */
-body > .sidebar-profile-dropdown {
-    position: fixed !important;
-    left: 12px !important;
-    right: auto !important;
-    top: auto !important;
-    bottom: 88px !important;
-    width: min(280px, calc(100vw - 24px)) !important;
-    max-height: min(72vh, 520px) !important;
-    overflow-y: auto !important;
-    z-index: 2147483000 !important;
-    pointer-events: auto !important;
-    display: none;
-}
-body > .sidebar-profile-dropdown.show {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: translateY(0) !important;
-}
-
-
-/* Account menu is positioned beside its trigger by the account-menu script. */
-body > .sidebar-profile-dropdown {
-  left: auto !important;
-  right: auto !important;
-  top: 12px !important;
-  bottom: auto !important;
-  width: min(280px, calc(100vw - 24px)) !important;
-  max-height: min(72vh, 520px) !important;
-  z-index: 2147483000 !important;
-}
-
-
-/* PDFnest account menu positioning — authoritative final override.
-   The inline account-menu script computes left/top from the actual trigger. */
+/* Account menu: position is calculated from the sidebar trigger by JS.
+   Do not set fixed left/top/bottom values here; they caused stale placement. */
 body > .sidebar-profile-dropdown {
   position: fixed !important;
   left: auto !important;
   right: auto !important;
-  top: 12px !important;
+  top: auto !important;
   bottom: auto !important;
   width: min(280px, calc(100vw - 24px)) !important;
   max-height: min(72vh, 520px) !important;
@@ -1600,7 +1528,12 @@ body > .sidebar-profile-dropdown.show {
   opacity: 1 !important;
   transform: none !important;
 }
+
+/* Keep the custom cursor layer above the account menu.
+   pointer-events:none means it never blocks clicks on the menu or page. */
 #cursor-trail-canvas {
-  z-index: 99998 !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483647 !important;
   pointer-events: none !important;
 }

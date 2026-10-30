@@ -1938,18 +1938,27 @@
           const anchor = trigger.getBoundingClientRect();
           const width = Math.min(280, window.innerWidth - 24);
           const height = menu.getBoundingClientRect().height || 260;
-          const gap = 14;
+          const gap = 18;
+          const cursorClearance = 42;
 
-          // Prefer the open space to the right of the sidebar account button.
+          // Place the menu beside the account row, never on top of the trigger.
           let left = anchor.right + gap;
           if (left + width > window.innerWidth - 12) {
-            // On narrow screens, place it above the button, not over the pointer.
+            // If there is no room on the right, use the left side of the trigger.
+            left = anchor.left - width - gap;
+          }
+          if (left < 12) {
+            // Very narrow viewport: place it above the trigger and preserve a
+            // cursor-sized gap from the trigger edge.
             left = Math.max(12, Math.min(anchor.left, window.innerWidth - width - 12));
           }
 
-          let top = anchor.top - height - gap;
-          if (top < 12) top = Math.min(anchor.bottom + gap, window.innerHeight - height - 12);
+          let top = anchor.top - height - cursorClearance;
+          if (top < 12) {
+            top = anchor.bottom + cursorClearance;
+          }
           top = Math.max(12, Math.min(top, window.innerHeight - height - 12));
+          left = Math.max(12, Math.min(left, window.innerWidth - width - 12));
 
           menu.style.setProperty('position', 'fixed', 'important');
           menu.style.setProperty('left', left + 'px', 'important');
@@ -1961,7 +1970,6 @@
           menu.style.setProperty('overflow-y', 'auto', 'important');
           menu.style.setProperty('z-index', '2147483000', 'important');
         }
-
         function openMenu() {
           menu.hidden = false;
           menu.classList.add('show');
@@ -2030,23 +2038,13 @@
         initPdfnestAccountMenu();
       }
 
-      // Open the portfolio homepage first, then navigate that same tab to Contact.
-      // This makes the homepage visible briefly before the section navigation.
+      // Open the Portfolio homepage only. The timed section-by-section scroll
+      // must be implemented inside the Portfolio site itself (cross-origin pages
+      // cannot be scrolled by this PDFnest page).
       const helpLink = document.getElementById('helpSupportLink');
       helpLink?.addEventListener('click', function (event) {
         event.preventDefault();
-        const home = 'https://satyamtiwari23.github.io/Portfolio/';
-        const contact = home + '#contact';
-        const tab = window.open(home, '_blank');
-        if (tab) tab.opener = null;
-        if (!tab) {
-          // Popup blockers can prevent the new tab; fall back to normal homepage navigation.
-          window.open(contact, '_blank', 'noopener');
-          return;
-        }
-        window.setTimeout(() => {
-          try { tab.location.href = contact; } catch (_) { /* navigation may be restricted */ }
-        }, 900);
+        window.open('https://satyamtiwari23.github.io/Portfolio/', '_blank', 'noopener,noreferrer');
       });
     })();
   </script>
