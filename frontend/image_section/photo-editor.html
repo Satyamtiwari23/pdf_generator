@@ -3142,6 +3142,25 @@
       dz.addEventListener('click', () => fi.click());
       dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } });
       fi.addEventListener('change', () => { if (fi.files && fi.files.length) addFiles(fi.files); fi.value = ''; });
+
+      // Receive a file selected in the PDFnest homepage workspace.
+      (async function receiveWorkspaceFile() {
+        try {
+          if (!window.ToolBridge) return;
+          const incoming = await window.ToolBridge.consumeIncoming();
+          if (!incoming || !incoming.blob) return;
+          const received = new File(
+            [incoming.blob],
+            incoming.fileName || 'received-image.png',
+            { type: incoming.mimeType || incoming.blob.type || 'image/png' }
+          );
+          await addFiles([received]);
+          if (typeof toast === 'function') toast('Received from PDFnest workspace');
+        } catch (error) {
+          console.error('[workspace] Could not receive image:', error);
+        }
+      })();
+
       ['dragenter', 'dragover'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); }));
       ['dragleave', 'drop'].forEach(evt => dz.addEventListener(evt, e => {
         e.preventDefault(); e.stopPropagation();

@@ -302,6 +302,28 @@
       dz.addEventListener('click', () => fileInput.click());
       dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
       fileInput.addEventListener('change', () => { addFiles(fileInput.files); fileInput.value = ''; });
+
+      // Receive the mixed/multiple selection from the PDFnest dashboard.
+      (async function receiveDashboardFiles() {
+        try {
+          if (!window.ToolBridge) return;
+          const incoming = await window.ToolBridge.consumeIncoming();
+          if (!incoming) return;
+          const entries = incoming.files || (incoming.blob ? [{
+            blob: incoming.blob, fileName: incoming.fileName, mimeType: incoming.mimeType
+          }] : []);
+          const files = entries.map(entry => new File(
+            [entry.blob],
+            entry.fileName || 'received-file',
+            { type: entry.mimeType || entry.blob.type || '' }
+          ));
+          if (files.length) addFiles(files);
+        } catch (error) {
+          console.error('[dashboard] Incoming files could not be loaded:', error);
+          if (typeof toast === 'function') toast('Could not receive dashboard files.');
+        }
+      })();
+
       ['dragenter', 'dragover'].forEach(evt => {
         dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); });
       });

@@ -2,702 +2,770 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Sign Up — PDFnest</title>
+    <title>Sign Up — PDFnest</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css" />
 
-  <script src="theme.js"></script>
-  <style>
-    .google-login-section {
-      margin-top: 20px;
-    }
+    <script src="theme.js"></script>
 
-    .google-divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 18px 0;
-      color: #888;
-      font-size: 12px;
-    }
+    <style>
+        .google-login-section {
+            margin-top: 20px;
+        }
 
-    .google-divider::before,
-    .google-divider::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: #ddd;
-    }
+        .google-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 18px 0;
+            color: #888;
+            font-size: 12px;
+        }
 
-    .google-circle-btn {
-      width: 42px;
-      height: 42px;
-      padding: 9px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid rgba(168, 85, 247, 0.4);
-      border-radius: 50%;
-      background: #21172f;
-      cursor: pointer;
-      transition: 0.2s ease;
-    }
+        .google-divider::before,
+        .google-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #ddd;
+        }
 
-    .google-circle-btn svg {
-      width: 22px;
-      height: 22px;
-    }
+        .google-button-wrap {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
 
-    .google-circle-btn:hover {
-      background: #302040;
-      border-color: #a855f7;
-      box-shadow: 0 0 14px rgba(139, 92, 246, 0.25);
-      transform: translateY(-1px);
-    }
+        .google-circle-btn {
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #d1d5db;
+            border-radius: 50%;
+            background: #fff;
+            color: #303030;
+            cursor: pointer;
+            transition:
+                background .15s ease,
+                border-color .15s ease,
+                transform .15s ease;
+        }
 
-    #googleButtonContainer {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-    }
-  </style>
+        .google-circle-btn:hover {
+            background: #f7f7f7;
+            border-color: #9ca3af;
+            transform: translateY(-1px);
+        }
+
+        .google-circle-btn:focus-visible {
+            outline: 2px solid #555;
+            outline-offset: 3px;
+        }
+
+        .google-circle-btn:disabled {
+            opacity: .6;
+            cursor: wait;
+            transform: none;
+        }
+
+        .google-circle-btn span {
+            font-family: Arial, sans-serif;
+            font-size: 25px;
+            line-height: 1;
+            font-weight: 600;
+        }
+    </style>
+
 </head>
 
 <body>
 
-  <div class="auth-container">
+    <div class="auth-container">
 
-    <div class="auth-card">
+        <div class="auth-card">
 
-      <h2>Create an account</h2>
+            <h2>Create an account</h2>
 
-      <p class="subtitle">
-        Join PDFnest to start generating documents.
-      </p>
+            <p class="subtitle">
+                Join PDFnest to start generating documents.
+            </p>
 
+            <form id="signupForm">
 
-      <form id="signupForm">
+                <!-- NAME -->
 
-        <!-- =========================
-             NAME
-        ========================== -->
+                <div class="auth-field">
 
-        <div class="auth-field">
+                    <label for="name">Full Name</label>
 
-          <label for="name">Full Name</label>
+                    <input
+                        type="text"
+                        id="name"
+                        placeholder="Your Name"
+                        required
+                    />
 
-          <input type="text" id="name" placeholder="Your Name" required />
+                </div>
+
+                <!-- EMAIL -->
+
+                <div class="auth-field">
+
+                    <label for="email">Email</label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="youremail@example.com"
+                        required
+                    />
+
+                </div>
+
+                <!-- PASSWORD -->
+
+                <div class="auth-field">
+
+                    <label for="password">Password</label>
+
+                    <div class="password-wrapper">
+
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="••••••••"
+                            required
+                            minlength="8"
+                            maxlength="64"
+                            autocomplete="new-password"
+                        />
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            id="passwordToggle"
+                            aria-label="Show password"
+                        >
+
+                            <svg
+                                class="eye-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+
+                                <path
+                                    d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="2.5"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                />
+
+                            </svg>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div
+                    id="passwordMessage"
+                    class="password-message"
+                ></div>
+
+                <!-- CONFIRM PASSWORD -->
+
+                <div class="auth-field">
+
+                    <label for="confirmPassword">
+                        Confirm Password
+                    </label>
+
+                    <div class="password-wrapper">
+
+                        <input
+                            type="password"
+                            id="confirmPassword"
+                            placeholder="••••••••"
+                            required
+                            minlength="8"
+                            maxlength="64"
+                            autocomplete="new-password"
+                        />
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            id="confirmPasswordToggle"
+                            aria-label="Show password"
+                        >
+
+                            <svg
+                                class="eye-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+
+                                <path
+                                    d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="2.5"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                />
+
+                            </svg>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <!-- SUBMIT -->
+
+                <button
+                    type="submit"
+                    class="auth-btn"
+                    id="submitBtn"
+                >
+                    Sign Up
+                </button>
+
+                <div
+                    class="error-msg"
+                    id="errorMsg"
+                ></div>
+
+            </form>
+
+            <!-- GOOGLE SIGNUP -->
+
+            <div class="google-login-section">
+
+                <div class="google-divider">
+                    <span>OR</span>
+                </div>
+
+                <div class="google-button-wrap">
+
+                    <button
+                        type="button"
+                        class="google-circle-btn"
+                        id="googleLoginBtn"
+                        aria-label="Continue with Google"
+                        title="Continue with Google"
+                    >
+                        <span aria-hidden="true">G</span>
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="auth-switch">
+
+                Already have an account?
+
+                <a href="login.html">Log in</a>
+
+            </div>
 
         </div>
-
-
-        <!-- =========================
-             EMAIL
-        ========================== -->
-
-        <div class="auth-field">
-
-          <label for="email">Email</label>
-
-          <input type="email" id="email" placeholder="youremail@example.com" required />
-
-        </div>
-
-
-        <!-- =========================
-             PASSWORD
-        ========================== -->
-
-        <div class="auth-field">
-
-          <label for="password">Password</label>
-
-          <div class="password-wrapper">
-
-            <input type="password" id="password" placeholder="••••••••" required minlength="8" maxlength="64"
-              autocomplete="new-password" />
-
-            <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password">
-
-              <svg class="eye-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-
-                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" stroke="currentColor" stroke-width="1.8"
-                  stroke-linecap="round" stroke-linejoin="round" />
-
-                <circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.8" />
-
-              </svg>
-
-            </button>
-
-          </div>
-
-        </div>
-        <div id="passwordMessage" class="password-message"></div>
-
-
-        <!-- =========================
-             CONFIRM PASSWORD
-        ========================== -->
-
-        <div class="auth-field">
-
-          <label for="confirmPassword">Confirm Password</label>
-
-          <div class="password-wrapper">
-
-            <input type="password" id="confirmPassword" placeholder="••••••••" required minlength="8" maxlength="64"
-              autocomplete="new-password" />
-            <button type="button" class="password-toggle" id="confirmPasswordToggle" aria-label="Show password">
-
-              <svg class="eye-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-
-                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" stroke="currentColor" stroke-width="1.8"
-                  stroke-linecap="round" stroke-linejoin="round" />
-
-                <circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.8" />
-
-              </svg>
-
-            </button>
-
-          </div>
-
-        </div>
-
-
-
-
-
-        <!-- =========================
-             SUBMIT
-        ========================== -->
-
-        <button type="submit" class="auth-btn" id="submitBtn">
-          Sign Up
-        </button>
-
-        <div class="error-msg" id="errorMsg"></div>
-
-      </form>
-
-      <!-- Google Signup -->
-      <div class="google-login-section">
-        <div class="google-divider">
-          <span>OR</span>
-        </div>
-
-        <div id="googleButtonContainer"></div>
-      </div>
-
-
-      <div class="auth-switch">
-
-        Already have an account?
-        <a href="login.html">Log in</a>
-
-      </div>
 
     </div>
 
-  </div>
+    <script>
 
+        const API_URL =
+            'https://pdf-generator-ochre-two.vercel.app/api/auth';
 
-  <script>
+        const form =
+            document.getElementById('signupForm');
 
-    const API_URL =
-      'https://pdf-generator-ochre-two.vercel.app/api/auth';
+        const errorMsg =
+            document.getElementById('errorMsg');
 
+        const submitBtn =
+            document.getElementById('submitBtn');
 
-    const form =
-      document.getElementById('signupForm');
+        const passwordInput =
+            document.getElementById('password');
 
-    const errorMsg =
-      document.getElementById('errorMsg');
+        const confirmPasswordInput =
+            document.getElementById('confirmPassword');
 
-    const submitBtn =
-      document.getElementById('submitBtn');
+        const passwordToggle =
+            document.getElementById('passwordToggle');
 
+        const confirmPasswordToggle =
+            document.getElementById('confirmPasswordToggle');
 
-    const passwordInput =
-      document.getElementById('password');
+        const passwordMessage =
+            document.getElementById('passwordMessage');
 
-    const confirmPasswordInput =
-      document.getElementById('confirmPassword');
+        // ======================================================
+        // GOOGLE OAUTH REDIRECT
+        // ======================================================
 
-    const passwordToggle =
-      document.getElementById('passwordToggle');
+        const googleLoginBtn =
+            document.getElementById('googleLoginBtn');
 
-    const confirmPasswordToggle =
-      document.getElementById('confirmPasswordToggle');
+        googleLoginBtn.addEventListener('click', () => {
 
+            errorMsg.textContent = '';
 
-    const passwordMessage =
-      document.getElementById('passwordMessage');
+            googleLoginBtn.disabled = true;
 
+            googleLoginBtn.setAttribute(
+                'aria-label',
+                'Redirecting to Google'
+            );
 
-    // ==========================================================
-    // GOOGLE SIGN-IN CONFIGURATION
-    // ==========================================================
+            window.location.assign(
+                `${API_URL}/google?mode=signup`
+            );
 
-    let googleInitialized = false;
-
-    window.handleGoogleCredential = async function (response) {
-      errorMsg.textContent = '';
-
-      try {
-        const res = await fetch(`${API_URL}/google`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            credential: response.credential
-          })
         });
 
-        const data = await res.json();
+        // ======================================================
+        // GOOGLE TICKET EXCHANGE
+        // ======================================================
 
-        if (!res.ok) {
-          throw new Error(data.message || 'Google signup failed.');
+        async function exchangeGoogleTicket() {
+
+            const params =
+                new URLSearchParams(window.location.search);
+
+            const ticket =
+                params.get('google_ticket');
+
+            const oauthError =
+                params.get('google_error');
+
+            if (oauthError) {
+
+                errorMsg.textContent =
+                    'Google sign-up was not completed. Please try again.';
+
+                window.history.replaceState(
+                    {},
+                    document.title,
+                    window.location.pathname
+                );
+
+                return;
+            }
+
+            if (!ticket) return;
+
+            window.history.replaceState(
+                {},
+                document.title,
+                window.location.pathname
+            );
+
+            googleLoginBtn.disabled = true;
+
+            errorMsg.textContent = '';
+
+            try {
+
+                const response = await fetch(
+                    `${API_URL}/google/exchange`,
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+
+                        body: JSON.stringify({
+                            ticket
+                        })
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message || 'Google signup failed.'
+                    );
+                }
+
+                localStorage.setItem(
+                    'token',
+                    data.token
+                );
+
+                localStorage.setItem(
+                    'user',
+                    JSON.stringify(data.user)
+                );
+
+                window.location.replace('index.html');
+
+            } catch (error) {
+
+                console.error(
+                    'Google ticket exchange error:',
+                    error
+                );
+
+                errorMsg.textContent =
+                    error.message ||
+                    'Google signup failed. Please try again.';
+
+                googleLoginBtn.disabled = false;
+
+            }
+
         }
 
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        exchangeGoogleTicket();
 
-        window.location.replace('index.html');
-      } catch (error) {
-        console.error('Google signup error:', error);
-        errorMsg.textContent = error.message || 'Google signup failed.';
-      }
-    };
-
-    async function loadGoogleConfiguration() {
-      try {
-        const response = await fetch(
-          'https://pdf-generator-ochre-two.vercel.app/api/config'
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `Configuration request failed: ${response.status}`
-          );
-        }
-
-        const config = await response.json();
-
-        if (!config.googleClientId) {
-          throw new Error('Google Client ID is missing.');
-        }
-
-        if (!window.google?.accounts?.id) {
-          throw new Error('Google Identity Services has not loaded.');
-        }
-
-        window.google.accounts.id.initialize({
-          client_id: config.googleClientId,
-          callback: window.handleGoogleCredential,
-          auto_select: false
-        });
-
-        window.google.accounts.id.renderButton(
-          document.getElementById('googleButtonContainer'),
-          {
-            type: 'icon',
-            shape: 'circle',
-            theme: 'outline',
-            size: 'large'
-          }
-        );
-
-        googleInitialized = true;
-        console.log('Google Sign-In initialized successfully.');
-      } catch (error) {
-        googleInitialized = false;
-        console.error('Google configuration error:', error);
-        errorMsg.textContent =
-          'Google sign-in is unavailable. Please reload the page.';
-      }
-    }
-
-    // Google authentication callback
-
-
-
-    function validatePassword(password) {
-
-      if (password.length < 8) {
-        return {
-          valid: false,
-          message: 'Password must be at least 8 characters.'
-        };
-      }
-
-      if (password.length > 64) {
-        return {
-          valid: false,
-          message: 'Password must not exceed 64 characters.'
-        };
-      }
-
-      if (!/[A-Z]/.test(password)) {
-        return {
-          valid: false,
-          message: 'Password must contain at least one uppercase letter.'
-        };
-      }
-
-      if (!/[a-z]/.test(password)) {
-        return {
-          valid: false,
-          message: 'Password must contain at least one lowercase letter.'
-        };
-      }
-
-      if (!/[0-9]/.test(password)) {
-        return {
-          valid: false,
-          message: 'Password must contain at least one number.'
-        };
-      }
-
-      if (!/[^A-Za-z0-9\s]/.test(password)) {
-        return {
-          valid: false,
-          message: 'Password must contain at least one special character.'
-        };
-      }
-
-      return {
-        valid: true,
-        message: 'Strong password — all requirements are met.'
-      };
-    }
-
-
-
-    passwordInput?.addEventListener('input', function () {
-
-      const result =
-        validatePassword(passwordInput.value);
-
-      if (!passwordInput.value) {
-        passwordMessage.textContent = '';
-        passwordMessage.className = 'password-message';
-        return;
-      }
-
-      passwordMessage.textContent =
-        result.message;
-
-      passwordMessage.className =
-        result.valid
-          ? 'password-message success'
-          : 'password-message error';
-
-    });
-
-
-
-    /* ==========================================================
-       EYE ICON
-    ========================================================== */
-
-    function eyeOpenSVG() {
-
-      return `
-        <svg
-          class="eye-icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-
-          <path
-            d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-
-          <circle
-            cx="12"
-            cy="12"
-            r="2.5"
-            stroke="currentColor"
-            stroke-width="1.8"
-          />
-
-        </svg>
-      `;
-
-    }
-
-
-    function eyeClosedSVG() {
-
-      return `
-        <svg
-          class="eye-icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-
-          <path
-            d="M3 3l18 18"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-          />
-
-          <path
-            d="M10.6 6.2C11.05 6.08 11.52 6 12 6
-               c6.5 0 10 6 10 6
-               a18.4 18.4 0 0 1-3.05 3.45"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-
-          <path
-            d="M6.1 9.1C3.7 10.55 2 12 2 12
-               s3.5 6 10 6
-               c1.05 0 2.02-.16 2.9-.43"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-
-        </svg>
-      `;
-
-    }
-
-
-    /* ==========================================================
-       PASSWORD VISIBILITY
-    ========================================================== */
-
-    function setupPasswordToggle(
-      input,
-      button
-    ) {
-
-      button.addEventListener('click', function () {
-
-        const isHidden =
-          input.type === 'password';
-
-
-        input.type =
-          isHidden ? 'text' : 'password';
-
-
-        button.innerHTML =
-          isHidden
-            ? eyeClosedSVG()
-            : eyeOpenSVG();
-
-
-        button.setAttribute(
-          'aria-label',
-          isHidden
-            ? 'Hide password'
-            : 'Show password'
-        );
-
-      });
-
-    }
-
-
-    setupPasswordToggle(
-      passwordInput,
-      passwordToggle
-    );
-
-
-    setupPasswordToggle(
-      confirmPasswordInput,
-      confirmPasswordToggle
-    );
-
-
-    /* ==========================================================
-       SIGNUP
-    ========================================================== */
-
-    form.addEventListener(
-      'submit',
-      async function (e) {
-
-        e.preventDefault();
-
-        errorMsg.textContent = '';
-
-
-        const name =
-          document.getElementById('name').value.trim();
-
-        const email =
-          document.getElementById('email').value.trim();
-
-        const password =
-          passwordInput.value;
-
-        const confirmPassword =
-          confirmPasswordInput.value;
-
-
-        // ------------------------------------------
+        // ======================================================
         // PASSWORD VALIDATION
-        // ------------------------------------------
+        // ======================================================
 
-        const passwordResult =
-          validatePassword(password);
+        function validatePassword(password) {
 
-        if (!passwordResult.valid) {
+            if (password.length < 8) {
+                return {
+                    valid: false,
+                    message: 'Password must be at least 8 characters.'
+                };
+            }
 
-          passwordMessage.textContent =
-            passwordResult.message;
+            if (password.length > 64) {
+                return {
+                    valid: false,
+                    message: 'Password must not exceed 64 characters.'
+                };
+            }
 
-          passwordMessage.className =
-            'password-message error';
+            if (!/[A-Z]/.test(password)) {
+                return {
+                    valid: false,
+                    message: 'Password must contain at least one uppercase letter.'
+                };
+            }
 
-          return;
-        }
+            if (!/[a-z]/.test(password)) {
+                return {
+                    valid: false,
+                    message: 'Password must contain at least one lowercase letter.'
+                };
+            }
 
+            if (!/[0-9]/.test(password)) {
+                return {
+                    valid: false,
+                    message: 'Password must contain at least one number.'
+                };
+            }
 
-        // ------------------------------------------
-        // PASSWORD MATCH CHECK
-        // ------------------------------------------
+            if (!/[^A-Za-z0-9\s]/.test(password)) {
+                return {
+                    valid: false,
+                    message: 'Password must contain at least one special character.'
+                };
+            }
 
-        if (password !== confirmPassword) {
-
-          errorMsg.textContent =
-            'Passwords do not match.';
-
-          return;
-        }
-
-
-        submitBtn.disabled = true;
-
-        submitBtn.textContent =
-          'Creating account...';
-
-
-        try {
-
-          const res =
-            await fetch(
-              `${API_URL}/signup`,
-              {
-                method: 'POST',
-
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-
-                body: JSON.stringify({
-                  name,
-                  email,
-                  password
-                })
-              }
-            );
-
-
-          const data =
-            await res.json();
-
-
-          if (!res.ok) {
-
-            throw new Error(
-              data.message || 'Signup failed'
-            );
-
-          }
-
-
-          /* ------------------------------------------
-             SAVE AUTH DATA
-          ------------------------------------------ */
-
-          localStorage.setItem(
-            'token',
-            data.token
-          );
-
-          localStorage.setItem(
-            'user',
-            JSON.stringify(data.user)
-          );
-
-
-          /* ------------------------------------------
-             REDIRECT
-          ------------------------------------------ */
-
-          window.location.href =
-            'index.html';
-
-
-        } catch (err) {
-
-          errorMsg.textContent =
-            err.message;
-
-          submitBtn.disabled = false;
-
-          submitBtn.textContent =
-            'Sign Up';
+            return {
+                valid: true,
+                message: 'Strong password — all requirements are met.'
+            };
 
         }
 
-      }
-    );
+        // ======================================================
+        // PASSWORD STRENGTH MESSAGE
+        // ======================================================
 
+        passwordInput.addEventListener('input', function () {
 
-    // Load Google configuration after the Google library is ready
-    const googleScript = document.querySelector(
-      'script[src="https://accounts.google.com/gsi/client"]'
-    );
+            const result =
+                validatePassword(passwordInput.value);
 
-    if (window.google?.accounts?.id) {
-      loadGoogleConfiguration();
-    } else if (googleScript) {
-      googleScript.addEventListener(
-        'load',
-        loadGoogleConfiguration,
-        { once: true }
-      );
+            if (!passwordInput.value) {
 
-      googleScript.addEventListener('error', () => {
-        console.error('Google Identity Services failed to load.');
-        errorMsg.textContent =
-          'Could not load Google Sign-In. Please try again.';
-      }, { once: true });
-    }
+                passwordMessage.textContent = '';
 
-  </script>
+                passwordMessage.className =
+                    'password-message';
+
+                return;
+            }
+
+            passwordMessage.textContent =
+                result.message;
+
+            passwordMessage.className =
+                result.valid
+                    ? 'password-message success'
+                    : 'password-message error';
+
+        });
+
+        // ======================================================
+        // EYE ICONS
+        // ======================================================
+
+        function eyeOpenSVG() {
+
+            return `
+                <svg
+                    class="eye-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+
+                    <path
+                        d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="2.5"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                    />
+
+                </svg>
+            `;
+
+        }
+
+        function eyeClosedSVG() {
+
+            return `
+                <svg
+                    class="eye-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+
+                    <path
+                        d="M3 3l18 18"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                    />
+
+                    <path
+                        d="M10.6 6.2C11.05 6.08 11.52 6 12 6
+                           c6.5 0 10 6 10 6
+                           a18.4 18.4 0 0 1-3.05 3.45"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                    <path
+                        d="M6.1 9.1C3.7 10.55 2 12 2 12
+                           s3.5 6 10 6
+                           c1.05 0 2.02-.16 2.9-.43"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                </svg>
+            `;
+
+        }
+
+        // ======================================================
+        // PASSWORD VISIBILITY
+        // ======================================================
+
+        function setupPasswordToggle(input, button) {
+
+            button.addEventListener('click', function () {
+
+                const isHidden =
+                    input.type === 'password';
+
+                input.type =
+                    isHidden ? 'text' : 'password';
+
+                button.innerHTML =
+                    isHidden
+                        ? eyeClosedSVG()
+                        : eyeOpenSVG();
+
+                button.setAttribute(
+                    'aria-label',
+                    isHidden
+                        ? 'Hide password'
+                        : 'Show password'
+                );
+
+            });
+
+        }
+
+        setupPasswordToggle(
+            passwordInput,
+            passwordToggle
+        );
+
+        setupPasswordToggle(
+            confirmPasswordInput,
+            confirmPasswordToggle
+        );
+
+        // ======================================================
+        // EMAIL / PASSWORD SIGNUP
+        // ======================================================
+
+        form.addEventListener('submit', async function (e) {
+
+            e.preventDefault();
+
+            errorMsg.textContent = '';
+
+            const name =
+                document.getElementById('name').value.trim();
+
+            const email =
+                document.getElementById('email').value.trim();
+
+            const password =
+                passwordInput.value;
+
+            const confirmPassword =
+                confirmPasswordInput.value;
+
+            // Password validation
+
+            const passwordResult =
+                validatePassword(password);
+
+            if (!passwordResult.valid) {
+
+                passwordMessage.textContent =
+                    passwordResult.message;
+
+                passwordMessage.className =
+                    'password-message error';
+
+                return;
+            }
+
+            // Confirm password
+
+            if (password !== confirmPassword) {
+
+                errorMsg.textContent =
+                    'Passwords do not match.';
+
+                return;
+            }
+
+            submitBtn.disabled = true;
+
+            submitBtn.textContent =
+                'Creating account...';
+
+            try {
+
+                const res = await fetch(
+                    `${API_URL}/signup`,
+                    {
+                        method: 'POST',
+
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+
+                        body: JSON.stringify({
+                            name,
+                            email,
+                            password
+                        })
+                    }
+                );
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(
+                        data.message || 'Signup failed'
+                    );
+                }
+
+                localStorage.setItem(
+                    'token',
+                    data.token
+                );
+
+                localStorage.setItem(
+                    'user',
+                    JSON.stringify(data.user)
+                );
+
+                window.location.href = 'index.html';
+
+            } catch (err) {
+
+                errorMsg.textContent =
+                    err.message;
+
+                submitBtn.disabled = false;
+
+                submitBtn.textContent =
+                    'Sign Up';
+
+            }
+
+        });
+
+    </script>
 
 </body>
 

@@ -516,6 +516,24 @@
 
       fileInput.addEventListener('change', () => { addFile(fileInput.files); fileInput.value = ''; });
 
+      // Receive a PDF selected in the PDFnest homepage workspace.
+      (async function receiveWorkspaceFile() {
+        try {
+          if (!window.ToolBridge) return;
+          const incoming = await window.ToolBridge.consumeIncoming();
+          if (!incoming || !incoming.blob) return;
+          const received = new File(
+            [incoming.blob],
+            incoming.fileName || 'received-document.pdf',
+            { type: incoming.mimeType || incoming.blob.type || 'application/pdf' }
+          );
+          await addFile([received]);
+        } catch (error) {
+          console.error('[workspace] Could not receive PDF:', error);
+        }
+      })();
+
+
       ['dragenter', 'dragover'].forEach(evt => {
         dz.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); });
       });

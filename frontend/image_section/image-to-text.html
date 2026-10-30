@@ -1576,6 +1576,25 @@
       });
       fi.addEventListener('change', () => { addFiles(fi.files); fi.value = ''; });
 
+      // Receive a file selected in the PDFnest homepage workspace.
+      (async function receiveWorkspaceFile() {
+        try {
+          if (!window.ToolBridge) return;
+          const incoming = await window.ToolBridge.consumeIncoming();
+          if (!incoming || !incoming.blob) return;
+          const received = new File(
+            [incoming.blob],
+            incoming.fileName || 'received-image.png',
+            { type: incoming.mimeType || incoming.blob.type || 'image/png' }
+          );
+          await addFiles([received]);
+          if (typeof toast === 'function') toast('Received from PDFnest workspace');
+        } catch (error) {
+          console.error('[workspace] Could not receive image:', error);
+        }
+      })();
+
+
       ['dragenter', 'dragover'].forEach(evt =>
         dz.addEventListener(evt, e => {
           e.preventDefault(); e.stopPropagation();
