@@ -1537,3 +1537,6 @@ body > .sidebar-profile-dropdown.show {
   z-index: 2147483647 !important;
   pointer-events: none !important;
 }
+
+/* Profile avatar: no pencil/edit badge overlay in the account dropdown. */
+#profileEditBtn, .profile-edit-btn { display: none !important; }
