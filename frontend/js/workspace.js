@@ -96,9 +96,8 @@
   // Sidebar navigation and account/profile affordances.
   $$("[data-view]").forEach(btn=>btn.addEventListener("click",()=>setView(btn.dataset.view)));
   $("#mobileMenuBtn").addEventListener("click",()=>$("#appSidebar").classList.toggle("mobile-open"));
-  $("#sidebarProfileBtn").addEventListener("click",()=>$("#profileDropdown").classList.toggle("show"));
-  $("#openProfileSettings").addEventListener("click",()=>{$("#profileDropdown").classList.add("show");setView("settings");});
-  $("#settingsThemeToggle").addEventListener("click",()=>$("#themeToggle").click());
+  // Account menu is initialized once by the dedicated script in index.html.
+  // Theme buttons are handled by theme.js to avoid double toggling.
   $("#settingsClearHistory").addEventListener("click",clearHistory);
   $("#clearHistoryBtn").addEventListener("click",clearHistory);
   function clearHistory(){if(!confirm("Clear your recent activity history from this browser?"))return;state.history=[];persistHistory();renderHistory();}
@@ -117,7 +116,7 @@
   $("#sidebarUserName").textContent=user.name||user.fullName||"Your account";
   $("#sidebarUserEmail").textContent=user.email||"Signed in";
   const initial=(user.name||user.email||"S").trim().charAt(0).toUpperCase();
-  $("#sidebarUserInitial").textContent=initial;$("#profileInitial").textContent=initial;$("#dropdownProfileInitial").textContent=initial;
+  $("#sidebarUserInitial").textContent=initial;$("#dropdownProfileInitial").textContent=initial;
   $("#welcomeDate").textContent=new Date().toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"});
   state.history=readList(HISTORY_KEY).filter(x=>x.at>Date.now()-RETENTION_DAYS*86400000).slice(0,MAX_HISTORY);
   state.favorites=readList(FAV_KEY);
