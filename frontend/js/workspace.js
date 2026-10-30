@@ -61,8 +61,22 @@
   }
   function removeFile(index){state.files.splice(index,1);renderSelection();}
   function renderSelection(){
-    if(!state.files.length){selected.hidden=true;drop.hidden=false;setStatus("");return;}
-    selected.hidden=false;drop.hidden=true;
+    const uploadCard = document.querySelector(".multi-upload-card");
+
+    if(!state.files.length){
+      selected.hidden=true;
+      drop.hidden=false;
+      uploadCard?.classList.remove("has-files");
+      setStatus("");
+      return;
+    }
+
+    selected.hidden=false;
+
+    // Keep the dropzone visible after files are selected. It becomes a
+    // compact "drop more files" area above the queue instead of disappearing.
+    drop.hidden=false;
+    uploadCard?.classList.add("has-files");
     $("#selectedFileCount").textContent=state.files.length;
     const total=state.files.reduce((n,x)=>n+x.file.size,0);
     const pdfs=state.files.filter(x=>x.info.kind==="pdf").length, images=state.files.filter(x=>x.info.kind==="image").length, docs=state.files.filter(x=>x.info.kind==="document").length, unsupported=state.files.filter(x=>x.info.kind==="unsupported").length;
@@ -96,9 +110,6 @@
   // Sidebar navigation and account/profile affordances.
   $$("[data-view]").forEach(btn=>btn.addEventListener("click",()=>setView(btn.dataset.view)));
   $("#mobileMenuBtn").addEventListener("click",()=>$("#appSidebar").classList.toggle("mobile-open"));
-  $("#sidebarProfileBtn").addEventListener("click",()=>$("#profileDropdown").classList.toggle("show"));
-  $("#openProfileSettings").addEventListener("click",()=>{$("#profileDropdown").classList.add("show");setView("settings");});
-  $("#settingsThemeToggle").addEventListener("click",()=>$("#themeToggle").click());
   $("#settingsClearHistory").addEventListener("click",clearHistory);
   $("#clearHistoryBtn").addEventListener("click",clearHistory);
   function clearHistory(){if(!confirm("Clear your recent activity history from this browser?"))return;state.history=[];persistHistory();renderHistory();}
@@ -188,8 +199,8 @@
   $("#sidebarUserName").textContent=user.name||user.fullName||"Your account";
   $("#sidebarUserEmail").textContent=user.email||"Signed in";
   const initial=(user.name||user.email||"S").trim().charAt(0).toUpperCase();
-  $("#sidebarUserInitial").textContent=initial;$("#profileInitial").textContent=initial;$("#dropdownProfileInitial").textContent=initial;
-  $("#welcomeDate").textContent=new Date().toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"});
+  $("#sidebarUserInitial").textContent=initial;
+  $("#dropdownProfileInitial").textContent=initial;
   state.history=readList(HISTORY_KEY).filter(x=>x.at>Date.now()-RETENTION_DAYS*86400000).slice(0,MAX_HISTORY);
   state.favorites=readList(FAV_KEY);
   persistHistory();renderPopular();renderAllTools();renderFavorites();renderHistory();

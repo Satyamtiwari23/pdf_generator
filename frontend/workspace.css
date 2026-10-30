@@ -1587,3 +1587,46 @@ body > .sidebar-profile-dropdown.show {
   outline-offset: -5px;
   background-color: rgba(139, 92, 246, .07) !important;
 }
+
+
+/* Persistent drag-and-drop area: stays visible above the selected-file queue. */
+.multi-upload-card.has-files .multi-dropzone {
+    min-height: 112px;
+    margin: 14px 16px 0;
+    padding: 15px 18px;
+    border-radius: 13px;
+    background: rgba(139, 92, 246, .045);
+    gap: 3px;
+}
+
+.multi-upload-card.has-files .upload-cloud-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    font-size: 1.35rem;
+}
+
+.multi-upload-card.has-files .multi-dropzone h2 {
+    margin: 7px 0 2px;
+    font-size: .92rem;
+}
+
+.multi-upload-card.has-files .multi-dropzone p {
+    font-size: .76rem;
+}
+
+.multi-upload-card.has-files .supported-file-pills,
+.multi-upload-card.has-files .multi-dropzone small {
+    display: none;
+}
+
+.multi-upload-card.has-files .selected-files-panel {
+    padding-top: 16px;
+}
+
+.multi-upload-card.dragging .multi-dropzone,
+.multi-upload-card.has-files .multi-dropzone.dragging {
+    border-color: #a78bfa;
+    background: rgba(139, 92, 246, .13);
+    box-shadow: inset 0 0 0 1px rgba(167, 139, 250, .25);
+}
