@@ -4,20 +4,15 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>Login — PDFnest</title>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
-
     <link rel="stylesheet" href="style.css" />
-
     <script src="auth-guard.js"></script>
     <script src="theme.js"></script>
-
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         .google-login-section {
             margin-top: 20px;
@@ -40,485 +35,309 @@
             background: #ddd;
         }
 
-        .google-button-wrap {
+        .google-circle-btn {
+            width: 42px;
+            height: 42px;
+            padding: 10px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            border-radius: 50%;
+            background: #21172f;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease,
+                transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .google-circle-btn svg {
+            width: 22px;
+            height: 22px;
+            display: block;
+        }
+
+        .google-circle-btn:hover {
+            background: #302040;
+            border-color: #a855f7;
+            box-shadow: 0 0 14px rgba(139, 92, 246, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .google-circle-btn:focus-visible {
+            outline: 2px solid #a855f7;
+            outline-offset: 3px;
+        }
+
+        #googleButtonContainer {
             display: flex;
             justify-content: center;
             align-items: center;
             width: 100%;
         }
-
-        .google-circle-btn {
-            width: 44px;
-            height: 44px;
-            padding: 0;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #d1d5db;
-            border-radius: 50%;
-            background: #fff;
-            color: #303030;
-            cursor: pointer;
-            transition:
-                background .15s ease,
-                border-color .15s ease,
-                transform .15s ease;
-        }
-
-        .google-circle-btn:hover {
-            background: #f7f7f7;
-            border-color: #9ca3af;
-            transform: translateY(-1px);
-        }
-
-        .google-circle-btn:focus-visible {
-            outline: 2px solid #555;
-            outline-offset: 3px;
-        }
-
-        .google-circle-btn:disabled {
-            opacity: .6;
-            cursor: wait;
-            transform: none;
-        }
-
-        .google-circle-btn span {
-            font-family: Arial, sans-serif;
-            font-size: 25px;
-            line-height: 1;
-            font-weight: 600;
-        }
     </style>
 </head>
 
 <body>
-
     <div class="auth-container">
-
         <div class="auth-card">
-
             <h2>Welcome back</h2>
-
-            <p class="subtitle">
-                Log in to access your PDF tools.
-            </p>
+            <p class="subtitle">Log in to access your PDF tools.</p>
 
             <form id="loginForm">
-
                 <div class="auth-field">
-
                     <label for="email">Email</label>
-
-                    <input
-                        type="email"
-                        id="email"
-                        placeholder="youremail@example.com"
-                        required
-                    />
-
+                    <input type="email" id="email" placeholder="youremail@example.com" required />
                 </div>
-
                 <div class="auth-field">
-
                     <label for="password">Password</label>
 
                     <div class="password-wrapper">
+                        <input type="password" id="password" placeholder="••••••••" required />
 
-                        <input
-                            type="password"
-                            id="password"
-                            placeholder="••••••••"
-                            required
-                        />
-
-                        <button
-                            type="button"
-                            class="password-toggle"
-                            id="passwordToggle"
-                            aria-label="Show password"
-                        >
-
-                            <svg
-                                class="eye-icon"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-
-                                <path
-                                    d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-
-                                <circle
-                                    cx="12"
-                                    cy="12"
-                                    r="2.5"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                />
-
+                        <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password">
+                            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                                <circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.8" />
                             </svg>
-
                         </button>
-
                     </div>
-
                 </div>
-
                 <div class="forgot-password">
                     <a href="forgot-password.html">Forgot password?</a>
                 </div>
 
-                <button
-                    type="submit"
-                    class="auth-btn"
-                    id="submitBtn"
-                >
-                    Log In
-                </button>
-
+                <button type="submit" class="auth-btn" id="submitBtn">Log In</button>
                 <div class="error-msg" id="errorMsg"></div>
-
             </form>
 
             <!-- Google Login -->
-
             <div class="google-login-section">
-
                 <div class="google-divider">
                     <span>OR</span>
                 </div>
 
-                <div class="google-button-wrap">
-
-                    <button
-                        type="button"
-                        class="google-circle-btn"
-                        id="googleLoginBtn"
-                        aria-label="Continue with Google"
-                        title="Continue with Google"
-                    >
-                        <span aria-hidden="true">G</span>
-                    </button>
-
-                </div>
-
+                <div id="googleButtonContainer"></div>
             </div>
+
 
             <div class="auth-switch">
-
-                Don't have an account?
-                <a href="signup.html">Sign up</a>
-
+                Don't have an account? <a href="signup.html">Sign up</a>
             </div>
-
         </div>
-
     </div>
 
     <script>
+        const API_URL = 'https://pdf-generator-ochre-two.vercel.app/api/auth';
+        const form = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const submitBtn = document.getElementById('submitBtn');
+        const passwordInput = document.getElementById('password');
+        const passwordToggle = document.getElementById('passwordToggle');
 
-        const API_URL =
-            'https://pdf-generator-ochre-two.vercel.app/api/auth';
 
-        const form =
-            document.getElementById('loginForm');
 
-        const errorMsg =
-            document.getElementById('errorMsg');
+        let googleInitialized = false;
 
-        const submitBtn =
-            document.getElementById('submitBtn');
-
-        const passwordInput =
-            document.getElementById('password');
-
-        const passwordToggle =
-            document.getElementById('passwordToggle');
-
-        // ======================================================
-        // GOOGLE OAUTH REDIRECT
-        // ======================================================
-
-        const googleLoginBtn =
-            document.getElementById('googleLoginBtn');
-
-        googleLoginBtn.addEventListener('click', () => {
-
-            errorMsg.textContent = '';
-
-            googleLoginBtn.disabled = true;
-
-            googleLoginBtn.setAttribute(
-                'aria-label',
-                'Redirecting to Google'
-            );
-
-            window.location.assign(
-                `${API_URL}/google?mode=login`
-            );
-
-        });
-
-        // ======================================================
-        // GOOGLE TICKET EXCHANGE
-        // ======================================================
-
-        async function exchangeGoogleTicket() {
-
-            const params =
-                new URLSearchParams(window.location.search);
-
-            const ticket =
-                params.get('google_ticket');
-
-            const oauthError =
-                params.get('google_error');
-
-            if (oauthError) {
-
-                errorMsg.textContent =
-                    'Google sign-in was not completed. Please try again.';
-
-                window.history.replaceState(
-                    {},
-                    document.title,
-                    window.location.pathname
-                );
-
-                return;
-            }
-
-            if (!ticket) return;
-
-            // Remove ticket from URL immediately.
-            window.history.replaceState(
-                {},
-                document.title,
-                window.location.pathname
-            );
-
-            googleLoginBtn.disabled = true;
-
+        window.handleGoogleCredential = async function (response) {
             errorMsg.textContent = '';
 
             try {
+                const res = await fetch(`${API_URL}/google`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        credential: response.credential
+                    })
+                });
 
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.message || 'Google login failed.');
+                }
+
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                window.location.replace('index.html');
+            } catch (error) {
+                console.error('Google login error:', error);
+                errorMsg.textContent = error.message || 'Google login failed.';
+            }
+        };
+
+        async function loadGoogleConfiguration() {
+            try {
                 const response = await fetch(
-                    `${API_URL}/google/exchange`,
+                    'https://pdf-generator-ochre-two.vercel.app/api/config'
+                );
+
+                if (!response.ok) {
+                    throw new Error(`Configuration request failed: ${response.status}`);
+                }
+
+                const config = await response.json();
+
+                if (!config.googleClientId) {
+                    throw new Error('Google Client ID is missing.');
+                }
+
+                if (!window.google?.accounts?.id) {
+                    throw new Error('Google Identity Services has not loaded.');
+                }
+
+                window.google.accounts.id.initialize({
+                    client_id: config.googleClientId,
+                    callback: window.handleGoogleCredential,
+                    auto_select: false
+                });
+
+                window.google.accounts.id.renderButton(
+                    document.getElementById('googleButtonContainer'),
                     {
-                        method: 'POST',
-
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-
-                        body: JSON.stringify({
-                            ticket
-                        })
+                        type: 'icon',
+                        shape: 'circle',
+                        theme: 'outline',
+                        size: 'large'
                     }
                 );
 
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(
-                        data.message || 'Google login failed.'
-                    );
-                }
-
-                localStorage.setItem(
-                    'token',
-                    data.token
-                );
-
-                localStorage.setItem(
-                    'user',
-                    JSON.stringify(data.user)
-                );
-
-                window.location.replace('index.html');
-
+                googleInitialized = true;
+                console.log('Google Sign-In initialized successfully.');
             } catch (error) {
-
-                console.error(
-                    'Google ticket exchange error:',
-                    error
-                );
-
+                googleInitialized = false;
+                console.error('Google configuration error:', error);
                 errorMsg.textContent =
-                    error.message ||
-                    'Google login failed. Please try again.';
-
-                googleLoginBtn.disabled = false;
-
+                    'Google sign-in is unavailable. Please reload the page.';
             }
-
         }
 
-        exchangeGoogleTicket();
 
-        // ======================================================
-        // PASSWORD VISIBILITY
-        // ======================================================
+
+        const googleScript = document.querySelector(
+            'script[src="https://accounts.google.com/gsi/client"]'
+        );
+
+        if (window.google?.accounts?.id) {
+            loadGoogleConfiguration();
+        } else if (googleScript) {
+            googleScript.addEventListener(
+                'load',
+                loadGoogleConfiguration,
+                { once: true }
+            );
+
+            googleScript.addEventListener('error', () => {
+                console.error('Google Identity Services failed to load.');
+                errorMsg.textContent =
+                    'Could not load Google Sign-In. Please try again.';
+            }, { once: true });
+        }
+
+
 
         passwordToggle.addEventListener('click', () => {
 
-            const isHidden =
-                passwordInput.type === 'password';
+            const isHidden = passwordInput.type === 'password';
 
-            passwordInput.type =
-                isHidden ? 'text' : 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
 
             passwordToggle.innerHTML = isHidden
                 ? `
-                    <svg
-                        class="eye-icon"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-
-                        <path
-                            d="M3 3l18 18"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                        />
-
-                        <path
-                            d="M10.6 6.2C11.05 6.08 11.52 6 12 6
-                               c6.5 0 10 6 10 6
-                               a18.4 18.4 0 0 1-3.05 3.45"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-
-                        <path
-                            d="M6.1 9.1C3.7 10.55 2 12 2 12
-                               s3.5 6 10 6
-                               c1.05 0 2.02-.16 2.9-.43"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-
-                    </svg>
-                `
+          <svg class="eye-icon" viewBox="0 0 24 24"
+               fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M3 3l18 18"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            />
+            <path
+              d="M10.6 6.2C11.05 6.08 11.52 6 12 6
+                 c6.5 0 10 6 10 6
+                 a18.4 18.4 0 0 1-3.05 3.45"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M6.1 9.1C3.7 10.55 2 12 2 12
+                 s3.5 6 10 6
+                 c1.05 0 2.02-.16 2.9-.43"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        `
                 : `
-                    <svg
-                        class="eye-icon"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-
-                        <path
-                            d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-
-                        <circle
-                            cx="12"
-                            cy="12"
-                            r="2.5"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        />
-
-                    </svg>
-                `;
+          <svg class="eye-icon" viewBox="0 0 24 24"
+               fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <circle
+              cx="12"
+              cy="12"
+              r="2.5"
+              stroke="currentColor"
+              stroke-width="1.8"
+            />
+          </svg>
+        `;
 
             passwordToggle.setAttribute(
                 'aria-label',
                 isHidden ? 'Hide password' : 'Show password'
             );
-
         });
 
-        // ======================================================
-        // EMAIL / PASSWORD LOGIN
-        // ======================================================
-
         form.addEventListener('submit', async (e) => {
-
             e.preventDefault();
-
             errorMsg.textContent = '';
-
             submitBtn.disabled = true;
-
             submitBtn.textContent = 'Logging in...';
 
             const email =
                 document.getElementById('email').value.trim();
-
-            const password =
-                document.getElementById('password').value;
+            const password = document.getElementById('password').value;
 
             try {
-
-                const res = await fetch(
-                    `${API_URL}/login`,
-                    {
-                        method: 'POST',
-
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-
-                        body: JSON.stringify({
-                            email,
-                            password
-                        })
-                    }
-                );
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
 
                 const data = await res.json();
 
                 if (!res.ok) {
-                    throw new Error(
-                        data.message || 'Login failed'
-                    );
+                    throw new Error(data.message || 'Login failed');
                 }
 
-                localStorage.setItem(
-                    'token',
-                    data.token
-                );
+                // Save token to localStorage
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
 
-                localStorage.setItem(
-                    'user',
-                    JSON.stringify(data.user)
-                );
-
+                // Redirect to main app
                 window.location.href = 'index.html';
-
             } catch (err) {
-
                 errorMsg.textContent = err.message;
-
                 submitBtn.disabled = false;
-
                 submitBtn.textContent = 'Log In';
-
             }
-
         });
-
     </script>
-
 </body>
 
 </html>
