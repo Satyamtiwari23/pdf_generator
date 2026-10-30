@@ -1545,3 +1545,24 @@ body:not(.dark-theme) .sidebar-user {
 #openProfileSettings {
     cursor: pointer;
 }
+
+/* PDFnest account menu: rendered under <body> to avoid sidebar clipping */
+body > .sidebar-profile-dropdown {
+    position: fixed !important;
+    left: 12px !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: 88px !important;
+    width: min(280px, calc(100vw - 24px)) !important;
+    max-height: min(72vh, 520px) !important;
+    overflow-y: auto !important;
+    z-index: 2147483000 !important;
+    pointer-events: auto !important;
+    display: none;
+}
+body > .sidebar-profile-dropdown.show {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}

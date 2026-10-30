@@ -676,83 +676,7 @@
       renderProfile();
 
 
-      /* ==========================================================
-         ACCOUNT MENU — SIDEBAR + SETTINGS ENTRY POINTS
-         ========================================================== */
-
-      function openAccountMenu() {
-        if (!profileDropdown || !profileBtn) return;
-
-        profileDropdown.classList.add('show');
-        profileBtn.setAttribute('aria-expanded', 'true');
-
-        // Keep the account menu above the sidebar and other workspace layers.
-        profileDropdown.style.position = 'fixed';
-        profileDropdown.style.left = '12px';
-        profileDropdown.style.bottom = '88px';
-        profileDropdown.style.top = 'auto';
-        profileDropdown.style.right = 'auto';
-        profileDropdown.style.zIndex = '10000';
-      }
-
-      function closeAccountMenu() {
-        profileDropdown?.classList.remove('show');
-        profileBtn?.setAttribute('aria-expanded', 'false');
-        profilePhotoMenu?.classList.remove('show');
-      }
-
-      function toggleAccountMenu() {
-        if (profileDropdown?.classList.contains('show')) {
-          closeAccountMenu();
-        } else {
-          openAccountMenu();
-        }
-      }
-
-      profileBtn?.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        toggleAccountMenu();
-      });
-
-      // Clicks inside the account panel must not trigger the outside-click handler.
-      profileDropdown?.addEventListener('click', function (event) {
-        event.stopPropagation();
-      });
-
-      document.addEventListener('click', function (event) {
-        if (
-          profileDropdown &&
-          !profileDropdown.contains(event.target) &&
-          !profileBtn?.contains(event.target)
-        ) {
-          closeAccountMenu();
-        }
-
-        if (
-          profilePhotoMenu &&
-          !profilePhotoMenu.contains(event.target) &&
-          !profileEditBtn?.contains(event.target)
-        ) {
-          profilePhotoMenu.classList.remove('show');
-        }
-      });
-
-      // The Settings page's account button opens the exact same account panel.
-      document.getElementById('openProfileSettings')?.addEventListener('click', function (event) {
-        event.preventDefault();
-
-        // On smaller screens, reveal the sidebar before opening the account panel.
-        document.getElementById('appSidebar')?.classList.add('mobile-open');
-
-        openAccountMenu();
-      });
-
-      document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape') {
-          closeAccountMenu();
-        }
-      });
+      /* Account menu events are delegated in the final script at the end of this page. */
 
 
       /* ==========================================================
@@ -1989,6 +1913,98 @@
   <script src="js/file-detector.js"></script>
   <script src="js/tool-registry.js"></script>
   <script src="js/workspace.js"></script>
+
+  <script>
+    (function () {
+      'use strict';
+
+      function initPdfnestAccountMenu() {
+        const trigger = document.getElementById('sidebarProfileBtn');
+        const menu = document.getElementById('profileDropdown');
+        const settingsTrigger = document.getElementById('openProfileSettings');
+        const sidebar = document.getElementById('appSidebar');
+
+        if (!trigger || !menu) {
+          console.error('[PDFnest] Account menu elements are missing.', {
+            triggerFound: !!trigger,
+            menuFound: !!menu
+          });
+          return;
+        }
+
+        // Move the menu to <body> so sidebar stacking/overflow cannot hide it.
+        if (menu.parentElement !== document.body) {
+          document.body.appendChild(menu);
+        }
+
+        function openMenu() {
+          menu.classList.add('show');
+          menu.hidden = false;
+          menu.style.setProperty('display', 'block', 'important');
+          menu.style.setProperty('visibility', 'visible', 'important');
+          menu.style.setProperty('opacity', '1', 'important');
+          menu.style.setProperty('position', 'fixed', 'important');
+          menu.style.setProperty('left', '12px', 'important');
+          menu.style.setProperty('right', 'auto', 'important');
+          menu.style.setProperty('top', 'auto', 'important');
+          menu.style.setProperty('bottom', '88px', 'important');
+          menu.style.setProperty('z-index', '2147483000', 'important');
+          trigger.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeMenu() {
+          menu.classList.remove('show');
+          menu.style.removeProperty('display');
+          menu.style.removeProperty('visibility');
+          menu.style.removeProperty('opacity');
+          trigger.setAttribute('aria-expanded', 'false');
+          const photoMenu = document.getElementById('profilePhotoMenu');
+          photoMenu?.classList.remove('show');
+        }
+
+        trigger.addEventListener('click', function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          if (menu.classList.contains('show')) closeMenu();
+          else openMenu();
+        });
+
+        menu.addEventListener('click', function (event) {
+          event.stopPropagation();
+        });
+
+        document.addEventListener('click', function (event) {
+          if (!menu.contains(event.target) && !trigger.contains(event.target)) {
+            closeMenu();
+          }
+        });
+
+        settingsTrigger?.addEventListener('click', function (event) {
+          event.preventDefault();
+          sidebar?.classList.add('mobile-open');
+          openMenu();
+        });
+
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') closeMenu();
+        });
+
+        // Keep menu usable after viewport changes.
+        window.addEventListener('resize', function () {
+          if (menu.classList.contains('show')) openMenu();
+        });
+
+        console.info('[PDFnest] Account menu initialized.');
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPdfnestAccountMenu, { once: true });
+      } else {
+        initPdfnestAccountMenu();
+      }
+    })();
+  </script>
+
 </body>
 
 </html>
