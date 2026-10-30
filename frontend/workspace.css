@@ -1540,3 +1540,30 @@ body > .sidebar-profile-dropdown.show {
 
 /* Profile avatar: no pencil/edit badge overlay in the account dropdown. */
 #profileEditBtn, .profile-edit-btn { display: none !important; }
+
+
+/* Reliable hidden file input: visually hidden, but not display:none/hidden. */
+.visually-hidden-file-input {
+  position: fixed !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Keep drag-and-drop available after the first file is selected. */
+#selectedFilesPanel.dragging,
+#workspaceDropzone.dragging {
+  outline: 2px dashed var(--accent, #8b5cf6) !important;
+  outline-offset: -6px;
+  background: rgba(139, 92, 246, .08) !important;
+}
+#selectedFilesPanel {
+  position: relative;
+}

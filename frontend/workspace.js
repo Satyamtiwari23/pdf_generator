@@ -99,16 +99,70 @@
   $("#settingsClearHistory").addEventListener("click",clearHistory);
   $("#clearHistoryBtn").addEventListener("click",clearHistory);
   function clearHistory(){if(!confirm("Clear your recent activity history from this browser?"))return;state.history=[];persistHistory();renderHistory();}
-  $("#browseFilesBtn").addEventListener("click",e=>{e.stopPropagation();input.click();});
-  $("#addMoreFilesBtn").addEventListener("click",()=>input.click());
-  $("#clearFilesBtn").addEventListener("click",()=>{state.files=[];renderSelection();});
-  drop.addEventListener("click",e=>{if(!e.target.closest("button"))input.click();});
-  drop.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();input.click();}});
-  input.addEventListener("change",()=>{addFiles(input.files);input.value="";});
-  ["dragenter","dragover"].forEach(evt=>drop.addEventListener(evt,e=>{e.preventDefault();drop.classList.add("dragging");}));
-  ["dragleave","drop"].forEach(evt=>drop.addEventListener(evt,e=>{e.preventDefault();drop.classList.remove("dragging");if(evt==="drop"&&e.dataTransfer.files.length)addFiles(e.dataTransfer.files);}));
-  document.addEventListener("dragover",e=>e.preventDefault());
-  document.addEventListener("drop",e=>{if(!drop.contains(e.target))e.preventDefault();});
+  // File picker: use one shared input for initial selection and Add more.
+  function openFilePicker(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    if (!input) {
+      console.error("[PDFnest] File input #workspaceFileInput was not found.");
+      return;
+    }
+    // Clear first so selecting the same file again still fires "change".
+    input.value = "";
+    input.click();
+  }
+
+  $("#browseFilesBtn")?.addEventListener("click", openFilePicker);
+  $("#addMoreFilesBtn")?.addEventListener("click", openFilePicker);
+  $("#clearFilesBtn")?.addEventListener("click", () => {
+    state.files = [];
+    renderSelection();
+  });
+
+  drop?.addEventListener("click", event => {
+    if (event.target.closest("button")) return;
+    openFilePicker(event);
+  });
+
+  drop?.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") openFilePicker(event);
+  });
+
+  input?.addEventListener("change", () => {
+    if (input.files && input.files.length) addFiles(input.files);
+    input.value = "";
+  });
+
+  // Both the initial dropzone and the upload queue remain valid drop targets.
+  const uploadDropTargets = [drop, selected].filter(Boolean);
+  uploadDropTargets.forEach(target => {
+    ["dragenter", "dragover"].forEach(type => target.addEventListener(type, event => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+      target.classList.add("dragging");
+    }));
+
+    ["dragleave", "drop"].forEach(type => target.addEventListener(type, event => {
+      event.preventDefault();
+      event.stopPropagation();
+      target.classList.remove("dragging");
+      if (type === "drop" && event.dataTransfer?.files?.length) {
+        addFiles(event.dataTransfer.files);
+      }
+    }));
+  });
+
+  // Prevent the browser from opening a dropped file, but don't cancel our
+  // dropzone/queue handlers.
+  document.addEventListener("dragover", event => event.preventDefault());
+  document.addEventListener("drop", event => {
+    const insideUploadArea = uploadDropTargets.some(target => target.contains(event.target));
+    if (!insideUploadArea) event.preventDefault();
+  });
+
   $$(".tool-filter").forEach(b=>b.addEventListener("click",()=>{$$(".tool-filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.filter=b.dataset.filter;renderAllTools();}));
   $("#toolSearch").addEventListener("input",e=>{state.search=e.target.value.trim().toLowerCase();renderAllTools();});
   $("#sidebarUserName").textContent=user.name||user.fullName||"Your account";

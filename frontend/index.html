@@ -103,7 +103,7 @@
           <section class="multi-upload-card" aria-label="Upload files">
             <div class="multi-dropzone" id="workspaceDropzone" tabindex="0" role="button"
               aria-label="Choose or drop multiple files">
-              <input id="workspaceFileInput" type="file" multiple hidden />
+              <input id="workspaceFileInput" class="visually-hidden-file-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp,.avif,.heic,.heif,.doc,.docx,.txt,.rtf,.odt" />
               <div class="upload-cloud-icon">↑</div>
               <h2>Drag &amp; drop your files here</h2>
               <p>or <button type="button" class="text-button" id="browseFilesBtn">select files</button> from your device
@@ -2037,22 +2037,18 @@
         initPdfnestAccountMenu();
       }
 
-      // Show the toast on PDFnest, then navigate this same tab after 1 second.
-      // Same-tab navigation avoids opening an unwanted blank tab and is not
-      // blocked by browser popup protection.
+      // Notify the user, then open the Portfolio homepage after one second.
       const helpLink = document.getElementById('helpSupportLink');
       helpLink?.addEventListener('click', function (event) {
         event.preventDefault();
-        event.stopPropagation();
 
-        const portfolioUrl = 'https://satyamtiwari23.github.io/Portfolio/';
         let toast = document.getElementById('pdfnestHelpToast');
-
         if (!toast) {
           toast = document.createElement('div');
           toast.id = 'pdfnestHelpToast';
           toast.setAttribute('role', 'status');
           toast.setAttribute('aria-live', 'polite');
+          toast.textContent = 'Visit the Contact section of our website';
           Object.assign(toast.style, {
             position: 'fixed',
             left: '50%',
@@ -2071,12 +2067,25 @@
           });
           document.body.appendChild(toast);
         }
-
-        toast.textContent = 'Visit the Contact section of my portfolio';
+        toast.textContent = 'Visit the Contact section of our website';
         requestAnimationFrame(() => { toast.style.opacity = '1'; });
 
+        // Open immediately in a blank tab to avoid popup blockers, then navigate
+        // that tab after the requested one-second toast.
+        const portfolioTab = window.open('about:blank', '_blank');
+        if (portfolioTab) {
+          portfolioTab.opener = null;
+          portfolioTab.document.title = 'Opening Portfolio…';
+          portfolioTab.document.body.innerHTML = '<p style="font-family:system-ui;padding:24px">Opening portfolio homepage…</p>';
+        }
         window.setTimeout(() => {
-          window.location.assign(portfolioUrl);
+          if (portfolioTab && !portfolioTab.closed) {
+            portfolioTab.location.href = 'https://satyamtiwari23.github.io/Portfolio/';
+          } else {
+            window.location.href = 'https://satyamtiwari23.github.io/Portfolio/';
+          }
+          toast.style.opacity = '0';
+          window.setTimeout(() => toast.remove(), 250);
         }, 1000);
       });
     })();
