@@ -11,26 +11,9 @@
     rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="workspace.css" />
-  <script src="./theme.js"></script>
+  <script src="theme.js"></script>
   <script src="auth-guard.js"></script>
   <script src="tool-bridge.js"></script>
-
-  <style>
-    #workspaceFileInput {
-      position: fixed !important;
-      width: 1px !important;
-      height: 1px !important;
-      opacity: 0 !important;
-      overflow: hidden !important;
-      clip: rect(0, 0, 0, 0) !important;
-      clip-path: inset(50%) !important;
-      white-space: nowrap !important;
-      pointer-events: none !important;
-    }
-    #workspaceDropzone { pointer-events: auto; }
-    #workspaceDropzone button { position: relative; z-index: 2; pointer-events: auto; }
-  </style>
-
 </head>
 
 <body class="has-custom-cursor">
@@ -52,7 +35,7 @@
       <div class="sidebar-label sidebar-label-spaced">PREFERENCES</div>
       <nav class="sidebar-nav" aria-label="Preferences">
         <button class="sidebar-link" type="button" data-view="settings"><span>⚙</span> Settings</button>
-        <a class="sidebar-link" href="https://satyamtiwari23.github.io/Portfolio/#contact" target="_blank" rel="noopener noreferrer"><span>?</span> Help &amp; Support</a>
+        <a class="sidebar-link" href="https://satyamtiwari23.github.io/Portfolio/" id="helpSupportLink" target="_blank" rel="noopener noreferrer"><span>?</span> Help &amp; Support</a>
       </nav>
 
       <div class="sidebar-bottom">
@@ -127,7 +110,7 @@
           <section class="multi-upload-card" aria-label="Upload files">
             <div class="multi-dropzone" id="workspaceDropzone" tabindex="0" role="button"
               aria-label="Choose or drop multiple files">
-              <input id="workspaceFileInput" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp,.avif,.heic,.heif,.doc,.docx,.txt,.rtf,.odt" />
+              <input id="workspaceFileInput" type="file" multiple hidden />
               <div class="upload-cloud-icon">↑</div>
               <h2>Drag &amp; drop your files here</h2>
               <p>or <button type="button" class="text-button" id="browseFilesBtn">select files</button> from your device
@@ -1880,7 +1863,10 @@
         mouse.y = e.clientY;
       });
 
-      // Keep the native cursor visible so file controls and menu interactions remain clear.
+      // Hide the default system cursor globally
+      const style = document.createElement('style');
+      style.textContent = `* { cursor: none !important; }`;
+      document.head.appendChild(style);
 
       function animate() {
         ctx.clearRect(0, 0, width, height);
@@ -1924,9 +1910,9 @@
       animate();
     })();
   </script>
-  <script src="./js/file-detector.js"></script>
-  <script src="./js/tool-registry.js"></script>
-  <script src="./js/workspace.js"></script>
+  <script src="js/file-detector.js"></script>
+  <script src="js/tool-registry.js"></script>
+  <script src="js/workspace.js"></script>
 
   <script>
     (function () {
@@ -1936,48 +1922,59 @@
         const trigger = document.getElementById('sidebarProfileBtn');
         const menu = document.getElementById('profileDropdown');
         const settingsTrigger = document.getElementById('openProfileSettings');
-        const sidebar = document.getElementById('appSidebar');
 
         if (!trigger || !menu) {
           console.error('[PDFnest] Account menu elements are missing.', {
-            triggerFound: !!trigger,
-            menuFound: !!menu
+            triggerFound: !!trigger, menuFound: !!menu
           });
           return;
         }
 
-        // Move the menu to <body> so sidebar stacking/overflow cannot hide it.
-        if (menu.parentElement !== document.body) {
-          document.body.appendChild(menu);
+        // Keep the menu under <body> to escape sidebar clipping, but position it
+        // from the actual trigger on every open. Never use fixed bottom/left values.
+        if (menu.parentElement !== document.body) document.body.appendChild(menu);
+
+        function positionMenu() {
+          const anchor = trigger.getBoundingClientRect();
+          const width = Math.min(280, window.innerWidth - 24);
+          const height = menu.getBoundingClientRect().height || 260;
+          const gap = 14;
+
+          // Prefer the open space to the right of the sidebar account button.
+          let left = anchor.right + gap;
+          if (left + width > window.innerWidth - 12) {
+            // On narrow screens, place it above the button, not over the pointer.
+            left = Math.max(12, Math.min(anchor.left, window.innerWidth - width - 12));
+          }
+
+          let top = anchor.top - height - gap;
+          if (top < 12) top = Math.min(anchor.bottom + gap, window.innerHeight - height - 12);
+          top = Math.max(12, Math.min(top, window.innerHeight - height - 12));
+
+          menu.style.setProperty('position', 'fixed', 'important');
+          menu.style.setProperty('left', left + 'px', 'important');
+          menu.style.setProperty('top', top + 'px', 'important');
+          menu.style.setProperty('right', 'auto', 'important');
+          menu.style.setProperty('bottom', 'auto', 'important');
+          menu.style.setProperty('width', width + 'px', 'important');
+          menu.style.setProperty('max-height', 'min(72vh, 520px)', 'important');
+          menu.style.setProperty('overflow-y', 'auto', 'important');
+          menu.style.setProperty('z-index', '2147483000', 'important');
         }
 
         function openMenu() {
-          menu.classList.add('show');
           menu.hidden = false;
+          menu.classList.add('show');
           menu.style.setProperty('display', 'block', 'important');
           menu.style.setProperty('visibility', 'visible', 'important');
           menu.style.setProperty('opacity', '1', 'important');
-          menu.style.setProperty('position', 'fixed', 'important');
-          menu.style.setProperty('right', 'auto', 'important');
-          menu.style.setProperty('top', 'auto', 'important');
-          menu.style.setProperty('bottom', 'auto', 'important');
-          menu.style.setProperty('z-index', '2147483000', 'important');
-
-          // Place the menu to the right of the account row so it never covers
-          // the pointer or the account button that opened it.
-          const anchor = trigger.getBoundingClientRect();
-          const menuRect = menu.getBoundingClientRect();
-          const menuWidth = menuRect.width || Math.min(280, window.innerWidth - 24);
-          const menuHeight = menuRect.height || 320;
-          const gap = 12;
-          let left = anchor.right + gap;
-          if (left + menuWidth > window.innerWidth - 12) {
-            left = Math.max(12, anchor.left - menuWidth - gap);
-          }
-          const top = Math.max(12, Math.min(anchor.bottom - menuHeight, window.innerHeight - menuHeight - 12));
-          menu.style.setProperty('left', `${left}px`, 'important');
-          menu.style.setProperty('top', `${top}px`, 'important');
           trigger.setAttribute('aria-expanded', 'true');
+
+          // Wait until the menu has a measurable box before placing it.
+          requestAnimationFrame(() => {
+            positionMenu();
+            requestAnimationFrame(positionMenu);
+          });
         }
 
         function closeMenu() {
@@ -1986,8 +1983,7 @@
           menu.style.removeProperty('visibility');
           menu.style.removeProperty('opacity');
           trigger.setAttribute('aria-expanded', 'false');
-          const photoMenu = document.getElementById('profilePhotoMenu');
-          photoMenu?.classList.remove('show');
+          document.getElementById('profilePhotoMenu')?.classList.remove('show');
         }
 
         trigger.addEventListener('click', function (event) {
@@ -1997,31 +1993,33 @@
           else openMenu();
         });
 
-        menu.addEventListener('click', function (event) {
-          event.stopPropagation();
-        });
-
-        document.addEventListener('click', function (event) {
-          if (!menu.contains(event.target) && !trigger.contains(event.target) && !settingsTrigger?.contains(event.target)) {
-            closeMenu();
-          }
-        });
+        menu.addEventListener('click', event => event.stopPropagation());
 
         settingsTrigger?.addEventListener('click', function (event) {
           event.preventDefault();
           event.stopPropagation();
-          sidebar?.classList.add('mobile-open');
           openMenu();
         });
 
-        document.addEventListener('keydown', function (event) {
+        document.addEventListener('click', function (event) {
+          if (!menu.contains(event.target) &&
+              !trigger.contains(event.target) &&
+              !settingsTrigger?.contains(event.target)) {
+            closeMenu();
+          }
+        });
+
+        document.addEventListener('keydown', event => {
           if (event.key === 'Escape') closeMenu();
         });
 
-        // Keep menu usable after viewport changes.
-        window.addEventListener('resize', function () {
-          if (menu.classList.contains('show')) openMenu();
+        window.addEventListener('resize', () => {
+          if (menu.classList.contains('show')) positionMenu();
         });
+
+        window.addEventListener('scroll', () => {
+          if (menu.classList.contains('show')) positionMenu();
+        }, true);
 
         console.info('[PDFnest] Account menu initialized.');
       }
@@ -2031,6 +2029,25 @@
       } else {
         initPdfnestAccountMenu();
       }
+
+      // Open the portfolio homepage first, then navigate that same tab to Contact.
+      // This makes the homepage visible briefly before the section navigation.
+      const helpLink = document.getElementById('helpSupportLink');
+      helpLink?.addEventListener('click', function (event) {
+        event.preventDefault();
+        const home = 'https://satyamtiwari23.github.io/Portfolio/';
+        const contact = home + '#contact';
+        const tab = window.open(home, '_blank');
+        if (tab) tab.opener = null;
+        if (!tab) {
+          // Popup blockers can prevent the new tab; fall back to normal homepage navigation.
+          window.open(contact, '_blank', 'noopener');
+          return;
+        }
+        window.setTimeout(() => {
+          try { tab.location.href = contact; } catch (_) { /* navigation may be restricted */ }
+        }, 900);
+      });
     })();
   </script>
 

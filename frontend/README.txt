@@ -1,19 +1,15 @@
-PDFnest upload and All Tools fix
+PDFnest account menu + Help & Support fix (v2)
 
-Replace these files in your existing frontend project:
-- index.html                 -> frontend/index.html
-- workspace.css              -> frontend/workspace.css
-- theme.js                   -> frontend/theme.js
-- js/workspace.js            -> frontend/js/workspace.js
-- js/file-detector.js        -> frontend/js/file-detector.js
-- js/tool-registry.js        -> frontend/js/tool-registry.js
+Replace in your frontend project:
+- index.html -> frontend/index.html
+- workspace.css -> frontend/workspace.css
+- workspace.js -> frontend/js/workspace.js (use the existing workspace.js supplied in this folder if present; this package does not alter its logic)
+- theme.js -> frontend/theme.js
 
-Keep your existing tool HTML files and their folders (pdf_section/, image_section/, etc.).
-Do not delete those folders.
+What this fixes:
+1. Removes the old hard-coded left:12px / bottom:88px menu position that kept placing the menu over the cursor.
+2. Positions the menu using the actual sidebar account button coordinates, preferring the free area to the right.
+3. Settings -> Open profile menu opens the same menu and is excluded from outside-click closing.
+4. Help & Support opens the portfolio homepage in a new tab, waits briefly, then navigates to #contact.
 
-After replacement, commit and push from the project root:
-git add .
-git commit -m "Fix PDFnest file upload and tools catalog"
-git push origin main
-
-Then hard refresh the deployed site with Cmd + Shift + R.
+Note: Smooth animated scrolling at the destination depends on the portfolio site's own CSS/JS. The staged homepage-then-contact navigation is implemented here. If the second navigation jumps instantly, share the Portfolio index.html/CSS and I can add native smooth scrolling there.
