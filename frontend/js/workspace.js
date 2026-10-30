@@ -4,16 +4,6 @@
   const state={files:[],view:"dashboard",filter:"all",search:"",history:[],favorites:[]};
   const input=$("#workspaceFileInput"), drop=$("#workspaceDropzone"), selected=$("#selectedFilesPanel");
   const status=$("#workspaceStatus");
-  if (!input || !drop || !selected || !status) {
-    console.error("[PDFnest] Upload UI is incomplete.", {input:!!input, drop:!!drop, selected:!!selected, status:!!status});
-    return;
-  }
-  if (!window.PDFnestToolRegistry || !window.PDFnestFileDetector) {
-    console.error("[PDFnest] Required tool scripts did not load.", {
-      registry:!!window.PDFnestToolRegistry, detector:!!window.PDFnestFileDetector
-    });
-    return;
-  }
   const user=(()=>{try{return JSON.parse(localStorage.getItem("user")||"{}")}catch{return {}}})();
   const userKey=String(user._id||user.id||user.email||"guest").toLowerCase().replace(/[^a-z0-9_-]/g,"_");
   const HISTORY_KEY=`pdfnest:activity:${userKey}`, FAV_KEY=`pdfnest:favorites:${userKey}`;
@@ -48,14 +38,14 @@
     link.addEventListener("click",()=>addActivity(tool,[]));
     container.appendChild(card);
   }
-  function renderPopular(){const c=$("#popularTools");if(!c)return;c.innerHTML="";window.PDFnestToolRegistry.getPopular().forEach(t=>addToolCard(t,c,false));}
+  function renderPopular(){const c=$("#popularTools");c.innerHTML="";window.PDFnestToolRegistry.getPopular().forEach(t=>addToolCard(t,c,false));}
   function renderAllTools(){
-    const c=$("#allToolsGrid");if(!c)return;c.innerHTML="";
+    const c=$("#allToolsGrid");c.innerHTML="";
     window.PDFnestToolRegistry.getAll().filter(t=>(state.filter==="all"||t.category===state.filter)&&(!state.search||`${t.name} ${t.desc}`.toLowerCase().includes(state.search))).forEach(t=>addToolCard(t,c));
     $("#catalogEmpty").hidden=!!c.children.length;
   }
   function renderFavorites(){
-    const c=$("#favoritesGrid");if(!c)return;c.innerHTML="";
+    const c=$("#favoritesGrid");c.innerHTML="";
     window.PDFnestToolRegistry.getAll().filter(t=>state.favorites.includes(t.id)).forEach(t=>addToolCard(t,c,false));
     $("#favoritesEmpty").hidden=!!c.children.length;
   }
@@ -106,42 +96,99 @@
   // Sidebar navigation and account/profile affordances.
   $$("[data-view]").forEach(btn=>btn.addEventListener("click",()=>setView(btn.dataset.view)));
   $("#mobileMenuBtn").addEventListener("click",()=>$("#appSidebar").classList.toggle("mobile-open"));
+  $("#sidebarProfileBtn").addEventListener("click",()=>$("#profileDropdown").classList.toggle("show"));
+  $("#openProfileSettings").addEventListener("click",()=>{$("#profileDropdown").classList.add("show");setView("settings");});
+  $("#settingsThemeToggle").addEventListener("click",()=>$("#themeToggle").click());
   $("#settingsClearHistory").addEventListener("click",clearHistory);
   $("#clearHistoryBtn").addEventListener("click",clearHistory);
   function clearHistory(){if(!confirm("Clear your recent activity history from this browser?"))return;state.history=[];persistHistory();renderHistory();}
-  $("#browseFilesBtn").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();input.click();});
-  $("#addMoreFilesBtn").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();input.click();});
-  $("#clearFilesBtn").addEventListener("click",()=>{state.files=[];renderSelection();});
-  drop.addEventListener("click",e=>{
-    if(e.target.closest("button")) return;
-    e.preventDefault();
-    input.click();
-  });
-  drop.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();input.click();}});
-  input.addEventListener("change",()=>{
-    if (input.files && input.files.length) addFiles(input.files);
-    input.value="";
-  });
-  ["dragenter","dragover"].forEach(evt=>drop.addEventListener(evt,e=>{
-    e.preventDefault();
-    if (e.dataTransfer) e.dataTransfer.dropEffect="copy";
-    drop.classList.add("dragging");
-  }));
-  ["dragleave","drop"].forEach(evt=>drop.addEventListener(evt,e=>{
-    e.preventDefault();
-    drop.classList.remove("dragging");
-    if(evt==="drop" && e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
-      addFiles(e.dataTransfer.files);
+  // One shared picker for both the empty state and the upload queue.
+  function openWorkspacePicker(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
     }
-  }));
-  document.addEventListener("dragover",e=>e.preventDefault());
-  document.addEventListener("drop",e=>{if(!drop.contains(e.target))e.preventDefault();});
+    if (!input) {
+      console.error("[PDFnest] Missing #workspaceFileInput");
+      setStatus("File picker is unavailable. Please refresh the page.", true);
+      return;
+    }
+    input.value = "";
+    input.click();
+  }
+
+  // Event delegation survives when the empty dropzone is replaced by the queue.
+  document.addEventListener("click", event => {
+    const browseButton = event.target.closest("#browseFilesBtn");
+    const addMoreButton = event.target.closest("#addMoreFilesBtn");
+    const dropzoneClick = event.target.closest("#workspaceDropzone");
+
+    if (browseButton || addMoreButton) {
+      openWorkspacePicker(event);
+      return;
+    }
+
+    if (dropzoneClick && !event.target.closest("button")) {
+      openWorkspacePicker(event);
+    }
+  });
+
+  $("#clearFilesBtn")?.addEventListener("click", () => {
+    state.files = [];
+    renderSelection();
+  });
+
+  drop?.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") {
+      openWorkspacePicker(event);
+    }
+  });
+
+  input?.addEventListener("change", () => {
+    if (input.files?.length) addFiles(input.files);
+    input.value = "";
+  });
+
+  // Listen on the persistent upload card, not the dropzone that disappears
+  // after the first selection. This supports adding files by drag-and-drop
+  // while the queue is visible.
+  const uploadCard = document.querySelector(".multi-upload-card");
+  if (uploadCard) {
+    ["dragenter", "dragover"].forEach(type => {
+      uploadCard.addEventListener(type, event => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+        uploadCard.classList.add("dragging");
+      });
+    });
+
+    ["dragleave", "drop"].forEach(type => {
+      uploadCard.addEventListener(type, event => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (type === "drop" && event.dataTransfer?.files?.length) {
+          addFiles(event.dataTransfer.files);
+        }
+        if (type === "drop" || !uploadCard.contains(event.relatedTarget)) {
+          uploadCard.classList.remove("dragging");
+        }
+      });
+    });
+  }
+
+  // Prevent the browser from navigating to a dropped file outside the upload card.
+  document.addEventListener("dragover", event => event.preventDefault());
+  document.addEventListener("drop", event => {
+    if (!uploadCard?.contains(event.target)) event.preventDefault();
+  });
+
   $$(".tool-filter").forEach(b=>b.addEventListener("click",()=>{$$(".tool-filter").forEach(x=>x.classList.remove("active"));b.classList.add("active");state.filter=b.dataset.filter;renderAllTools();}));
   $("#toolSearch").addEventListener("input",e=>{state.search=e.target.value.trim().toLowerCase();renderAllTools();});
   $("#sidebarUserName").textContent=user.name||user.fullName||"Your account";
   $("#sidebarUserEmail").textContent=user.email||"Signed in";
   const initial=(user.name||user.email||"S").trim().charAt(0).toUpperCase();
-  $("#sidebarUserInitial").textContent=initial;$("#dropdownProfileInitial").textContent=initial;
+  $("#sidebarUserInitial").textContent=initial;$("#profileInitial").textContent=initial;$("#dropdownProfileInitial").textContent=initial;
   $("#welcomeDate").textContent=new Date().toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"});
   state.history=readList(HISTORY_KEY).filter(x=>x.at>Date.now()-RETENTION_DAYS*86400000).slice(0,MAX_HISTORY);
   state.favorites=readList(FAV_KEY);

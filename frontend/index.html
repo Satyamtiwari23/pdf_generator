@@ -35,7 +35,7 @@
       <div class="sidebar-label sidebar-label-spaced">PREFERENCES</div>
       <nav class="sidebar-nav" aria-label="Preferences">
         <button class="sidebar-link" type="button" data-view="settings"><span>⚙</span> Settings</button>
-        <a class="sidebar-link" href="https://satyamtiwari23.github.io/Portfolio/" id="helpSupportLink" target="_blank" rel="noopener noreferrer"><span>?</span> Help &amp; Support</a>
+        <a class="sidebar-link" href="mailto:support@pdfnest.com"><span>?</span> Help &amp; Support</a>
       </nav>
 
       <div class="sidebar-bottom">
@@ -60,6 +60,13 @@
                 <div class="profile-photo-circle">
                   <span id="dropdownProfileInitial">S</span>
                   <img id="dropdownProfileAvatar" class="dropdown-profile-avatar" alt="Profile picture" />
+                </div>
+                <button id="profileEditBtn" class="profile-edit-btn" type="button"
+                  aria-label="Edit profile picture">✎</button>
+                <div id="profilePhotoMenu" class="profile-photo-menu">
+                  <button id="changeProfilePictureBtn" type="button">✏️ Change photo</button>
+                  <button id="deleteProfilePictureBtn" type="button" class="delete-photo-option">🗑️ Delete
+                    photo</button>
                 </div>
               </div>
             </div>
@@ -101,9 +108,10 @@
           </div>
 
           <section class="multi-upload-card" aria-label="Upload files">
+            <input id="workspaceFileInput" class="visually-hidden-file-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp,.avif,.heic,.heif,.doc,.docx,.txt,.rtf,.odt" />
             <div class="multi-dropzone" id="workspaceDropzone" tabindex="0" role="button"
               aria-label="Choose or drop multiple files">
-              <input id="workspaceFileInput" class="visually-hidden-file-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp,.avif,.heic,.heif,.doc,.docx,.txt,.rtf,.odt" />
+              
               <div class="upload-cloud-icon">↑</div>
               <h2>Drag &amp; drop your files here</h2>
               <p>or <button type="button" class="text-button" id="browseFilesBtn">select files</button> from your device
@@ -448,7 +456,7 @@
         const fullName = (currentUser.name || 'there').trim();
         const firstName = fullName.split(/\s+/)[0] || 'there';
         const hour = new Date().getHours();
-        const greeting = hour >= 5 && hour < 12
+        const greeting = hour >= 4 && hour < 12
           ? 'Good morning'
           : hour >= 12 && hour < 17
             ? 'Good afternoon'
@@ -1427,28 +1435,22 @@
 
       document
         .getElementById('logoutBtn')
-        ?.addEventListener('click', function (event) {
-          event.preventDefault();
-          event.stopPropagation();
+        ?.addEventListener(
+          'click',
+          function (event) {
 
-          const accountMenu = document.getElementById('profileDropdown');
-          accountMenu?.classList.remove('show');
-          if (accountMenu) {
-            accountMenu.hidden = true;
-            accountMenu.style.removeProperty('display');
-            accountMenu.style.removeProperty('visibility');
-            accountMenu.style.removeProperty('opacity');
+            event.preventDefault();
+
+
+            closeAccountMenu();
+
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+
+            window.location.replace('login.html');
+
           }
-          document.getElementById('sidebarProfileBtn')?.setAttribute('aria-expanded', 'false');
-
-          // Clear the local session and return to the login page.
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          sessionStorage.clear();
-
-          const loginUrl = new URL('login.html', window.location.href);
-          window.location.replace(loginUrl.href);
-        });
+        );
 
 
       /* ==========================================================
@@ -1921,67 +1923,34 @@
         const trigger = document.getElementById('sidebarProfileBtn');
         const menu = document.getElementById('profileDropdown');
         const settingsTrigger = document.getElementById('openProfileSettings');
+        const sidebar = document.getElementById('appSidebar');
 
         if (!trigger || !menu) {
           console.error('[PDFnest] Account menu elements are missing.', {
-            triggerFound: !!trigger, menuFound: !!menu
+            triggerFound: !!trigger,
+            menuFound: !!menu
           });
           return;
         }
 
-        // Keep the menu under <body> to escape sidebar clipping, but position it
-        // from the actual trigger on every open. Never use fixed bottom/left values.
-        if (menu.parentElement !== document.body) document.body.appendChild(menu);
-
-        function positionMenu() {
-          const anchor = trigger.getBoundingClientRect();
-          const width = Math.min(280, window.innerWidth - 24);
-          const height = menu.getBoundingClientRect().height || 260;
-          const gap = 18;
-          const cursorClearance = 42;
-
-          // Place the menu beside the account row, never on top of the trigger.
-          let left = anchor.right + gap;
-          if (left + width > window.innerWidth - 12) {
-            // If there is no room on the right, use the left side of the trigger.
-            left = anchor.left - width - gap;
-          }
-          if (left < 12) {
-            // Very narrow viewport: place it above the trigger and preserve a
-            // cursor-sized gap from the trigger edge.
-            left = Math.max(12, Math.min(anchor.left, window.innerWidth - width - 12));
-          }
-
-          let top = anchor.top - height - cursorClearance;
-          if (top < 12) {
-            top = anchor.bottom + cursorClearance;
-          }
-          top = Math.max(12, Math.min(top, window.innerHeight - height - 12));
-          left = Math.max(12, Math.min(left, window.innerWidth - width - 12));
-
-          menu.style.setProperty('position', 'fixed', 'important');
-          menu.style.setProperty('left', left + 'px', 'important');
-          menu.style.setProperty('top', top + 'px', 'important');
-          menu.style.setProperty('right', 'auto', 'important');
-          menu.style.setProperty('bottom', 'auto', 'important');
-          menu.style.setProperty('width', width + 'px', 'important');
-          menu.style.setProperty('max-height', 'min(72vh, 520px)', 'important');
-          menu.style.setProperty('overflow-y', 'auto', 'important');
-          menu.style.setProperty('z-index', '2147483000', 'important');
+        // Move the menu to <body> so sidebar stacking/overflow cannot hide it.
+        if (menu.parentElement !== document.body) {
+          document.body.appendChild(menu);
         }
+
         function openMenu() {
-          menu.hidden = false;
           menu.classList.add('show');
+          menu.hidden = false;
           menu.style.setProperty('display', 'block', 'important');
           menu.style.setProperty('visibility', 'visible', 'important');
           menu.style.setProperty('opacity', '1', 'important');
+          menu.style.setProperty('position', 'fixed', 'important');
+          menu.style.setProperty('left', '12px', 'important');
+          menu.style.setProperty('right', 'auto', 'important');
+          menu.style.setProperty('top', 'auto', 'important');
+          menu.style.setProperty('bottom', '88px', 'important');
+          menu.style.setProperty('z-index', '2147483000', 'important');
           trigger.setAttribute('aria-expanded', 'true');
-
-          // Wait until the menu has a measurable box before placing it.
-          requestAnimationFrame(() => {
-            positionMenu();
-            requestAnimationFrame(positionMenu);
-          });
         }
 
         function closeMenu() {
@@ -1990,7 +1959,8 @@
           menu.style.removeProperty('visibility');
           menu.style.removeProperty('opacity');
           trigger.setAttribute('aria-expanded', 'false');
-          document.getElementById('profilePhotoMenu')?.classList.remove('show');
+          const photoMenu = document.getElementById('profilePhotoMenu');
+          photoMenu?.classList.remove('show');
         }
 
         trigger.addEventListener('click', function (event) {
@@ -2000,33 +1970,30 @@
           else openMenu();
         });
 
-        menu.addEventListener('click', event => event.stopPropagation());
-
-        settingsTrigger?.addEventListener('click', function (event) {
-          event.preventDefault();
+        menu.addEventListener('click', function (event) {
           event.stopPropagation();
-          openMenu();
         });
 
         document.addEventListener('click', function (event) {
-          if (!menu.contains(event.target) &&
-              !trigger.contains(event.target) &&
-              !settingsTrigger?.contains(event.target)) {
+          if (!menu.contains(event.target) && !trigger.contains(event.target)) {
             closeMenu();
           }
         });
 
-        document.addEventListener('keydown', event => {
+        settingsTrigger?.addEventListener('click', function (event) {
+          event.preventDefault();
+          sidebar?.classList.add('mobile-open');
+          openMenu();
+        });
+
+        document.addEventListener('keydown', function (event) {
           if (event.key === 'Escape') closeMenu();
         });
 
-        window.addEventListener('resize', () => {
-          if (menu.classList.contains('show')) positionMenu();
+        // Keep menu usable after viewport changes.
+        window.addEventListener('resize', function () {
+          if (menu.classList.contains('show')) openMenu();
         });
-
-        window.addEventListener('scroll', () => {
-          if (menu.classList.contains('show')) positionMenu();
-        }, true);
 
         console.info('[PDFnest] Account menu initialized.');
       }
@@ -2036,58 +2003,6 @@
       } else {
         initPdfnestAccountMenu();
       }
-
-      // Notify the user, then open the Portfolio homepage after one second.
-      const helpLink = document.getElementById('helpSupportLink');
-      helpLink?.addEventListener('click', function (event) {
-        event.preventDefault();
-
-        let toast = document.getElementById('pdfnestHelpToast');
-        if (!toast) {
-          toast = document.createElement('div');
-          toast.id = 'pdfnestHelpToast';
-          toast.setAttribute('role', 'status');
-          toast.setAttribute('aria-live', 'polite');
-          toast.textContent = 'Visit the Contact section of our website';
-          Object.assign(toast.style, {
-            position: 'fixed',
-            left: '50%',
-            bottom: '28px',
-            transform: 'translateX(-50%)',
-            zIndex: '2147483647',
-            padding: '13px 20px',
-            borderRadius: '12px',
-            background: '#241b38',
-            color: '#ffffff',
-            border: '1px solid rgba(167,139,250,.55)',
-            boxShadow: '0 12px 36px rgba(0,0,0,.28)',
-            font: '600 13px/1.4 system-ui, sans-serif',
-            opacity: '0',
-            transition: 'opacity .2s ease'
-          });
-          document.body.appendChild(toast);
-        }
-        toast.textContent = 'Visit the Contact section of our website';
-        requestAnimationFrame(() => { toast.style.opacity = '1'; });
-
-        // Open immediately in a blank tab to avoid popup blockers, then navigate
-        // that tab after the requested one-second toast.
-        const portfolioTab = window.open('about:blank', '_blank');
-        if (portfolioTab) {
-          portfolioTab.opener = null;
-          portfolioTab.document.title = 'Opening Portfolio…';
-          portfolioTab.document.body.innerHTML = '<p style="font-family:system-ui;padding:24px">Opening portfolio homepage…</p>';
-        }
-        window.setTimeout(() => {
-          if (portfolioTab && !portfolioTab.closed) {
-            portfolioTab.location.href = 'https://satyamtiwari23.github.io/Portfolio/';
-          } else {
-            window.location.href = 'https://satyamtiwari23.github.io/Portfolio/';
-          }
-          toast.style.opacity = '0';
-          window.setTimeout(() => toast.remove(), 250);
-        }, 1000);
-      });
     })();
   </script>
 
