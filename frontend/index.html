@@ -1840,10 +1840,21 @@
     })();
 
     (function initProfessionalCursor() {
+
+      // Disable the custom cursor completely on phones and touch devices.
+      const isTouchDevice =
+        window.matchMedia('(hover: none), (pointer: coarse)').matches;
+
+      if (isTouchDevice) {
+        return;
+      }
+
       // Create canvas for cursor trail
       const canvas = document.createElement('canvas');
       canvas.id = 'cursor-trail-canvas';
-      canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:99999;';
+      canvas.style.cssText =
+        'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:99999;';
+
       document.body.appendChild(canvas);
 
       const ctx = canvas.getContext('2d');
@@ -1853,19 +1864,20 @@
         width = canvas.width = window.innerWidth;
         height = canvas.height = window.innerHeight;
       }
+
       window.addEventListener('resize', resize);
       resize();
 
       let mouse = { x: -100, y: -100 };
       let trail = [];
-      const maxTrail = 15; // Length of the trail
+      const maxTrail = 15;
 
       document.addEventListener('mousemove', e => {
         mouse.x = e.clientX;
         mouse.y = e.clientY;
       });
 
-      // Hide the default system cursor globally
+      // Hide the default system cursor only on desktop.
       const style = document.createElement('style');
       style.textContent = `* { cursor: none !important; }`;
       document.head.appendChild(style);
@@ -1873,35 +1885,30 @@
       function animate() {
         ctx.clearRect(0, 0, width, height);
 
-        // Add current position to trail
         trail.push({ x: mouse.x, y: mouse.y });
+
         if (trail.length > maxTrail) {
           trail.shift();
         }
 
-        // Draw the trail
         for (let i = 0; i < trail.length; i++) {
           const p = trail[i];
-          const ratio = i / trail.length; // 0 at oldest, 1 at newest
-          const radius = 8 * ratio; // Tapering effect
+          const ratio = i / trail.length;
+          const radius = 8 * ratio;
 
           if (radius <= 0) continue;
 
           ctx.beginPath();
           ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-
-          // Soft purple glow for the trail
           ctx.fillStyle = `rgba(139, 92, 246, ${ratio * 0.5})`;
           ctx.fill();
         }
 
-        // Draw the main glowing dot
         ctx.beginPath();
         ctx.arc(mouse.x, mouse.y, 5, 0, Math.PI * 2);
         ctx.fillStyle = '#ffffff';
         ctx.fill();
 
-        // Outer glow for main dot
         ctx.beginPath();
         ctx.arc(mouse.x, mouse.y, 12, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(139, 92, 246, 0.4)';
@@ -1909,7 +1916,9 @@
 
         requestAnimationFrame(animate);
       }
+
       animate();
+
     })();
   </script>
   <script src="js/file-detector.js"></script>
@@ -2043,51 +2052,48 @@
 
       const helpLink = document.getElementById('helpSupportLink');
 
-helpLink?.addEventListener('click', function (event) {
-  event.preventDefault();
+      helpLink?.addEventListener('click', function (event) {
+        event.preventDefault();
 
-  const portfolioUrl = 'https://satyamtiwari23.github.io/Portfolio/';
+        const portfolioUrl = 'https://satyamtiwari23.github.io/Portfolio/';
 
-  // Open a new tab immediately so the browser allows it.
-  const portfolioTab = window.open('about:blank', '_blank');
+        let toast = document.getElementById('pdfnestHelpToast');
 
-  // Display notification on PDFnest.
-  let toast = document.getElementById('pdfnestHelpToast');
+        if (!toast) {
+          toast = document.createElement('div');
+          toast.id = 'pdfnestHelpToast';
+          toast.setAttribute('role', 'status');
 
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'pdfnestHelpToast';
-    toast.setAttribute('role', 'status');
+          Object.assign(toast.style, {
+            position: 'fixed',
+            left: '50%',
+            bottom: '28px',
+            transform: 'translateX(-50%)',
+            zIndex: '2147483647',
+            padding: '13px 20px',
+            borderRadius: '12px',
+            background: '#241b38',
+            color: '#ffffff',
+            border: '1px solid rgba(167,139,250,.55)',
+            boxShadow: '0 12px 36px rgba(0,0,0,.28)',
+            font: '600 13px/1.4 system-ui, sans-serif'
+          });
 
-    Object.assign(toast.style, {
-      position: 'fixed',
-      left: '50%',
-      bottom: '28px',
-      transform: 'translateX(-50%)',
-      zIndex: '2147483647',
-      padding: '13px 20px',
-      borderRadius: '12px',
-      background: '#241b38',
-      color: '#ffffff',
-      border: '1px solid rgba(167,139,250,.55)',
-      boxShadow: '0 12px 36px rgba(0,0,0,.28)',
-      font: '600 13px/1.4 system-ui, sans-serif'
-    });
+          document.body.appendChild(toast);
+        }
 
-    document.body.appendChild(toast);
-  }
+        toast.textContent =
+          'You are being redirected to my portfolio... Please Visit Contact Section.';
 
-  toast.textContent = 'You are being redirected to my portfolio... Please Visit Contact Section.';
-  toast.style.display = 'block';
+        toast.style.display = 'block';
 
-  // Navigate the new tab after 2.5 seconds.
-  window.setTimeout(() => {
-    if (portfolioTab && !portfolioTab.closed) {
-      portfolioTab.location.href = portfolioUrl;
-    }
-  }, 2500);
-});
+        // After 2.5 seconds, hide the toast and open the portfolio in a new tab.
+        window.setTimeout(() => {
+          toast.style.display = 'none';
 
+          window.open(portfolioUrl, '_blank');
+        }, 2500);
+      });
     })();
   </script>
 
