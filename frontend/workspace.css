@@ -1568,18 +1568,9 @@ body > .sidebar-profile-dropdown.show {
 }
 
 
-/* Persistent picker: keep it outside the toggleable dropzone so Browse and Add more
-   continue to work after the first file selection. */
-.multi-upload-card > .visually-hidden-file-input {
-    position: absolute !important;
-    width: 1px !important;
-    height: 1px !important;
-    padding: 0 !important;
-    margin: -1px !important;
-    overflow: hidden !important;
-    clip: rect(0, 0, 0, 0) !important;
-    white-space: nowrap !important;
-    border: 0 !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+/* Keep the custom cursor visible above the profile dropdown.
+   pointer-events:none preserves all menu and page interactions. */
+#cursor-trail-canvas {
+  z-index: 2147483001 !important;
+  pointer-events: none !important;
 }
