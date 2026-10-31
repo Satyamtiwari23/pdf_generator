@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="../tool-theme.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
   <script src="../tool-bridge.js"></script>
@@ -462,6 +463,8 @@
     })();
 
     (function initProfessionalCursor() {
+      // Disable the custom cursor on touch devices; keep normal touch interaction.
+      if (window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
       // Create canvas for cursor trail
       const canvas = document.createElement('canvas');
       canvas.id = 'cursor-trail-canvas';
