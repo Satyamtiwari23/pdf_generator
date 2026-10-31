@@ -136,11 +136,19 @@
   }
 
   // Direct event handlers for manual file selection.
-  document.getElementById("browseFilesBtn")
-    ?.addEventListener("click", openWorkspacePicker);
 
-  document.getElementById("addMoreFilesBtn")
-    ?.addEventListener("click", openWorkspacePicker);
+
+  // Reliable manual file picker handling using event delegation.
+  document.addEventListener("click", function (event) {
+    const pickerButton = event.target.closest?.(
+      "#browseFilesBtn, #addMoreFilesBtn"
+    );
+
+    if (!pickerButton) return;
+
+    openWorkspacePicker(event);
+  }, true);
+
 
   // Allow clicking the dropzone to open the picker.
   drop?.addEventListener("click", function (event) {

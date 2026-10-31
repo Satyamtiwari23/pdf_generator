@@ -2040,6 +2040,7 @@
         initPdfnestAccountMenu();
       }
 
+
       const helpLink = document.getElementById('helpSupportLink');
 
       helpLink?.addEventListener('click', function (event) {
@@ -2047,7 +2048,7 @@
 
         const portfolioUrl = 'https://satyamtiwari23.github.io/Portfolio/';
 
-        // Show notification on the current PDFnest page.
+        // Display notification on PDFnest first.
         let toast = document.getElementById('pdfnestHelpToast');
 
         if (!toast) {
@@ -2073,18 +2074,15 @@
           document.body.appendChild(toast);
         }
 
-        toast.textContent = 'Visit the Contact section of my portfolio';
+        toast.textContent = 'You are being redirected to my portfolio...';
         toast.style.display = 'block';
 
-        // Open the actual website in a new tab.
-        // Opening it directly avoids the blank "Opening portfolio" page.
-        const portfolioTab = window.open(portfolioUrl, '_blank');
-
-        // Remove the toast after 1.5 seconds.
+        // Give the user 2.5 seconds to read the notification.
         window.setTimeout(() => {
-          toast.remove();
+          window.location.href = portfolioUrl;
         }, 2500);
       });
+
     })();
   </script>
 
