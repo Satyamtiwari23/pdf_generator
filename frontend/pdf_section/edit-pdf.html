@@ -21,821 +21,79 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
-
-  <style>
-    .cursor-glow {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: -1;
-      background: radial-gradient(480px circle at var(--glow-x, 50%) var(--glow-y, 30%), rgba(139, 92, 246, .13), rgba(192, 38, 211, .06) 35%, transparent 72%);
-      opacity: 0;
-      transition: opacity .3s ease;
-    }
-
-    .cursor-glow.active {
-      opacity: 1;
-    }
-
-    @media (hover:none),
-    (pointer:coarse),
-    (prefers-reduced-motion:reduce) {
-      .cursor-glow {
-        display: none;
-      }
-    }
-
-    body.editing main {
-      padding: 12px 12px 16px;
-    }
-
-    body.editing .hero {
-      display: none;
-    }
-
-    .card.editor {
-      --primary: #8b5cf6;
-      display: flex;
-      flex-direction: column;
-      padding: 10px;
-      height: calc(100vh - 100px);
-      height: calc(100dvh - 100px);
-      min-height: 480px;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-    }
-
-    .tb {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding-bottom: 8px;
-    }
-
-    .tb .sp {
-      flex: 1;
-    }
-
-    .zg,
-    .ea {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      position: relative;
-    }
-
-    .zl {
-      min-width: 46px;
-      text-align: center;
-      font-weight: 800;
-      font-size: .8rem;
-      color: var(--p-800);
-    }
-
-    body.dark-theme .zl {
-      color: #d7c4ff;
-    }
-
-    .ib {
-      flex: none;
-      min-width: 36px;
-      height: 36px;
-      padding: 0 11px;
-      border-radius: 11px;
-      border: 1px solid var(--p-200);
-      background: var(--p-100);
-      color: var(--p-800);
-      font: inherit;
-      font-weight: 800;
-      font-size: .82rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      white-space: nowrap;
-      transition: background .18s, transform .16s;
-    }
-
-    .ib:hover {
-      background: var(--p-200);
-    }
-
-    .ib:disabled {
-      opacity: .35;
-      cursor: not-allowed;
-    }
-
-    .ib.active {
-      background: linear-gradient(135deg, var(--p-600), var(--p-800));
-      color: #fff;
-      border-color: transparent;
-      box-shadow: 0 8px 18px -10px var(--p-700);
-    }
-
-    body.dark-theme .ib {
-      background: #211a2d;
-      color: #d7c4ff;
-      border-color: #4b3864;
-    }
-
-    body.dark-theme .ib:hover {
-      background: #2b2040;
-    }
-
-    body.dark-theme .ib.active {
-      background: linear-gradient(135deg, var(--p-600), var(--p-800));
-      color: #fff;
-      border-color: transparent;
-    }
-
-    .tb .btn,
-    .tb .send-to-btn {
-      padding: 0 14px;
-      height: 36px;
-      border-radius: 11px;
-      font-size: .84rem;
-    }
-
-    .tb .send-to-menu {
-      bottom: auto;
-      top: calc(100% + 8px);
-      left: auto;
-      right: 0;
-      width: min(320px, 86vw);
-    }
-
-    .tools {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 10px;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .tools::-webkit-scrollbar {
-      display: none;
-    }
-
-    .sep {
-      flex: none;
-      width: 1px;
-      background: var(--line);
-      margin: 4px 2px;
-    }
-
-    .ed-body {
-      flex: 1;
-      min-height: 0;
-      display: flex;
-    }
-
-    .ws {
-      flex: 1;
-      min-width: 0;
-      position: relative;
-      border-radius: 14px;
-      overflow: hidden;
-      background: var(--p-100);
-      border: 1px solid var(--p-200);
-    }
-
-    body.dark-theme .ws {
-      background: #110d16;
-      border-color: #3b2c50;
-    }
-
-    #pages {
-      position: absolute;
-      inset: 0;
-      overflow: auto;
-      padding: 14px 8px;
-      display: flex;
-      flex-direction: column;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    body.sheet-open #pages {
-      padding-bottom: 55vh;
-    }
-
-    .pg {
-      position: relative;
-      flex: none;
-      margin: 0 auto 20px;
-      background: #fff;
-      box-shadow: 0 4px 20px rgba(60, 16, 120, .28);
-      text-align: left;
-    }
-
-    .pg canvas {
-      display: block;
-    }
-
-    .ol,
-    .txl {
-      position: absolute;
-      inset: 0;
-    }
-
-    .txl {
-      pointer-events: none;
-    }
-
-    .txl.on {
-      pointer-events: auto;
-    }
-
-    .crosshair .pg {
-      cursor: crosshair;
-      touch-action: none;
-    }
-
-    .pgt {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      display: flex;
-      gap: 2px;
-      opacity: 0;
-      transition: opacity .2s;
-      z-index: 5;
-      background: rgba(34, 26, 51, .88);
-      padding: 3px;
-      border-radius: 10px;
-    }
-
-    .pg:hover .pgt {
-      opacity: 1;
-    }
-
-    @media (hover:none) {
-      .pgt {
-        opacity: .85;
-      }
-    }
-
-    .pgt button {
-      border: 0;
-      border-radius: 7px;
-      background: transparent;
-      color: #fff;
-      padding: 6px 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .pgt button:hover {
-      background: rgba(255, 255, 255, .2);
-    }
-
-    .tx {
-      position: absolute;
-      cursor: pointer;
-    }
-
-    .tx:hover {
-      background: rgba(139, 92, 246, .15);
-      outline: 1px solid var(--primary);
-    }
-
-    .obj {
-      position: absolute;
-      box-sizing: border-box;
-      cursor: move;
-      touch-action: none;
-      -webkit-touch-callout: none;
-      transition: transform .25s cubic-bezier(.34, 1.56, .64, 1), filter .25s;
-    }
-
-    .obj.sel {
-      outline: 1.5px solid var(--primary);
-    }
-
-    .obj:hover {
-      outline: 1px dashed rgba(139, 92, 246, .55);
-    }
-
-    .obj.sel:hover {
-      outline: 1.5px solid var(--primary);
-    }
-
-    .obj.held {
-      transform: scale(1.14);
-      z-index: 30;
-      filter: drop-shadow(0 10px 18px rgba(76, 29, 149, .45));
-    }
-
-    .obj .b {
-      white-space: pre-wrap;
-      line-height: 1.2;
-      outline: none;
-      min-width: 12px;
-      padding: 0;
-      margin: 0;
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-touch-callout: none;
-    }
-
-    .obj .b[contenteditable="true"] {
-      -webkit-user-select: text;
-      user-select: text;
-      cursor: text;
-    }
-
-    .obj.img img {
-      width: 100%;
-      height: 100%;
-      display: block;
-      pointer-events: none;
-      -webkit-user-drag: none;
-    }
-
-    .obj .h {
-      display: none;
-      position: absolute;
-      width: 11px;
-      height: 11px;
-      transform: translate(-50%, -50%);
-      background: var(--primary);
-      border: 2px solid #fff;
-      border-radius: 50%;
-      box-sizing: border-box;
-      z-index: 20;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
-    }
-
-    .obj.sel .h {
-      display: block;
-    }
-
-    @media (pointer:coarse) {
-      .obj .h {
-        width: 22px;
-        height: 22px;
-      }
-    }
-
-    .h.nw {
-      left: 0;
-      top: 0;
-      cursor: nwse-resize;
-    }
-
-    .h.n {
-      left: 50%;
-      top: 0;
-      cursor: ns-resize;
-    }
-
-    .h.ne {
-      left: 100%;
-      top: 0;
-      cursor: nesw-resize;
-    }
-
-    .h.e {
-      left: 100%;
-      top: 50%;
-      cursor: ew-resize;
-    }
-
-    .h.se {
-      left: 100%;
-      top: 100%;
-      cursor: nwse-resize;
-    }
-
-    .h.s {
-      left: 50%;
-      top: 100%;
-      cursor: ns-resize;
-    }
-
-    .h.sw {
-      left: 0;
-      top: 100%;
-      cursor: nesw-resize;
-    }
-
-    .h.w {
-      left: 0;
-      top: 50%;
-      cursor: ew-resize;
-    }
-
-    .obj.path .h {
-      display: none !important;
-    }
-
-    .obj.path {
-      min-width: 8px;
-      min-height: 8px;
-    }
-
-    .obj.path svg {
-      position: absolute;
-      left: 0;
-      top: 0;
-      overflow: visible;
-      pointer-events: none;
-    }
-
-    .obj.rect.e {
-      border-radius: 50%;
-    }
-
-    .pnav {
-      position: absolute;
-      left: 50%;
-      bottom: 14px;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 8px;
-      background: rgba(34, 26, 51, .74);
-      border: 1px solid rgba(255, 255, 255, .22);
-      border-radius: 16px;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      box-shadow: 0 10px 28px rgba(0, 0, 0, .3);
-      color: #fff;
-      z-index: 10;
-    }
-
-    .pnav button {
-      width: 32px;
-      height: 32px;
-      border: 0;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, .14);
-      color: #fff;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .pnav button:hover:not(:disabled) {
-      background: rgba(255, 255, 255, .26);
-    }
-
-    .pnav button:disabled {
-      opacity: .4;
-      cursor: not-allowed;
-    }
-
-    .pnav .pi {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: .8rem;
-      font-weight: 800;
-    }
-
-    .pnav input {
-      width: 40px;
-      height: 28px;
-      text-align: center;
-      border: 1px solid rgba(255, 255, 255, .3);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, .16);
-      color: #fff;
-      font: inherit;
-      font-weight: 800;
-      font-size: .8rem;
-      outline: none;
-      padding: 0;
-      appearance: textfield;
-      -moz-appearance: textfield;
-    }
-
-    .pnav input::-webkit-outer-spin-button,
-    .pnav input::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
-    body.sheet-open .pnav {
-      display: none;
-    }
-
-    .props {
-      width: 250px;
-      flex: none;
-      margin-left: 12px;
-      background: #fff;
-      border: 1px solid var(--p-200);
-      border-radius: 14px;
-      overflow-y: auto;
-      flex-direction: column;
-    }
-
-    body.dark-theme .props {
-      background: #181321;
-      border-color: #3b2c50;
-    }
-
-    .ph {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--line);
-      font-weight: 800;
-      font-size: .85rem;
-      position: sticky;
-      top: 0;
-      background: inherit;
-      z-index: 2;
-    }
-
-    #props {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-      padding: 14px;
-      font-size: .85rem;
-    }
-
-    .pgp {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      min-width: 0;
-    }
-
-    .pgp>label {
-      font-size: .68rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .09em;
-      color: var(--p-800);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 6px;
-    }
-
-    body.dark-theme .pgp>label {
-      color: #b58cff;
-    }
-
-    .pr {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .props select,
-    .props input[type=number] {
-      width: 100%;
-      padding: 9px 10px;
-      border-radius: 10px;
-      border: 1.5px solid var(--line);
-      background: #fff;
-      color: var(--ink);
-      font: inherit;
-      font-weight: 600;
-      font-size: .86rem;
-      outline: none;
-    }
-
-    .props input[type=number] {
-      width: 64px;
-      text-align: center;
-      flex: none;
-    }
-
-    .props select:focus,
-    .props input[type=number]:focus {
-      border-color: var(--p-400);
-      box-shadow: 0 0 0 4px rgba(139, 92, 246, .15);
-    }
-
-    .props input[type=color] {
-      width: 34px;
-      height: 34px;
-      border: 0;
-      border-radius: 50%;
-      padding: 0;
-      background: transparent;
-      cursor: pointer;
-      flex: none;
-    }
-
-    .props input[type=color]::-webkit-color-swatch-wrapper {
-      padding: 0;
-    }
-
-    .props input[type=color]::-webkit-color-swatch {
-      border: 2px solid var(--p-200);
-      border-radius: 50%;
-    }
-
-    .props input[type=range] {
-      width: 100%;
-      accent-color: var(--p-600);
-    }
-
-    .bgp {
-      display: flex;
-      flex: 1;
-      border: 1.5px solid var(--line);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    .bgp button {
-      flex: 1;
-      padding: 8px 0;
-      border: 0;
-      border-right: 1px solid var(--line);
-      background: transparent;
-      color: var(--ink);
-      font: inherit;
-      cursor: pointer;
-    }
-
-    .bgp button:last-child {
-      border-right: 0;
-    }
-
-    .bgp button.active {
-      background: var(--p-100);
-      color: var(--p-700);
-    }
-
-    body.dark-theme .bgp button.active {
-      background: #2b2040;
-      color: #d7c4ff;
-    }
-
-    .sb {
-      flex: 1;
-      padding: 9px 4px;
-      border-radius: 10px;
-      border: 1.5px solid var(--line);
-      background: transparent;
-      color: var(--ink);
-      font: inherit;
-      font-weight: 800;
-      font-size: .74rem;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .sb:hover {
-      background: var(--p-100);
-    }
-
-    .sb.del {
-      color: #d64545;
-    }
-
-    .chk {
-      flex-direction: row !important;
-      align-items: center;
-      font-weight: 700;
-      font-size: .82rem;
-    }
-
-    .blank-page-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding: 10px;
-      margin-bottom: 8px;
-      border: 1px solid var(--p-200);
-      border-radius: 12px;
-      background: var(--p-100);
-    }
-
-    .blank-page-controls label {
-      font-size: .78rem;
-      font-weight: 800;
-      color: var(--p-800);
-    }
-
-    .blank-page-controls select {
-      min-width: 130px;
-      max-width: 100%;
-      padding: 8px 10px;
-      border-radius: 9px;
-      border: 1px solid var(--p-200);
-      background: #fff;
-      color: #211a2d;
-      font: inherit;
-      font-size: .82rem;
-    }
-
-    .blank-page-controls input[type=color] {
-      width: 34px;
-      height: 34px;
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-    }
-
-    @media (min-width:1025px) {
-      .props {
-        display: none;
-      }
-
-      .props.on {
-        display: flex;
-      }
-    }
-
-    @media (max-width:1024px) {
-      .props {
-        display: flex;
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: auto;
-        margin: 0;
-        max-height: 46vh;
-        border-radius: 20px 20px 0 0;
-        border-bottom: 0;
-        transform: translateY(110%);
-        visibility: hidden;
-        transition: transform .3s cubic-bezier(.22, 1, .36, 1), visibility .3s;
-        z-index: 300;
-        box-shadow: 0 -18px 40px -18px rgba(76, 29, 149, .5);
-      }
-
-      .props.open {
-        transform: none;
-        visibility: visible;
-      }
-
-      #props {
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
-      }
-
-      .pgp.wide {
-        grid-column: 1/-1;
-      }
-    }
-
-    @media (max-width:639px) {
-      .card.editor {
-        padding: 8px;
-        border-radius: 18px;
-      }
-
-      .tb {
-        gap: 6px;
-      }
-
-      .ib {
-        padding: 0 9px;
-      }
-
-      .lbl {
-        display: none;
-      }
-
-      .tb .btn {
-        padding: 0 12px;
-      }
-
-      .blank-page-controls {
-        gap: 6px;
-      }
-
-      .blank-page-controls select {
-        min-width: 105px;
-      }
-    }
-  </style>
-  <link rel="stylesheet" href="../tool-theme.css" />
 </head>
 
-<body>
+<body data-page="edit-pdf">
   <div class="cursor-glow" aria-hidden="true"></div>
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="../index.html" class="brand"><span class="logo">✦</span><span>PDFnest<small>Edit PDF</small></span></a>
-      <a href="../index.html" class="back-link">← All tools</a>
-    </div>
-  </header>
+  <!-- App Layout Wrapper -->
+  <div class="app-layout">
 
-  <main>
-    <div id="upCard">
-      <section class="hero">
-        <h1>Edit <span class="grad">PDF</span></h1>
-        <p>Edit text, add images, draw, highlight, watermark and merge — all inside your browser.</p>
-      </section>
+    <!-- SIDEBAR -->
+    <aside class="app-sidebar" id="appSidebar">
+      <a href="../index.html" class="sidebar-brand">
+        <span class="sidebar-logo">✦</span>
+        <span><strong>PDFnest</strong><small>FILE WORKSPACE</small></span>
+      </a>
+
+      <div class="sidebar-label">WORKSPACE</div>
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <a href="../index.html" class="sidebar-link"><span>▦</span> Dashboard</a>
+        <a href="../index.html#all-tools" class="sidebar-link"><span>⌘</span> All Tools</a>
+        <a href="../index.html#recent" class="sidebar-link"><span>◷</span> Recent Files</a>
+        <a href="../index.html#favorites" class="sidebar-link"><span>♡</span> Favorites</a>
+      </nav>
+
+      <div class="sidebar-label sidebar-label-spaced">PREFERENCES</div>
+      <nav class="sidebar-nav" aria-label="Preferences">
+        <a href="../index.html#settings" class="sidebar-link"><span>⚙</span> Settings</a>
+        <a class="sidebar-link" href="https://satyamtiwari23.github.io/Portfolio/" target="_blank"
+          rel="noopener noreferrer"><span>?</span> Help &amp; Support</a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-plan"><span class="plan-dot"></span><span><strong>Browser processing</strong><small>Your
+              files stay on your device</small></span></div>
+        <div class="sidebar-account-wrap">
+          <button class="sidebar-user" type="button" id="sidebarProfileBtn" aria-label="Open account menu"
+            aria-expanded="false">
+            <span class="sidebar-user-avatar" id="sidebarUserAvatar">
+              <span id="sidebarUserInitial">S</span>
+              <img id="profileAvatar" class="profile-avatar" alt="Profile picture" />
+            </span>
+            <span class="sidebar-user-copy"><strong id="sidebarUserName">Your account</strong><small
+                id="sidebarUserEmail">Signed in</small></span>
+            <span class="sidebar-user-more">···</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="app-main">
+
+      <!-- TOPBAR -->
+      <header class="workspace-topbar">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle navigation">☰</button>
+        <div class="topbar-breadcrumb"><span>Workspace</span><b>/</b><strong>Edit PDF</strong></div>
+        <div class="topbar-actions">
+          <button class="topbar-icon" id="themeToggle" type="button" aria-label="Switch to dark theme"
+            title="Toggle light / dark theme">
+            <span id="themeIcon" aria-hidden="true">☾</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- TOOL CONTENT -->
+      <main class="workspace-content">
+
+
+<div id="upCard">
+      <section class="hero page-heading">
+<span class="workspace-kicker">PDF TOOL</span>
+<h1>Edit <span class="grad">PDF</span></h1>
+<p>Edit text, add images, draw, highlight, watermark and merge — all inside your browser.</p>
+</section>
       <section class="card">
         <div class="field">
           <label>Your PDF</label>
@@ -1024,7 +282,10 @@
     </section>
   </main>
 
-  <footer class="site-footer">100% client-side editing · Files never leave your device.</footer>
+      <footer class="site-footer">100% client-side editing · Files never leave your device.</footer>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -2861,6 +2122,12 @@
         });
       })();
     })();
+  </script>
+
+  <script>
+    document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+      document.querySelector('.app-sidebar').classList.toggle('mobile-open');
+    });
   </script>
 </body>
 

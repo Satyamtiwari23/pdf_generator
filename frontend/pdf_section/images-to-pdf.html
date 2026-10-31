@@ -14,28 +14,78 @@
   <script src="../auth-guard.js"></script>
   <script src="../tool-bridge.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <link rel="stylesheet" href="../tool-theme.css" />
 </head>
 
-<body class="has-custom-cursor">
+<body class="has-custom-cursor" data-page="images-to-pdf">
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="../index.html" class="brand">
-        <span class="logo">✦</span>
-        <span>PDFnest<small>Pics to PDF</small></span>
+  <!-- App Layout Wrapper -->
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="app-sidebar" id="appSidebar">
+      <a href="../index.html" class="sidebar-brand">
+        <span class="sidebar-logo">✦</span>
+        <span><strong>PDFnest</strong><small>FILE WORKSPACE</small></span>
       </a>
-      <a href="../index.html" class="back-link">← All tools</a>
-    </div>
-  </header>
 
-  <main>
-    <section class="hero">
-      <h1>Turn <span class="grad">photos into a PDF</span></h1>
-      <p>Drop your images, arrange them, and export a clean PDF — one page per photo.</p>
-    </section>
+      <div class="sidebar-label">WORKSPACE</div>
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <a href="../index.html" class="sidebar-link"><span>▦</span> Dashboard</a>
+        <a href="../index.html#all-tools" class="sidebar-link"><span>⌘</span> All Tools</a>
+        <a href="../index.html#recent" class="sidebar-link"><span>◷</span> Recent Files</a>
+        <a href="../index.html#favorites" class="sidebar-link"><span>♡</span> Favorites</a>
+      </nav>
 
-    <section class="card">
+      <div class="sidebar-label sidebar-label-spaced">PREFERENCES</div>
+      <nav class="sidebar-nav" aria-label="Preferences">
+        <a href="../index.html#settings" class="sidebar-link"><span>⚙</span> Settings</a>
+        <a class="sidebar-link" href="https://satyamtiwari23.github.io/Portfolio/" target="_blank"
+          rel="noopener noreferrer"><span>?</span> Help &amp; Support</a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-plan"><span class="plan-dot"></span><span><strong>Browser processing</strong><small>Your
+              files stay on your device</small></span></div>
+        <div class="sidebar-account-wrap">
+          <button class="sidebar-user" type="button" id="sidebarProfileBtn" aria-label="Open account menu"
+            aria-expanded="false">
+            <span class="sidebar-user-avatar" id="sidebarUserAvatar">
+              <span id="sidebarUserInitial">S</span>
+              <img id="profileAvatar" class="profile-avatar" alt="Profile picture" />
+            </span>
+            <span class="sidebar-user-copy"><strong id="sidebarUserName">Your account</strong><small
+                id="sidebarUserEmail">Signed in</small></span>
+            <span class="sidebar-user-more">···</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="app-main">
+
+      <!-- TOPBAR -->
+      <header class="workspace-topbar">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle navigation">☰</button>
+        <div class="topbar-breadcrumb"><span>Workspace</span><b>/</b><strong>Pics to PDF</strong></div>
+        <div class="topbar-actions">
+          <button class="topbar-icon" id="themeToggle" type="button" aria-label="Switch to dark theme"
+            title="Toggle light / dark theme">
+            <span id="themeIcon" aria-hidden="true">☾</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- TOOL CONTENT -->
+      <main class="workspace-content">
+
+
+        <div class="page-heading">
+          <span class="workspace-kicker">PDF TOOL</span>
+          <h1>Turn <span class="grad">photos into a PDF</span></h1>
+          <p>Drop your images, arrange them, and export a clean PDF — one page per photo.</p>
+        </div>
+<section class="card">
       <div class="field">
         <label>Your images</label>
         <div class="dropzone" id="dropzone" tabindex="0" role="button">
@@ -91,7 +141,10 @@
     </section>
   </main>
 
-  <footer class="site-footer">Built with jsPDF · Your files never leave your device.</footer>
+      <footer class="site-footer">Built with jsPDF · Your files never leave your device.</footer>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -536,6 +589,12 @@
       }
       animate();
     })();
+  </script>
+
+  <script>
+    document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+      document.querySelector('.app-sidebar').classList.toggle('mobile-open');
+    });
   </script>
 </body>
 
