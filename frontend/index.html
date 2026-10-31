@@ -35,7 +35,8 @@
       <div class="sidebar-label sidebar-label-spaced">PREFERENCES</div>
       <nav class="sidebar-nav" aria-label="Preferences">
         <button class="sidebar-link" type="button" data-view="settings"><span>⚙</span> Settings</button>
-        <a class="sidebar-link" href="https://satyamtiwari23.github.io/Portfolio/" id="helpSupportLink" target="_blank" rel="noopener noreferrer"><span>?</span> Help &amp; Support</a>
+        <a class="sidebar-link" href="https://satyamtiwari23.github.io/Portfolio/" id="helpSupportLink" target="_blank"
+          rel="noopener noreferrer"><span>?</span> Help &amp; Support</a>
       </nav>
 
       <div class="sidebar-bottom">
@@ -103,13 +104,15 @@
           <section class="multi-upload-card" aria-label="Upload files">
             <div class="multi-dropzone" id="workspaceDropzone" tabindex="0" role="button"
               aria-label="Choose or drop multiple files">
-              <input id="workspaceFileInput" class="visually-hidden-file-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp,.avif,.heic,.heif,.doc,.docx,.txt,.rtf,.odt" />
+              <input id="workspaceFileInput" class="visually-hidden-file-input" type="file" multiple
+                accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp,.avif,.heic,.heif,.doc,.docx,.txt,.rtf,.odt" />
               <div class="upload-cloud-icon">↑</div>
               <h2>Drag &amp; drop your files here</h2>
               <p>or <button type="button" class="text-button" id="browseFilesBtn">select files</button> from your device
               </p>
               <div class="supported-file-pills">
-                <span>PDF</span><span>Images</span><span>DOCX</span><span>TXT</span><span>More formats</span></div>
+                <span>PDF</span><span>Images</span><span>DOCX</span><span>TXT</span><span>More formats</span>
+              </div>
               <small>Select multiple files of different types in one upload.</small>
             </div>
 
@@ -2010,8 +2013,8 @@
 
         document.addEventListener('click', function (event) {
           if (!menu.contains(event.target) &&
-              !trigger.contains(event.target) &&
-              !settingsTrigger?.contains(event.target)) {
+            !trigger.contains(event.target) &&
+            !settingsTrigger?.contains(event.target)) {
             closeMenu();
           }
         });
@@ -2037,17 +2040,21 @@
         initPdfnestAccountMenu();
       }
 
-      // Show the toast on PDFnest for 1.5 seconds, then navigate this tab.
       const helpLink = document.getElementById('helpSupportLink');
+
       helpLink?.addEventListener('click', function (event) {
         event.preventDefault();
 
+        const portfolioUrl = 'https://satyamtiwari23.github.io/Portfolio/';
+
+        // Show notification on the current PDFnest page.
         let toast = document.getElementById('pdfnestHelpToast');
+
         if (!toast) {
           toast = document.createElement('div');
           toast.id = 'pdfnestHelpToast';
           toast.setAttribute('role', 'status');
-          toast.setAttribute('aria-live', 'polite');
+
           Object.assign(toast.style, {
             position: 'fixed',
             left: '50%',
@@ -2060,19 +2067,23 @@
             color: '#ffffff',
             border: '1px solid rgba(167,139,250,.55)',
             boxShadow: '0 12px 36px rgba(0,0,0,.28)',
-            font: '600 13px/1.4 system-ui, sans-serif',
-            opacity: '0',
-            transition: 'opacity .2s ease'
+            font: '600 13px/1.4 system-ui, sans-serif'
           });
+
           document.body.appendChild(toast);
         }
 
         toast.textContent = 'Visit the Contact section of my portfolio';
-        requestAnimationFrame(() => { toast.style.opacity = '1'; });
+        toast.style.display = 'block';
 
+        // Open the actual website in a new tab.
+        // Opening it directly avoids the blank "Opening portfolio" page.
+        const portfolioTab = window.open(portfolioUrl, '_blank');
+
+        // Remove the toast after 1.5 seconds.
         window.setTimeout(() => {
-          window.location.href = 'https://satyamtiwari23.github.io/Portfolio/';
-        }, 1500);
+          toast.remove();
+        }, 2500);
       });
     })();
   </script>
