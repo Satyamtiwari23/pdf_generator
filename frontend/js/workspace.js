@@ -130,16 +130,18 @@
 
   // Event delegation survives when the empty dropzone is replaced by the queue.
   document.addEventListener("click", event => {
-    const browseButton = event.target.closest("#browseFilesBtn");
-    const addMoreButton = event.target.closest("#addMoreFilesBtn");
-    const dropzoneClick = event.target.closest("#workspaceDropzone");
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+    const browseButton = target.closest("#browseFilesBtn");
+    const addMoreButton = target.closest("#addMoreFilesBtn");
+    const dropzoneClick = target.closest("#workspaceDropzone");
 
     if (browseButton || addMoreButton) {
       openWorkspacePicker(event);
       return;
     }
 
-    if (dropzoneClick && !event.target.closest("button")) {
+    if (dropzoneClick && !target.closest("button")) {
       openWorkspacePicker(event);
     }
   });

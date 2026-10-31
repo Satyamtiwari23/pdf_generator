@@ -1568,18 +1568,18 @@ body > .sidebar-profile-dropdown.show {
 }
 
 
-/* Account menu repair: the pencil/edit affordance is intentionally hidden here. */
-body > .sidebar-profile-dropdown .profile-edit-btn,
-.sidebar-profile-dropdown .profile-edit-btn {
-    display: none !important;
-}
-body > .sidebar-profile-dropdown {
-    z-index: 2147483000 !important;
-    pointer-events: auto !important;
-}
-body > .sidebar-profile-dropdown button,
-body > .sidebar-profile-dropdown a {
-    position: relative;
-    z-index: 1;
-    pointer-events: auto;
+/* Persistent picker: keep it outside the toggleable dropzone so Browse and Add more
+   continue to work after the first file selection. */
+.multi-upload-card > .visually-hidden-file-input {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
