@@ -13,69 +13,6 @@
     <script src="auth-guard.js"></script>
     <script src="theme.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <style>
-        .google-login-section {
-            margin-top: 20px;
-        }
-
-        .google-divider {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 18px 0;
-            color: #888;
-            font-size: 12px;
-        }
-
-        .google-divider::before,
-        .google-divider::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background: #ddd;
-        }
-
-        .google-circle-btn {
-            width: 42px;
-            height: 42px;
-            padding: 10px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid rgba(168, 85, 247, 0.4);
-            border-radius: 50%;
-            background: #21172f;
-            cursor: pointer;
-            transition: background 0.2s ease, border-color 0.2s ease,
-                transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .google-circle-btn svg {
-            width: 22px;
-            height: 22px;
-            display: block;
-        }
-
-        .google-circle-btn:hover {
-            background: #302040;
-            border-color: #a855f7;
-            box-shadow: 0 0 14px rgba(139, 92, 246, 0.25);
-            transform: translateY(-1px);
-        }
-
-        .google-circle-btn:focus-visible {
-            outline: 2px solid #a855f7;
-            outline-offset: 3px;
-        }
-
-        #googleButtonContainer {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-        }
-    </style>
 </head>
 
 <body>

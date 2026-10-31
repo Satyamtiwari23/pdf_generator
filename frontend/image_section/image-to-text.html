@@ -17,664 +17,78 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://unpkg.com/docx@8.2.3/build/index.umd.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-  <style>
-    /* ============================================================
-       FORM CONTROLS (dark-mode aware)
-       ============================================================ */
-    .ocr-input,
-    .ocr-select {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 11px;
-      border: 1.5px solid var(--line);
-      background: #fff;
-      color: var(--ink);
-      font-family: inherit;
-      font-size: .9rem;
-      font-weight: 700;
-      outline: none;
-      transition: border-color .2s, box-shadow .2s, background .2s;
-    }
-
-    .ocr-input:focus,
-    .ocr-select:focus {
-      border-color: var(--p-400);
-      box-shadow: 0 0 0 4px rgba(139, 92, 246, .15);
-    }
-
-    body.dark-theme .ocr-input,
-    body.dark-theme .ocr-select {
-      background: #1b1624;
-      color: var(--ink);
-      border-color: #3b2c50;
-    }
-
-    .ocr-select {
-      -webkit-appearance: none;
-      appearance: none;
-      background-image: none !important;
-      padding-right: 40px;
-      cursor: pointer;
-    }
-
-    .sel-wrap {
-      position: relative;
-    }
-
-    .sel-wrap::after {
-      content: "▾";
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none;
-      color: var(--p-600);
-      font-size: 1rem;
-      font-weight: 800;
-      line-height: 1;
-    }
-
-    body.dark-theme .sel-wrap::after {
-      color: #b58cff;
-    }
-
-    /* ============================================================
-       DROPZONE
-       ============================================================ */
-    .dropzone {
-      padding: 26px 18px;
-    }
-
-    /* ============================================================
-       IMAGE STRIP
-       ============================================================ */
-    .ocr-imgs {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .ocr-img {
-      position: relative;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid var(--line);
-      background: #fff;
-      aspect-ratio: 1;
-      box-shadow: var(--shadow-sm);
-      animation: pop .25s ease both;
-      user-select: none;
-    }
-
-    .ocr-img[draggable="true"] {
-      cursor: grab;
-    }
-
-    .ocr-img.is-dragging {
-      opacity: .42;
-      outline: 2px dashed var(--p-400);
-    }
-
-    .ocr-img.drop-before {
-      box-shadow: -4px 0 0 var(--p-500);
-    }
-
-    .ocr-img.drop-after {
-      box-shadow: 4px 0 0 var(--p-500);
-    }
-
-    .hero h1 .grad {
-      display: inline-block;
-      will-change: transform;
-      transition: transform .12s ease-out;
-    }
-
-    body.dark-theme .ocr-img {
-      background: #1b1624;
-      border-color: #3b2c50;
-    }
-
-    .ocr-img img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .ocr-img .idx {
-      position: absolute;
-      left: 6px;
-      bottom: 6px;
-      background: rgba(60, 16, 120, .85);
-      color: #fff;
-      font-size: .68rem;
-      font-weight: 800;
-      padding: 2px 7px;
-      border-radius: 6px;
-      letter-spacing: .04em;
-    }
-
-    .ocr-img .rm {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      border: 0;
-      background: rgba(60, 16, 120, .85);
-      color: #fff;
-      cursor: pointer;
-      font-size: .7rem;
-      display: grid;
-      place-items: center;
-      transition: background .18s;
-    }
-
-    .ocr-img .rm:hover {
-      background: #b91c1c;
-    }
-
-    .ocr-img .badge-ok {
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      background: rgba(16, 185, 129, .95);
-      color: #fff;
-      font-size: .62rem;
-      font-weight: 800;
-      padding: 2px 7px;
-      border-radius: 6px;
-    }
-
-    /* ============================================================
-       OPTIONS GRID
-       ============================================================ */
-    .ocr-opts {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px;
-      margin-top: 22px;
-    }
-
-    /* Toggle row */
-    .toggle-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .toggle {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 10px 12px;
-      border-radius: 11px;
-      border: 1.5px solid var(--line);
-      background: #fff;
-      cursor: pointer;
-      transition: border-color .18s, background .18s;
-      font-size: .82rem;
-      font-weight: 700;
-      color: var(--ink);
-    }
-
-    .toggle:hover {
-      border-color: var(--p-300);
-    }
-
-    .toggle input[type="checkbox"] {
-      width: 17px;
-      height: 17px;
-      flex: none;
-      accent-color: var(--p-600);
-      cursor: pointer;
-    }
-
-    .toggle.checked {
-      border-color: var(--p-400);
-      background: rgba(139, 92, 246, .06);
-    }
-
-    body.dark-theme .toggle {
-      background: #1b1624;
-      border-color: #3b2c50;
-      color: var(--ink);
-    }
-
-    body.dark-theme .toggle.checked {
-      background: rgba(139, 92, 246, .12);
-      border-color: #6d4ca5;
-    }
-
-    /* ============================================================
-       PROGRESS
-       ============================================================ */
-    .prog-wrap {
-      margin-top: 18px;
-      padding: 16px;
-      border-radius: 12px;
-      background: rgba(139, 92, 246, .06);
-      border: 1.5px solid rgba(139, 92, 246, .18);
-    }
-
-    body.dark-theme .prog-wrap {
-      background: rgba(139, 92, 246, .1);
-      border-color: rgba(139, 92, 246, .25);
-    }
-
-    .prog-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .prog-status {
-      font-size: .82rem;
-      font-weight: 800;
-      color: var(--p-800);
-    }
-
-    body.dark-theme .prog-status {
-      color: #d7c4ff;
-    }
-
-    .prog-pct {
-      font-size: .78rem;
-      font-weight: 800;
-      color: var(--p-700);
-    }
-
-    .prog-bar {
-      height: 8px;
-      background: var(--p-100);
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    body.dark-theme .prog-bar {
-      background: rgba(139, 92, 246, .15);
-    }
-
-    .prog-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--p-500), var(--p-700));
-      transition: width .35s ease;
-    }
-
-    /* ============================================================
-       RESULTS
-       ============================================================ */
-    .results {
-      margin-top: 24px;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 4px;
-      padding: 4px;
-      background: var(--p-100);
-      border-radius: 12px;
-      max-width: 420px;
-      margin-bottom: 14px;
-      border: 1px solid var(--p-200);
-      grid-template-columns: none;
-    }
-
-    body.dark-theme .tabs {
-      background: rgba(139, 92, 246, .12);
-      border-color: #4b3864;
-    }
-
-    .tabs .tab {
-      flex: 1;
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-      padding: 9px 10px;
-      border-radius: 9px;
-      font: inherit;
-      font-weight: 800;
-      color: var(--p-800);
-      font-size: .82rem;
-      transition: background .18s, color .18s, box-shadow .18s;
-    }
-
-    body.dark-theme .tabs .tab {
-      color: #d7c4ff;
-    }
-
-    .tabs .tab.active {
-      background: linear-gradient(135deg, var(--p-600), var(--p-800));
-      color: #fff;
-      box-shadow: 0 6px 14px -8px var(--p-700);
-    }
-
-    .tabs .tab:hover:not(.active) {
-      background: rgba(255, 255, 255, .6);
-    }
-
-    body.dark-theme .tabs .tab:hover:not(.active) {
-      background: rgba(255, 255, 255, .08);
-    }
-
-    .output-panel {
-      display: none;
-    }
-
-    .output-panel.active {
-      display: block;
-    }
-
-    #resultText {
-      width: 100%;
-      min-height: 320px;
-      padding: 16px;
-      border-radius: var(--radius-md);
-      border: 1.5px solid var(--line);
-      background: #fff;
-      color: var(--ink);
-      font-family: 'Plus Jakarta Sans', -apple-system, monospace;
-      font-size: .9rem;
-      line-height: 1.6;
-      resize: vertical;
-      outline: none;
-    }
-
-    #resultText:focus {
-      border-color: var(--p-400);
-      box-shadow: 0 0 0 4px rgba(139, 92, 246, .15);
-    }
-
-    body.dark-theme #resultText {
-      background: #1b1624;
-      border-color: #3b2c50;
-      color: var(--ink);
-    }
-
-    #resultJson {
-      width: 100%;
-      min-height: 320px;
-      padding: 16px;
-      border-radius: var(--radius-md);
-      border: 1.5px solid var(--line);
-      background: #fff;
-      color: var(--ink);
-      font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
-      font-size: .78rem;
-      line-height: 1.55;
-      resize: vertical;
-      outline: none;
-    }
-
-    body.dark-theme #resultJson {
-      background: #1b1624;
-      border-color: #3b2c50;
-      color: var(--ink);
-    }
-
-    /* ============================================================
-       CONFIDENCE LEGEND
-       ============================================================ */
-    .conf-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      font-size: .78rem;
-      font-weight: 700;
-      color: var(--muted);
-      margin-top: 10px;
-    }
-
-    .conf-legend .dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-
-    .conf-legend .dot.good {
-      background: #10b981;
-    }
-
-    .conf-legend .dot.mid {
-      background: #f59e0b;
-    }
-
-    .conf-legend .dot.bad {
-      background: #ef4444;
-    }
-
-    /* ============================================================
-       BOUNDING BOX OVERLAY
-       ============================================================ */
-    .overlay-wrap {
-      position: relative;
-      display: inline-block;
-      max-width: 100%;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1.5px solid var(--line);
-      background: #fff;
-    }
-
-    body.dark-theme .overlay-wrap {
-      background: #1b1624;
-      border-color: #3b2c50;
-    }
-
-    .overlay-wrap img {
-      display: block;
-      max-width: 100%;
-      height: auto;
-    }
-
-    .overlay-wrap canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-
-    /* ============================================================
-       ACTION BUTTONS
-       ============================================================ */
-    .act-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 14px;
-    }
-
-    .act-row .btn {
-      flex: 1;
-      min-width: 130px;
-    }
-
-    /* Download dropdown */
-    .dl-wrap {
-      position: relative;
-      flex: 1;
-      min-width: 130px;
-    }
-
-    .dl-menu {
-      position: absolute;
-      right: 0;
-      bottom: calc(100% + 8px);
-      min-width: 180px;
-      background: #fff;
-      border: 1px solid var(--p-200);
-      border-radius: 12px;
-      padding: 6px;
-      box-shadow: 0 18px 45px rgba(60, 35, 100, .18);
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(6px);
-      transition: opacity .18s ease, transform .18s ease, visibility .18s;
-      z-index: 100;
-    }
-
-    body.dark-theme .dl-menu {
-      background: #181321;
-      border-color: #3b2c50;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, .45);
-    }
-
-    .dl-menu.show {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
-    .dl-menu button {
-      width: 100%;
-      text-align: left;
-      border: 0;
-      background: transparent;
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: .84rem;
-      font-weight: 700;
-      color: var(--ink);
-      cursor: pointer;
-      transition: background .18s;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    body.dark-theme .dl-menu button {
-      color: #f5f2ff;
-    }
-
-    .dl-menu button:hover {
-      background: var(--p-100);
-    }
-
-    body.dark-theme .dl-menu button:hover {
-      background: rgba(139, 92, 246, .15);
-    }
-
-    /* ============================================================
-       DETECTED LANGUAGE CHIP
-       ============================================================ */
-    .lang-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, rgba(16, 185, 129, .15), rgba(52, 211, 153, .1));
-      color: #059669;
-      font-size: .74rem;
-      font-weight: 800;
-      border: 1px solid rgba(16, 185, 129, .3);
-      margin-top: 8px;
-    }
-
-    body.dark-theme .lang-chip {
-      background: linear-gradient(135deg, rgba(16, 185, 129, .18), rgba(52, 211, 153, .12));
-      color: #34d399;
-      border-color: rgba(52, 211, 153, .35);
-    }
-
-    /* ============================================================
-       RESULT META
-       ============================================================ */
-    .result-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .meta-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: var(--p-50);
-      border: 1px solid var(--p-200);
-      font-size: .74rem;
-      font-weight: 800;
-      color: var(--p-800);
-    }
-
-    body.dark-theme .meta-chip {
-      background: rgba(139, 92, 246, .12);
-      border-color: #4b3864;
-      color: #d7c4ff;
-    }
-
-    .meta-chip .ok {
-      color: #10b981;
-    }
-
-    .meta-chip .warn {
-      color: #f59e0b;
-    }
-
-    .meta-chip .bad {
-      color: #ef4444;
-    }
-
-    @media (max-width: 639px) {
-      .act-row .btn {
-        width: 100%;
-      }
-
-      .dl-wrap {
-        width: 100%;
-      }
-
-      .tabs {
-        max-width: 100%;
-      }
-    }
-
-    /* ===== Hero gradient text follows the cursor ===== */
-    .hero h1 .grad {
-      display: inline-block;
-      will-change: transform;
-      transition: transform 0.12s ease-out;
-    }
-  </style>
-  <link rel="stylesheet" href="../tool-theme.css" />
 </head>
 
-<body class="has-custom-cursor">
+<body class="has-custom-cursor" data-page="image-to-text">
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="../index.html" class="brand">
-        <span class="logo">✦</span>
-        <span>PDFnest<small>Advanced OCR</small></span>
+  <!-- App Layout Wrapper -->
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="app-sidebar" id="appSidebar">
+      <a href="../index.html" class="sidebar-brand">
+        <span class="sidebar-logo">✦</span>
+        <span><strong>PDFnest</strong><small>FILE WORKSPACE</small></span>
       </a>
-      <a href="../index.html" class="back-link">← All tools</a>
-    </div>
-  </header>
 
-  <main>
-    <section class="hero">
-      <h1>Extract <span class="grad">text from images</span></h1>
-      <p>Auto-detects language · Smart preprocessing · Multi-image · Bounding-box overlay</p>
-    </section>
+      <div class="sidebar-label">WORKSPACE</div>
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <a href="../index.html" class="sidebar-link"><span>▦</span> Dashboard</a>
+        <a href="../index.html#all-tools" class="sidebar-link"><span>⌘</span> All Tools</a>
+        <a href="../index.html#recent" class="sidebar-link"><span>◷</span> Recent Files</a>
+        <a href="../index.html#favorites" class="sidebar-link"><span>♡</span> Favorites</a>
+      </nav>
 
-    <section class="card">
+      <div class="sidebar-label sidebar-label-spaced">PREFERENCES</div>
+      <nav class="sidebar-nav" aria-label="Preferences">
+        <a href="../index.html#settings" class="sidebar-link"><span>⚙</span> Settings</a>
+        <a class="sidebar-link" href="https://satyamtiwari23.github.io/Portfolio/" target="_blank"
+          rel="noopener noreferrer"><span>?</span> Help &amp; Support</a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-plan"><span class="plan-dot"></span><span><strong>Browser processing</strong><small>Your
+              files stay on your device</small></span></div>
+        <div class="sidebar-account-wrap">
+          <button class="sidebar-user" type="button" id="sidebarProfileBtn" aria-label="Open account menu"
+            aria-expanded="false">
+            <span class="sidebar-user-avatar" id="sidebarUserAvatar">
+              <span id="sidebarUserInitial">S</span>
+              <img id="profileAvatar" class="profile-avatar" alt="Profile picture" />
+            </span>
+            <span class="sidebar-user-copy"><strong id="sidebarUserName">Your account</strong><small
+                id="sidebarUserEmail">Signed in</small></span>
+            <span class="sidebar-user-more">···</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="app-main">
+
+      <!-- TOPBAR -->
+      <header class="workspace-topbar">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle navigation">☰</button>
+        <div class="topbar-breadcrumb"><span>Workspace</span><b>/</b><strong>Image to Text (OCR)</strong></div>
+        <div class="topbar-actions">
+          <button class="topbar-icon" id="themeToggle" type="button" aria-label="Switch to dark theme"
+            title="Toggle light / dark theme">
+            <span id="themeIcon" aria-hidden="true">☾</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- TOOL CONTENT -->
+      <main class="workspace-content">
+
+        <div class="page-heading">
+          <span class="workspace-kicker">IMAGE TOOL</span>
+          <h1>Extract <span class="grad">text from images</span></h1>
+          <p>Auto-detects language · Smart preprocessing · Multi-image · Bounding-box overlay</p>
+        </div>
+
+<section class="card">
       <!-- Dropzone -->
       <div class="field">
         <label>Your images</label>
@@ -810,7 +224,7 @@
       <!-- Results -->
       <div class="results" id="results" hidden>
         <label
-          style="display:block; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.09em; color:var(--p-800); margin-bottom:10px;">
+          style="display:block; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.09em; color: var(--accent-text); margin-bottom:10px;">
           Extracted text
         </label>
 
@@ -873,7 +287,10 @@
     </section>
   </main>
 
-  <footer class="site-footer">Powered by Tesseract.js · Files never leave your device.</footer>
+      <footer class="site-footer">Powered by Tesseract.js · Files never leave your device.</footer>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -1327,7 +744,7 @@
           wrap.style.marginBottom = '18px';
 
           const label = document.createElement('div');
-          label.style.cssText = 'font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--p-700);margin-bottom:6px;';
+          label.style.cssText = 'font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color: var(--accent-text);margin-bottom:6px;';
           label.textContent = 'Image ' + (i + 1) + ' — ' + r.imageName;
           wrap.appendChild(label);
 
@@ -1886,6 +1303,12 @@
       }
       animate();
     })();
+  </script>
+
+  <script>
+    document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+      document.querySelector('.app-sidebar').classList.toggle('mobile-open');
+    });
   </script>
 </body>
 

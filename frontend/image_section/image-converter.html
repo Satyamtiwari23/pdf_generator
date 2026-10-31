@@ -15,664 +15,78 @@
   <script src="../tool-bridge.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <style>
-    /* ============================================================
-       FILE CHIP
-       ============================================================ */
-    .file-chip {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-      border-radius: 12px;
-      background: #fff;
-      border: 1.5px solid var(--line);
-      margin-top: 14px;
-    }
-
-    body.dark-theme .file-chip {
-      background: #1b1624;
-      border-color: #3b2c50;
-    }
-
-    .file-chip .thumb {
-      width: 48px;
-      height: 48px;
-      border-radius: 8px;
-      object-fit: cover;
-      flex: none;
-      border: 1px solid var(--line);
-      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 10px 10px;
-    }
-
-    .file-chip .info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .file-chip .nm {
-      font-weight: 700;
-      font-size: .88rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .file-chip .sz {
-      font-size: .74rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .file-chip .rm {
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      color: var(--muted);
-      font-weight: 800;
-      transition: background .18s, color .18s;
-    }
-
-    .file-chip .rm:hover {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-
-    body.dark-theme .file-chip .rm:hover {
-      background: rgba(214, 69, 69, .15);
-      color: #f87171;
-    }
-
-    /* ============================================================
-       FORMAT GRID (to-type picker)
-       ============================================================ */
-    .format-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 8px;
-    }
-
-    .format-tile {
-      border: 1.5px solid var(--line);
-      background: #fff;
-      padding: 12px 8px;
-      border-radius: 11px;
-      font-family: inherit;
-      cursor: pointer;
-      text-align: center;
-      transition: border-color .18s, transform .16s, background .18s, box-shadow .18s;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      align-items: center;
-    }
-
-    body.dark-theme .format-tile {
-      background: #1b1624;
-      border-color: #3b2c50;
-      color: var(--ink);
-    }
-
-    .format-tile:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-sm);
-      border-color: var(--p-300);
-    }
-
-    .format-tile.active {
-      border-color: var(--p-500);
-      background: linear-gradient(135deg, rgba(139, 92, 246, .08), rgba(192, 38, 211, .05));
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, .15);
-    }
-
-    body.dark-theme .format-tile.active {
-      background: linear-gradient(135deg, rgba(139, 92, 246, .15), rgba(192, 38, 211, .1));
-      border-color: #a78bfa;
-    }
-
-    .format-tile .f-icon {
-      font-size: 1.35rem;
-      line-height: 1;
-    }
-
-    .format-tile .f-name {
-      font-weight: 800;
-      font-size: .82rem;
-      letter-spacing: -.01em;
-      color: var(--ink);
-    }
-
-    .format-tile.active .f-name {
-      color: var(--p-800);
-    }
-
-    body.dark-theme .format-tile .f-name {
-      color: var(--ink);
-    }
-
-    body.dark-theme .format-tile.active .f-name {
-      color: #d7c4ff;
-    }
-
-    .format-tile .f-tag {
-      font-size: .62rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--muted);
-      padding: 1px 6px;
-      border-radius: 999px;
-      background: var(--p-50);
-      border: 1px solid var(--p-100);
-    }
-
-    body.dark-theme .format-tile .f-tag {
-      background: rgba(139, 92, 246, .1);
-      border-color: #3b2c50;
-      color: #aaa1bd;
-    }
-
-    .format-tile.active .f-tag {
-      background: var(--p-100);
-      color: var(--p-800);
-      border-color: var(--p-200);
-    }
-
-    body.dark-theme .format-tile.active .f-tag {
-      background: rgba(139, 92, 246, .2);
-      color: #d7c4ff;
-    }
-
-    .format-tile .f-tag.lossy {
-      background: rgba(245, 158, 11, .15);
-      color: #92400e;
-      border-color: rgba(245, 158, 11, .3);
-    }
-
-    .format-tile .f-tag.lossless {
-      background: rgba(16, 185, 129, .15);
-      color: #047857;
-      border-color: rgba(16, 185, 129, .3);
-    }
-
-    body.dark-theme .format-tile .f-tag.lossy {
-      color: #fbbf24;
-    }
-
-    body.dark-theme .format-tile .f-tag.lossless {
-      color: #34d399;
-    }
-
-    /* ============================================================
-       SLIDERS
-       ============================================================ */
-    .pe-slider {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .pe-slider label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: .72rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--p-800);
-    }
-
-    body.dark-theme .pe-slider label {
-      color: #d7c4ff;
-    }
-
-    .pe-slider label .val {
-      background: var(--p-100);
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: .68rem;
-      color: var(--p-700);
-      border: 1px solid var(--p-200);
-    }
-
-    body.dark-theme .pe-slider label .val {
-      background: rgba(139, 92, 246, .15);
-      border-color: #4b3864;
-      color: #d7c4ff;
-    }
-
-    .pe-slider input[type="range"] {
-      width: 100%;
-      accent-color: var(--p-600);
-      cursor: pointer;
-    }
-
-    /* ============================================================
-       BACKGROUND PICKER
-       ============================================================ */
-    .bg-choices {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .bg-swatch {
-      width: 32px;
-      height: 32px;
-      border-radius: 9px;
-      border: 2px solid var(--line);
-      cursor: pointer;
-      padding: 0;
-      transition: transform .16s, border-color .18s, box-shadow .18s;
-    }
-
-    body.dark-theme .bg-swatch {
-      border-color: #3b2c50;
-    }
-
-    .bg-swatch:hover {
-      transform: scale(1.1);
-    }
-
-    .bg-swatch.active {
-      border-color: var(--p-600);
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, .25);
-    }
-
-    .bg-custom {
-      position: relative;
-      overflow: hidden;
-      background: conic-gradient(#ef4444, #f59e0b, #10b981, #3b82f6, #8b5cf6, #ef4444);
-    }
-
-    .bg-custom input {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-      width: 100%;
-      height: 100%;
-    }
-
-    /* ============================================================
-       INFO PANEL
-       ============================================================ */
-    .info-panel {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-      padding: 14px;
-      border-radius: 12px;
-      background: rgba(139, 92, 246, .06);
-      border: 1.5px solid rgba(139, 92, 246, .2);
-      margin-top: 14px;
-    }
-
-    body.dark-theme .info-panel {
-      background: rgba(139, 92, 246, .1);
-      border-color: rgba(139, 92, 246, .25);
-    }
-
-    .info-item {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .info-item .k {
-      font-size: .66rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--muted);
-    }
-
-    .info-item .v {
-      font-size: .88rem;
-      font-weight: 800;
-      color: var(--p-800);
-      letter-spacing: -.01em;
-    }
-
-    body.dark-theme .info-item .v {
-      color: #d7c4ff;
-    }
-
-    /* ============================================================
-       ACTIONS
-       ============================================================ */
-    .act-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 22px;
-      justify-content: center;
-    }
-
-    .act-row .btn {
-      flex: 1;
-      min-width: 140px;
-      max-width: 240px;
-    }
-
-    @media (max-width: 500px) {
-      .act-row .btn {
-        max-width: none;
-      }
-    }
-
-    /* ============================================================
-       PREVIEW MODAL
-       ============================================================ */
-    .preview-modal {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 12, 20, .88);
-      backdrop-filter: blur(6px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 20px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .22s ease;
-    }
-
-    .preview-modal.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .preview-modal-content {
-      background: #fff;
-      border-radius: 18px;
-      width: 100%;
-      max-width: 1000px;
-      max-height: 92vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 26px 60px -24px rgba(0, 0, 0, .55);
-    }
-
-    body.dark-theme .preview-modal-content {
-      background: #1b1624;
-    }
-
-    .preview-header {
-      padding: 16px 22px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .preview-header h3 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 800;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      min-width: 0;
-    }
-
-    .preview-close {
-      background: transparent;
-      border: 0;
-      font-size: 1.2rem;
-      cursor: pointer;
-      color: var(--muted);
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      display: grid;
-      place-items: center;
-      flex: none;
-    }
-
-    .preview-close:hover {
-      background: var(--p-100);
-      color: var(--p-800);
-    }
-
-    body.dark-theme .preview-close:hover {
-      background: #2b2040;
-      color: #f5f2ff;
-    }
-
-    .preview-body {
-      padding: 22px;
-      overflow-y: auto;
-      background: #f4f2fa;
-    }
-
-    body.dark-theme .preview-body {
-      background: #110d16;
-    }
-
-    .compare {
-      position: relative;
-      max-width: 100%;
-      margin: 0 auto;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1.5px solid var(--line);
-      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 20px 20px;
-      user-select: none;
-      touch-action: none;
-    }
-
-    body.dark-theme .compare {
-      border-color: #3b2c50;
-      background: repeating-conic-gradient(#1b1624 0% 25%, #241c31 0% 50%) 50% / 20px 20px;
-    }
-
-    .compare img {
-      display: block;
-      max-width: 100%;
-      height: auto;
-      -webkit-user-drag: none;
-    }
-
-    .compare .after-wrap {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-    }
-
-    .compare .after-wrap img {
-      position: absolute;
-      top: 0;
-      left: 0;
-      max-width: none;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .compare .divider {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: #fff;
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, .15), 0 0 12px rgba(139, 92, 246, .6);
-      cursor: ew-resize;
-      z-index: 3;
-    }
-
-    .compare .divider::before,
-    .compare .divider::after {
-      content: '';
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--p-500), var(--p-700));
-      box-shadow: 0 6px 14px -4px var(--p-700);
-    }
-
-    .compare .divider::before {
-      top: -17px;
-    }
-
-    .compare .divider::after {
-      bottom: -17px;
-    }
-
-    .compare .divider .knob {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #fff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
-      display: grid;
-      place-items: center;
-      color: var(--p-700);
-      font-size: 1.05rem;
-      font-weight: 800;
-      pointer-events: none;
-    }
-
-    .compare .lbl {
-      position: absolute;
-      top: 12px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: .68rem;
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      background: rgba(255, 255, 255, .92);
-      color: var(--p-800);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, .1);
-      z-index: 4;
-    }
-
-    .compare .lbl.left {
-      left: 12px;
-    }
-
-    .compare .lbl.right {
-      right: 12px;
-    }
-
-    .details {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-      margin-top: 18px;
-    }
-
-    .detail-card {
-      padding: 14px 16px;
-      border-radius: 12px;
-      border: 1.5px solid var(--line);
-      background: #fff;
-    }
-
-    body.dark-theme .detail-card {
-      background: #1b1624;
-      border-color: #3b2c50;
-    }
-
-    .detail-card .d-label {
-      font-size: .68rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    .detail-card .d-value {
-      font-size: .95rem;
-      font-weight: 800;
-      color: var(--p-800);
-      letter-spacing: -.01em;
-    }
-
-    body.dark-theme .detail-card .d-value {
-      color: #d7c4ff;
-    }
-
-    .detail-card .d-sub {
-      font-size: .72rem;
-      color: var(--muted);
-      margin-top: 3px;
-      font-weight: 600;
-    }
-
-    .detail-card.good .d-value {
-      background: linear-gradient(135deg, #10b981, #059669);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .detail-card.warn .d-value {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .preview-footer {
-      padding: 14px 22px;
-      border-top: 1px solid var(--line);
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    @media (max-width: 560px) {
-      .preview-body {
-        padding: 14px;
-      }
-
-      .preview-footer .btn {
-        flex: 1;
-      }
-    }
-  </style>
-  <link rel="stylesheet" href="../tool-theme.css" />
 </head>
 
-<body class="has-custom-cursor">
+<body class="has-custom-cursor" data-page="image-converter">
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="../index.html" class="brand">
-        <span class="logo">✦</span>
-        <span>PDFnest<small>Image Type Converter</small></span>
+  <!-- App Layout Wrapper -->
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="app-sidebar" id="appSidebar">
+      <a href="../index.html" class="sidebar-brand">
+        <span class="sidebar-logo">✦</span>
+        <span><strong>PDFnest</strong><small>FILE WORKSPACE</small></span>
       </a>
-      <a href="../index.html" class="back-link">← All tools</a>
-    </div>
-  </header>
 
-  <main>
-    <section class="hero">
-      <h1>Convert <span class="grad">image formats</span></h1>
-      <p>JPG · JPEG · PNG · WEBP · AVIF · HEIC · BMP · GIF · ICO · PDF — all in your browser.</p>
-    </section>
+      <div class="sidebar-label">WORKSPACE</div>
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <a href="../index.html" class="sidebar-link"><span>▦</span> Dashboard</a>
+        <a href="../index.html#all-tools" class="sidebar-link"><span>⌘</span> All Tools</a>
+        <a href="../index.html#recent" class="sidebar-link"><span>◷</span> Recent Files</a>
+        <a href="../index.html#favorites" class="sidebar-link"><span>♡</span> Favorites</a>
+      </nav>
 
-    <section class="card">
+      <div class="sidebar-label sidebar-label-spaced">PREFERENCES</div>
+      <nav class="sidebar-nav" aria-label="Preferences">
+        <a href="../index.html#settings" class="sidebar-link"><span>⚙</span> Settings</a>
+        <a class="sidebar-link" href="https://satyamtiwari23.github.io/Portfolio/" target="_blank"
+          rel="noopener noreferrer"><span>?</span> Help &amp; Support</a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-plan"><span class="plan-dot"></span><span><strong>Browser processing</strong><small>Your
+              files stay on your device</small></span></div>
+        <div class="sidebar-account-wrap">
+          <button class="sidebar-user" type="button" id="sidebarProfileBtn" aria-label="Open account menu"
+            aria-expanded="false">
+            <span class="sidebar-user-avatar" id="sidebarUserAvatar">
+              <span id="sidebarUserInitial">S</span>
+              <img id="profileAvatar" class="profile-avatar" alt="Profile picture" />
+            </span>
+            <span class="sidebar-user-copy"><strong id="sidebarUserName">Your account</strong><small
+                id="sidebarUserEmail">Signed in</small></span>
+            <span class="sidebar-user-more">···</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="app-main">
+
+      <!-- TOPBAR -->
+      <header class="workspace-topbar">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle navigation">☰</button>
+        <div class="topbar-breadcrumb"><span>Workspace</span><b>/</b><strong>Image Type Converter</strong></div>
+        <div class="topbar-actions">
+          <button class="topbar-icon" id="themeToggle" type="button" aria-label="Switch to dark theme"
+            title="Toggle light / dark theme">
+            <span id="themeIcon" aria-hidden="true">☾</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- TOOL CONTENT -->
+      <main class="workspace-content">
+
+        <div class="page-heading">
+          <span class="workspace-kicker">IMAGE TOOL</span>
+          <h1>Convert <span class="grad">image formats</span></h1>
+          <p>JPG · JPEG · PNG · WEBP · AVIF · HEIC · BMP · GIF · ICO · PDF — all in your browser.</p>
+        </div>
+
+<section class="card">
 
       <div id="uploadStage">
         <div class="field">
@@ -810,7 +224,10 @@
     </section>
   </main>
 
-  <footer class="site-footer">100% client-side conversion · Files never leave your device.</footer>
+      <footer class="site-footer">100% client-side conversion · Files never leave your device.</footer>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <!-- ============================================================
@@ -1463,6 +880,12 @@
       }
       animate();
     })();
+  </script>
+
+  <script>
+    document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+      document.querySelector('.app-sidebar').classList.toggle('mobile-open');
+    });
   </script>
 </body>
 

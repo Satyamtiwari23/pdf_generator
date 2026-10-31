@@ -10,13 +10,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="workspace.css" />
   <script src="theme.js"></script>
   <script src="auth-guard.js"></script>
   <script src="tool-bridge.js"></script>
 </head>
 
-<body class="has-custom-cursor">
+<body class="has-custom-cursor" data-page="dashboard">
   <div class="app-layout">
     <aside class="app-sidebar" id="appSidebar">
       <a href="index.html" class="sidebar-brand">
@@ -46,11 +45,11 @@
           <button class="sidebar-user" type="button" id="sidebarProfileBtn" aria-label="Open account menu"
             aria-expanded="false">
             <span class="sidebar-user-avatar" id="sidebarUserAvatar">
-              <span id="sidebarUserInitial">S</span>
+              <span id="sidebarUserInitial">U</span>
               <img id="profileAvatar" class="profile-avatar" alt="Profile picture" />
             </span>
             <span class="sidebar-user-copy"><strong id="sidebarUserName">Your account</strong><small
-                id="sidebarUserEmail">Signed in</small></span>
+                id="sidebarUserEmail">Sign in</small></span>
             <span class="sidebar-user-more">···</span>
           </button>
 
@@ -250,6 +249,10 @@
           </div>
         </section>
       </main>
+
+      <footer class="site-footer">
+        Built with jsPDF, pdf-lib, pdf.js, and more · Your files never leave your device.
+      </footer>
     </div>
   </div>
 
@@ -310,11 +313,6 @@
 
   </div>
 
-  </main>
-
-  <footer class="site-footer">
-    Built with jsPDF, pdf-lib, pdf.js, and more · Your files never leave your device.
-  </footer>
 
   <script>
     (function () {

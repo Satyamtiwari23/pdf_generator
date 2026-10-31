@@ -13,510 +13,78 @@
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
   <script src="../tool-bridge.js"></script>
-
-  <style>
-    /* ============================================================
-       STAGE
-       ============================================================ */
-    .stage {
-      position: relative;
-      display: inline-block;
-      max-width: 100%;
-      margin-top: 18px;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1.5px solid var(--line);
-      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 20px 20px;
-    }
-
-    body.dark-theme .stage {
-      border-color: #3b2c50;
-      background: repeating-conic-gradient(#1b1624 0% 25%, #241c31 0% 50%) 50% / 20px 20px;
-    }
-
-    .stage img {
-      display: block;
-      max-width: 100%;
-      height: auto;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
-
-    /* ============================================================
-       HINT BAR
-       ============================================================ */
-    .hint {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      padding: 10px 12px;
-      border-radius: 11px;
-      background: rgba(139, 92, 246, .08);
-      border: 1.5px solid rgba(139, 92, 246, .2);
-      font-size: .78rem;
-      color: var(--p-800);
-      line-height: 1.45;
-      margin-top: 14px;
-    }
-
-    body.dark-theme .hint {
-      background: rgba(139, 92, 246, .12);
-      border-color: rgba(139, 92, 246, .3);
-      color: #d7c4ff;
-    }
-
-    .hint .icon {
-      flex: none;
-    }
-
-    .hint strong {
-      color: var(--p-900);
-    }
-
-    body.dark-theme .hint strong {
-      color: #fff;
-    }
-
-    /* ============================================================
-       PROGRESS
-       ============================================================ */
-    .prog-wrap {
-      margin-top: 18px;
-      padding: 16px;
-      border-radius: 12px;
-      background: rgba(139, 92, 246, .06);
-      border: 1.5px solid rgba(139, 92, 246, .18);
-    }
-
-    body.dark-theme .prog-wrap {
-      background: rgba(139, 92, 246, .1);
-      border-color: rgba(139, 92, 246, .25);
-    }
-
-    .prog-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
-    .prog-status {
-      font-size: .82rem;
-      font-weight: 800;
-      color: var(--p-800);
-    }
-
-    body.dark-theme .prog-status {
-      color: #d7c4ff;
-    }
-
-    .prog-pct {
-      font-size: .78rem;
-      font-weight: 800;
-      color: var(--p-700);
-    }
-
-    .prog-bar {
-      height: 8px;
-      background: var(--p-100);
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    body.dark-theme .prog-bar {
-      background: rgba(139, 92, 246, .15);
-    }
-
-    .prog-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--p-500), var(--p-700));
-      transition: width .35s ease;
-    }
-
-    /* ============================================================
-       RESULT COMPARISON SLIDER
-       ============================================================ */
-    .compare {
-      position: relative;
-      max-width: 100%;
-      margin-top: 18px;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1.5px solid var(--line);
-      background: repeating-conic-gradient(#eee 0% 25%, #fff 0% 50%) 50% / 20px 20px;
-      user-select: none;
-      touch-action: none;
-    }
-
-    body.dark-theme .compare {
-      border-color: #3b2c50;
-      background: repeating-conic-gradient(#1b1624 0% 25%, #241c31 0% 50%) 50% / 20px 20px;
-    }
-
-    .compare img {
-      display: block;
-      max-width: 100%;
-      height: auto;
-      -webkit-user-drag: none;
-    }
-
-    .compare .after-wrap {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-    }
-
-    .compare .after-wrap img {
-      position: absolute;
-      top: 0;
-      left: 0;
-      max-width: none;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .compare .divider {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: #fff;
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, .15), 0 0 12px rgba(139, 92, 246, .6);
-      cursor: ew-resize;
-      z-index: 3;
-    }
-
-    .compare .divider::before,
-    .compare .divider::after {
-      content: '';
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--p-500), var(--p-700));
-      box-shadow: 0 6px 14px -4px var(--p-700);
-    }
-
-    .compare .divider::before {
-      top: -17px;
-    }
-
-    .compare .divider::after {
-      bottom: -17px;
-    }
-
-    .compare .divider .knob {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #fff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, .3);
-      display: grid;
-      place-items: center;
-      color: var(--p-700);
-      font-size: 1.05rem;
-      font-weight: 800;
-      pointer-events: none;
-    }
-
-    .compare .lbl {
-      position: absolute;
-      top: 12px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: .68rem;
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      background: rgba(255, 255, 255, .92);
-      color: var(--p-800);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, .1);
-      z-index: 4;
-    }
-
-    .compare .lbl.left {
-      left: 12px;
-    }
-
-    .compare .lbl.right {
-      right: 12px;
-    }
-
-    /* ============================================================
-       DETAILS PANEL
-       ============================================================ */
-    .details {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 12px;
-      margin-top: 18px;
-    }
-
-    .detail-card {
-      padding: 14px 16px;
-      border-radius: 12px;
-      border: 1.5px solid var(--line);
-      background: #fff;
-    }
-
-    body.dark-theme .detail-card {
-      background: #1b1624;
-      border-color: #3b2c50;
-    }
-
-    .detail-card .d-label {
-      font-size: .68rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    .detail-card .d-value {
-      font-size: .95rem;
-      font-weight: 800;
-      color: var(--p-800);
-      letter-spacing: -.01em;
-    }
-
-    body.dark-theme .detail-card .d-value {
-      color: #d7c4ff;
-    }
-
-    .detail-card .d-sub {
-      font-size: .72rem;
-      color: var(--muted);
-      margin-top: 3px;
-      font-weight: 600;
-    }
-
-    .detail-card.good .d-value {
-      background: linear-gradient(135deg, #10b981, #059669);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    /* ============================================================
-       DOWNLOAD MENU
-       ============================================================ */
-    .dl-wrap {
-      position: relative;
-    }
-
-    .dl-menu {
-      position: absolute;
-      right: 0;
-      bottom: calc(100% + 8px);
-      min-width: 210px;
-      background: #fff;
-      border: 1px solid var(--p-200);
-      border-radius: 12px;
-      padding: 6px;
-      box-shadow: 0 18px 45px rgba(60, 35, 100, .18);
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(6px);
-      transition: opacity .18s ease, transform .18s ease, visibility .18s;
-      z-index: 100;
-    }
-
-    body.dark-theme .dl-menu {
-      background: #181321;
-      border-color: #3b2c50;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, .45);
-    }
-
-    .dl-menu.show {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
-    .dl-menu button {
-      width: 100%;
-      text-align: left;
-      border: 0;
-      background: transparent;
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: .84rem;
-      font-weight: 700;
-      color: var(--ink);
-      cursor: pointer;
-      transition: background .18s;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    body.dark-theme .dl-menu button {
-      color: #f5f2ff;
-    }
-
-    .dl-menu button:hover {
-      background: var(--p-100);
-    }
-
-    body.dark-theme .dl-menu button:hover {
-      background: rgba(139, 92, 246, .15);
-    }
-
-    /* ============================================================
-       FILE CHIP
-       ============================================================ */
-    .file-chip {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
-      border-radius: 12px;
-      background: #fff;
-      border: 1.5px solid var(--line);
-      margin-top: 14px;
-    }
-
-    body.dark-theme .file-chip {
-      background: #1b1624;
-      border-color: #3b2c50;
-    }
-
-    .file-chip .thumb {
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      object-fit: cover;
-      flex: none;
-      border: 1px solid var(--line);
-    }
-
-    .file-chip .info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .file-chip .nm {
-      font-weight: 700;
-      font-size: .88rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .file-chip .sz {
-      font-size: .74rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .file-chip .rm {
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      color: var(--muted);
-      font-weight: 800;
-      transition: background .18s, color .18s;
-    }
-
-    .file-chip .rm:hover {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-
-    body.dark-theme .file-chip .rm:hover {
-      background: rgba(214, 69, 69, .15);
-      color: #f87171;
-    }
-
-    /* ============================================================
-       ACTION ROW
-       ============================================================ */
-    .act-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 20px;
-      justify-content: center;
-    }
-
-    .act-row .btn {
-      flex: 1;
-      min-width: 150px;
-      max-width: 260px;
-    }
-
-    @media (max-width: 500px) {
-      .act-row .btn {
-        max-width: none;
-      }
-    }
-
-    /* ============================================================
-       BACKGROUND SWATCHES
-       ============================================================ */
-    .bg-choices {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-    }
-
-    .bg-swatch {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      border: 2px solid var(--line);
-      cursor: pointer;
-      transition: transform .15s, border-color .15s;
-      position: relative;
-    }
-
-    .bg-swatch:hover {
-      transform: scale(1.08);
-    }
-
-    .bg-swatch.active {
-      border-color: var(--p-600);
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, .25);
-    }
-  </style>
-  <link rel="stylesheet" href="../tool-theme.css" />
 </head>
 
-<body class="has-custom-cursor">
+<body class="has-custom-cursor" data-page="remove-background">
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="../index.html" class="brand">
-        <span class="logo">✦</span>
-        <span>PDFnest<small>Remove Background</small></span>
+  <!-- App Layout Wrapper -->
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="app-sidebar" id="appSidebar">
+      <a href="../index.html" class="sidebar-brand">
+        <span class="sidebar-logo">✦</span>
+        <span><strong>PDFnest</strong><small>FILE WORKSPACE</small></span>
       </a>
-      <a href="../index.html" class="back-link">← All tools</a>
-    </div>
-  </header>
 
-  <main>
-    <section class="hero">
-      <h1>Remove <span class="grad">background</span></h1>
-      <p>AI-powered auto-detection · Live before/after comparison · Instant download</p>
-    </section>
+      <div class="sidebar-label">WORKSPACE</div>
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <a href="../index.html" class="sidebar-link"><span>▦</span> Dashboard</a>
+        <a href="../index.html#all-tools" class="sidebar-link"><span>⌘</span> All Tools</a>
+        <a href="../index.html#recent" class="sidebar-link"><span>◷</span> Recent Files</a>
+        <a href="../index.html#favorites" class="sidebar-link"><span>♡</span> Favorites</a>
+      </nav>
 
-    <section class="card">
+      <div class="sidebar-label sidebar-label-spaced">PREFERENCES</div>
+      <nav class="sidebar-nav" aria-label="Preferences">
+        <a href="../index.html#settings" class="sidebar-link"><span>⚙</span> Settings</a>
+        <a class="sidebar-link" href="https://satyamtiwari23.github.io/Portfolio/" target="_blank"
+          rel="noopener noreferrer"><span>?</span> Help &amp; Support</a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-plan"><span class="plan-dot"></span><span><strong>Browser processing</strong><small>Your
+              files stay on your device</small></span></div>
+        <div class="sidebar-account-wrap">
+          <button class="sidebar-user" type="button" id="sidebarProfileBtn" aria-label="Open account menu"
+            aria-expanded="false">
+            <span class="sidebar-user-avatar" id="sidebarUserAvatar">
+              <span id="sidebarUserInitial">S</span>
+              <img id="profileAvatar" class="profile-avatar" alt="Profile picture" />
+            </span>
+            <span class="sidebar-user-copy"><strong id="sidebarUserName">Your account</strong><small
+                id="sidebarUserEmail">Signed in</small></span>
+            <span class="sidebar-user-more">···</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="app-main">
+
+      <!-- TOPBAR -->
+      <header class="workspace-topbar">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle navigation">☰</button>
+        <div class="topbar-breadcrumb"><span>Workspace</span><b>/</b><strong>Remove Background</strong></div>
+        <div class="topbar-actions">
+          <button class="topbar-icon" id="themeToggle" type="button" aria-label="Switch to dark theme"
+            title="Toggle light / dark theme">
+            <span id="themeIcon" aria-hidden="true">☾</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- TOOL CONTENT -->
+      <main class="workspace-content">
+
+        <div class="page-heading">
+          <span class="workspace-kicker">IMAGE TOOL</span>
+          <h1>Remove <span class="grad">background</span></h1>
+          <p>AI-powered auto-detection · Live before/after comparison · Instant download</p>
+        </div>
+
+<section class="card">
 
       <!-- ============================================================
          STAGE 1 — UPLOAD
@@ -662,7 +230,10 @@
     </section>
   </main>
 
-  <footer class="site-footer">Powered by @imgly/background-removal · Files never leave your device.</footer>
+      <footer class="site-footer">Powered by @imgly/background-removal · Files never leave your device.</footer>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script type="module">
@@ -1202,6 +773,12 @@
   }
   animate();
 })();
+  </script>
+
+  <script>
+    document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+      document.querySelector('.app-sidebar').classList.toggle('mobile-open');
+    });
   </script>
 </body>
 
