@@ -2043,45 +2043,50 @@
 
       const helpLink = document.getElementById('helpSupportLink');
 
-      helpLink?.addEventListener('click', function (event) {
-        event.preventDefault();
+helpLink?.addEventListener('click', function (event) {
+  event.preventDefault();
 
-        const portfolioUrl = 'https://satyamtiwari23.github.io/Portfolio/';
+  const portfolioUrl = 'https://satyamtiwari23.github.io/Portfolio/';
 
-        // Display notification on PDFnest first.
-        let toast = document.getElementById('pdfnestHelpToast');
+  // Open a new tab immediately so the browser allows it.
+  const portfolioTab = window.open('about:blank', '_blank');
 
-        if (!toast) {
-          toast = document.createElement('div');
-          toast.id = 'pdfnestHelpToast';
-          toast.setAttribute('role', 'status');
+  // Display notification on PDFnest.
+  let toast = document.getElementById('pdfnestHelpToast');
 
-          Object.assign(toast.style, {
-            position: 'fixed',
-            left: '50%',
-            bottom: '28px',
-            transform: 'translateX(-50%)',
-            zIndex: '2147483647',
-            padding: '13px 20px',
-            borderRadius: '12px',
-            background: '#241b38',
-            color: '#ffffff',
-            border: '1px solid rgba(167,139,250,.55)',
-            boxShadow: '0 12px 36px rgba(0,0,0,.28)',
-            font: '600 13px/1.4 system-ui, sans-serif'
-          });
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'pdfnestHelpToast';
+    toast.setAttribute('role', 'status');
 
-          document.body.appendChild(toast);
-        }
+    Object.assign(toast.style, {
+      position: 'fixed',
+      left: '50%',
+      bottom: '28px',
+      transform: 'translateX(-50%)',
+      zIndex: '2147483647',
+      padding: '13px 20px',
+      borderRadius: '12px',
+      background: '#241b38',
+      color: '#ffffff',
+      border: '1px solid rgba(167,139,250,.55)',
+      boxShadow: '0 12px 36px rgba(0,0,0,.28)',
+      font: '600 13px/1.4 system-ui, sans-serif'
+    });
 
-        toast.textContent = 'You are being redirected to my portfolio...';
-        toast.style.display = 'block';
+    document.body.appendChild(toast);
+  }
 
-        // Give the user 2.5 seconds to read the notification.
-        window.setTimeout(() => {
-          window.location.href = portfolioUrl;
-        }, 2500);
-      });
+  toast.textContent = 'You are being redirected to my portfolio... Please Visit Contact Section.';
+  toast.style.display = 'block';
+
+  // Navigate the new tab after 2.5 seconds.
+  window.setTimeout(() => {
+    if (portfolioTab && !portfolioTab.closed) {
+      portfolioTab.location.href = portfolioUrl;
+    }
+  }, 2500);
+});
 
     })();
   </script>
