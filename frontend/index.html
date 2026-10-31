@@ -35,7 +35,7 @@
       <div class="sidebar-label sidebar-label-spaced">PREFERENCES</div>
       <nav class="sidebar-nav" aria-label="Preferences">
         <button class="sidebar-link" type="button" data-view="settings"><span>⚙</span> Settings</button>
-        <a class="sidebar-link" href="mailto:support@pdfnest.com"><span>?</span> Help &amp; Support</a>
+        <a class="sidebar-link" href="https://satyamtiwari23.github.io/Portfolio/#contact" target="_blank" rel="noopener noreferrer"><span>?</span> Help &amp; Support</a>
       </nav>
 
       <div class="sidebar-bottom">
@@ -108,10 +108,9 @@
           </div>
 
           <section class="multi-upload-card" aria-label="Upload files">
-            <input id="workspaceFileInput" class="visually-hidden-file-input" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.bmp,.avif,.heic,.heif,.doc,.docx,.txt,.rtf,.odt" />
             <div class="multi-dropzone" id="workspaceDropzone" tabindex="0" role="button"
               aria-label="Choose or drop multiple files">
-              
+              <input id="workspaceFileInput" type="file" multiple hidden />
               <div class="upload-cloud-icon">↑</div>
               <h2>Drag &amp; drop your files here</h2>
               <p>or <button type="button" class="text-button" id="browseFilesBtn">select files</button> from your device
@@ -456,7 +455,7 @@
         const fullName = (currentUser.name || 'there').trim();
         const firstName = fullName.split(/\s+/)[0] || 'there';
         const hour = new Date().getHours();
-        const greeting = hour >= 4 && hour < 12
+        const greeting = hour >= 5 && hour < 12
           ? 'Good morning'
           : hour >= 12 && hour < 17
             ? 'Good afternoon'
@@ -1442,7 +1441,13 @@
             event.preventDefault();
 
 
-            closeAccountMenu();
+            const accountMenu = document.getElementById('profileDropdown');
+            const accountTrigger = document.getElementById('sidebarProfileBtn');
+            accountMenu?.classList.remove('show');
+            accountMenu?.style.removeProperty('display');
+            accountMenu?.style.removeProperty('visibility');
+            accountMenu?.style.removeProperty('opacity');
+            accountTrigger?.setAttribute('aria-expanded', 'false');
 
             localStorage.removeItem('token');
             localStorage.removeItem('user');
@@ -1842,7 +1847,7 @@
       // Create canvas for cursor trail
       const canvas = document.createElement('canvas');
       canvas.id = 'cursor-trail-canvas';
-      canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:99999;';
+      canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483647;';
       document.body.appendChild(canvas);
 
       const ctx = canvas.getContext('2d');
