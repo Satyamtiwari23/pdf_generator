@@ -79,7 +79,7 @@
     uploadCard?.classList.add("has-files");
     $("#selectedFileCount").textContent = state.files.length;
     const total = state.files.reduce((n, x) => n + x.file.size, 0);
-    const pdfs = state.files.filter(x => x.info.kind === "pdf").length, images = state.files.filter(x => x.info.kind === "image").length, docs = state.files.filter(x => x.info.kind === "document").length, unsupported = state.files.filter(x => x.info.kind === "unsupported").length;
+    const pdfs = state.files.filter(x => x.info.kind === "pdf").length, images = state.files.filter(x => x.info.kind === "image").length, docs = state.files.filter(x => x.info.kind === "document").length, unsupported = state.files.filter(x => window.PDFnestToolRegistry.itemKind(x) === "other").length;
     $("#fileSummaryLine").textContent = `${pdfs} PDF · ${images} images · ${docs} documents · ${unsupported} unsupported · ${window.PDFnestFileDetector.formatBytes(total)} total`;
     $("#selectedFilesList").innerHTML = "";
     state.files.forEach((item, i) => { const row = document.createElement("div"); row.className = "selected-file-row"; const icon = item.info.kind === "pdf" ? "📕" : item.info.kind === "image" ? "🖼️" : item.info.kind === "document" ? "📄" : "📦"; row.innerHTML = `<span class="selected-file-icon">${icon}</span><span class="selected-file-info"><strong>${safe(item.file.name)}</strong><small>${safe(item.info.label)} · ${window.PDFnestFileDetector.formatBytes(item.file.size)}</small></span><button type="button" class="remove-selected-file" aria-label="Remove ${safe(item.file.name)}">×</button>`; row.querySelector("button").addEventListener("click", () => removeFile(i)); $("#selectedFilesList").appendChild(row); });
