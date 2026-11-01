@@ -14,6 +14,7 @@
   <script src="../auth-guard.js"></script>
   <script src="../js/tool-registry.js"></script>
   <script src="../tool-bridge.js"></script>
+  <script src="../js/app-shell.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -218,8 +219,8 @@
         </div>
 
         <div class="act-row">
-          <button class="btn btn-ghost" id="previewBtn">👁 Preview &amp; details</button>
-          <button class="btn btn-primary" id="convertBtn">🔄 Convert &amp; download</button>
+          <button class="btn btn-ghost" id="previewBtn" hidden>👁 Preview &amp; details</button>
+          <button class="btn btn-primary" id="convertBtn">🔄 Convert &amp; preview</button>
         </div>
       </div>
     </section>
@@ -650,7 +651,7 @@
           return null;
         } finally {
           btn.disabled = false; prevBtn.disabled = false;
-          btn.textContent = '🔄 Convert & download';
+          btn.textContent = '🔄 Convert & preview';
         }
       }
 
@@ -795,7 +796,7 @@
          BUTTONS
          ============================================================ */
       $('#previewBtn').addEventListener('click', openPreview);
-      $('#convertBtn').addEventListener('click', () => doConvert(true));
+      $('#convertBtn').addEventListener('click', async () => { state.outputBlob = null; await openPreview(); });
     })();
 
     (function initProfessionalCursor() {
@@ -874,11 +875,6 @@
     })();
   </script>
 
-  <script>
-    document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
-      document.querySelector('.app-sidebar').classList.toggle('mobile-open');
-    });
-  </script>
-</body>
+  </body>
 
 </html>

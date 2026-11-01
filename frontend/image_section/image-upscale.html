@@ -14,6 +14,7 @@
   <script src="../auth-guard.js"></script>
   <script src="../js/tool-registry.js"></script>
   <script src="../tool-bridge.js"></script>
+  <script src="../js/app-shell.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/pica@9.0.1/dist/pica.min.js"></script>
 </head>
 
@@ -190,8 +191,8 @@
         </div>
 
         <div class="act-row">
-          <button class="btn btn-ghost" id="previewBtn">👁 Preview upscale</button>
-          <button class="btn btn-primary" id="upscaleBtn">✨ Upscale &amp; download</button>
+          <button class="btn btn-ghost" id="previewBtn" hidden>👁 Preview upscale</button>
+          <button class="btn btn-primary" id="upscaleBtn">✨ Upscale &amp; preview</button>
         </div>
 
         <div class="prog-wrap" id="progWrap" hidden>
@@ -673,7 +674,7 @@
           return null;
         } finally {
           btn.disabled = false; prevBtn.disabled = false;
-          btn.textContent = '✨ Upscale & download';
+          btn.textContent = '✨ Upscale & preview';
         }
       }
 
@@ -812,7 +813,7 @@
       window.addEventListener('drop', e => { if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
 
       $('#previewBtn').addEventListener('click', openPreview);
-      $('#upscaleBtn').addEventListener('click', () => doUpscale(true));
+      $('#upscaleBtn').addEventListener('click', async () => { state.resultBlob = null; await openPreview(); });
     })();
 
     (function initProfessionalCursor() {
@@ -891,11 +892,6 @@
     })();
   </script>
 
-  <script>
-    document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
-      document.querySelector('.app-sidebar').classList.toggle('mobile-open');
-    });
-  </script>
-</body>
+  </body>
 
 </html>
