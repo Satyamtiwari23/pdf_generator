@@ -33,6 +33,41 @@
 
   applyFont(readFont());
 
+  /* ---------- collapsible sidebar (laptop / desktop) ---------- */
+  const SIDEBAR_KEY = "pdfnest-sidebar";
+  function readSidebarCollapsed() {
+    try { return localStorage.getItem(SIDEBAR_KEY) === "collapsed"; } catch (_) { return false; }
+  }
+  function syncSidebarButton() {
+    const btn = document.getElementById("sidebarCollapseBtn");
+    if (!btn) return;
+    const collapsed = document.documentElement.classList.contains("sidebar-collapsed");
+    btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    btn.setAttribute("aria-label", collapsed ? "Show sidebar" : "Hide sidebar");
+    btn.setAttribute("title", collapsed ? "Show sidebar" : "Hide sidebar");
+  }
+  function setSidebarCollapsed(collapsed) {
+    document.documentElement.classList.toggle("sidebar-collapsed", !!collapsed);
+    try { localStorage.setItem(SIDEBAR_KEY, collapsed ? "collapsed" : "open"); } catch (_) { }
+    syncSidebarButton();
+  }
+  function initSidebarToggle() {
+    const bar = document.querySelector(".workspace-topbar");
+    if (!bar || document.getElementById("sidebarCollapseBtn")) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.id = "sidebarCollapseBtn";
+    btn.className = "topbar-icon sidebar-collapse-btn";
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg>';
+    btn.addEventListener("click", function () {
+      setSidebarCollapsed(!document.documentElement.classList.contains("sidebar-collapsed"));
+    });
+    const mobileBtn = bar.querySelector(".mobile-menu-btn");
+    if (mobileBtn) mobileBtn.after(btn); else bar.insertBefore(btn, bar.firstChild);
+    syncSidebarButton();
+  }
+  if (readSidebarCollapsed()) document.documentElement.classList.add("sidebar-collapsed");
+
   function readTheme() {
     try {
       const value = localStorage.getItem(STORAGE_KEY);
@@ -73,6 +108,7 @@
   if (document.body) applyTheme(initial);
 
   function initialize() {
+    initSidebarToggle();
     applyTheme(readTheme());
     ["themeToggle", "settingsThemeToggle"].forEach(function (id) {
       const button = document.getElementById(id);
@@ -92,8 +128,10 @@
   window.addEventListener("storage", function (event) {
     if (event.key === STORAGE_KEY) applyTheme(event.newValue === "dark" ? "dark" : "light");
     if (event.key === FONT_KEY) applyFont(readFont());
+    if (event.key === SIDEBAR_KEY) { document.documentElement.classList.toggle("sidebar-collapsed", readSidebarCollapsed()); syncSidebarButton(); }
   });
 
+  window.PDFnestSidebar = { collapse: () => setSidebarCollapsed(true), expand: () => setSidebarCollapsed(false), toggle: () => setSidebarCollapsed(!document.documentElement.classList.contains("sidebar-collapsed")) };
   window.PDFnestFont = { get: readFont, set: setFont, apply: applyFont, default: FONT_DEFAULT };
 
   window.PDFnestTheme = {

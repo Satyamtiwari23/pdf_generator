@@ -60,6 +60,7 @@
     ensureAccountMarkup();
     initProfile();
     initAccountMenu();
+    initSidebarNav();
     initMobileMenu();
   }
 
@@ -1234,6 +1235,28 @@
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
     window.addEventListener('resize', () => { if (menu.classList.contains('show')) positionMenu(); });
     window.addEventListener('scroll', () => { if (menu.classList.contains('show')) positionMenu(); }, true);
+  }
+
+  /* ============================================================
+     SIDEBAR NAVIGATION — same items as the homepage; each one opens
+     that homepage view (Dashboard, All Tools, Recent, Favorites,
+     Settings, Help & Support). Nothing here jumps straight to a website.
+     ============================================================ */
+  function initSidebarNav() {
+    document.querySelectorAll('.app-sidebar [data-view]').forEach(btn => {
+      btn.addEventListener('click', event => {
+        event.preventDefault();
+        const view = btn.dataset.view;
+        window.location.href = ROOT + 'index.html' + (view === 'dashboard' ? '' : '#' + view);
+      });
+    });
+    // safety net for older copies of a page that still link the portfolio directly
+    document.querySelectorAll('.app-sidebar a[href*="satyamtiwari23.github.io"]').forEach(a => {
+      a.addEventListener('click', event => {
+        event.preventDefault();
+        window.location.href = ROOT + 'index.html#help';
+      });
+    });
   }
 
   /* ============================================================
