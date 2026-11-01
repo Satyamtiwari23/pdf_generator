@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../js/tool-registry.js"></script>
   <script src="../tool-bridge.js"></script>
 </head>
 
@@ -94,6 +95,8 @@
             </div>
             <input type="file" id="fileInput" accept="image/*" multiple hidden />
           </div>
+
+          <div class="file-list" id="fileList"></div>
 
           <div class="options">
             <div class="field">
@@ -241,8 +244,33 @@
             originalUrl: url
           });
         }
-        $('#compressBtn').disabled = false;
+        renderQueue();
         toast(files.length + ' image(s) added');
+      }
+
+      function fmtQueueSize(n) {
+        return n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(2) + ' MB';
+      }
+
+      function renderQueue() {
+        const list = $('#fileList');
+        list.innerHTML = '';
+        state.files.forEach(f => {
+          const row = document.createElement('div');
+          row.className = 'file-item';
+          row.innerHTML =
+            '<span class="file-icon">IMG</span>' +
+            '<div class="file-info"><div class="file-name"></div><div class="file-size"></div></div>' +
+            '<button class="remove" type="button" aria-label="Remove">✕</button>';
+          row.querySelector('.file-name').textContent = f.name;
+          row.querySelector('.file-size').textContent = fmtQueueSize(f.size);
+          row.querySelector('.remove').addEventListener('click', () => {
+            state.files = state.files.filter(x => x.id !== f.id);
+            renderQueue();
+          });
+          list.appendChild(row);
+        });
+        $('#compressBtn').disabled = state.files.length === 0;
       }
 
       async function compressImage(entry, opts) {
@@ -475,14 +503,15 @@
       window.addEventListener('dragover', e => { if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
       window.addEventListener('drop', e => { if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); });
 
-      (async function receiveIncoming() {
+      (async function receiveIncomingFiles() {
         try {
-          const incoming = await window.ToolBridge?.consumeIncoming?.();
-          if (!incoming) return;
-          const file = new File([incoming.blob], incoming.fileName, { type: incoming.mimeType || 'image/jpeg' });
-          await addFiles([file]);
-          toast('📥 Received from another tool');
-        } catch (e) { console.error('Incoming receive failed', e); }
+          const files = await window.ToolBridge?.consumeIncomingFiles?.();
+          if (!files || !files.length) return;
+          await addFiles(files);
+          try { toast('📥 Received from another tool'); } catch (_) { }
+        } catch (err) {
+          console.error('[bridge] receive failed:', err);
+        }
       })();
 
       function injectSendToButtons() {
@@ -515,6 +544,20 @@
           return { blob: r.blob, fileName: 'compressed-' + r.name.replace(/\.[^.]+$/, '.jpg'), mimeType: r.blob.type || 'image/jpeg' };
         });
       };
+
+      (function sendAllResults() {
+        const head = document.querySelector('.results-head');
+        if (!head || !window.ToolBridge) return;
+        window.ToolBridge.injectSendToButton(head, function () {
+          return {
+            files: state.results.map(r => ({
+              blob: r.blob,
+              fileName: 'compressed-' + r.name.replace(/\.[^.]+$/, '.jpg'),
+              mimeType: r.blob.type || 'image/jpeg'
+            }))
+          };
+        }, { key: 'all', label: 'Send all to…', position: 'end' });
+      })();
 
       $('#compressBtn').addEventListener('click', compressAll);
     })();

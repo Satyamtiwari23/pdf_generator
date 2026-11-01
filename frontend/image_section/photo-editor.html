@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../js/tool-registry.js"></script>
   <script src="../tool-bridge.js"></script>
 </head>
 
@@ -2029,6 +2030,24 @@
         } catch (err) { console.error(err); toast('Download failed'); }
       }
       $('#downloadBtn').addEventListener('click', downloadImage);
+
+      /* ===== Tool Bridge: send the edited image / collage to other tools ===== */
+      async function buildEditedOutput() {
+        const ec = renderExportCanvas();
+        if (!ec) { toast('Nothing to send yet'); return null; }
+        const blob = await new Promise(res => ec.toBlob(b => res(b), 'image/png'));
+        if (!blob) return null;
+        const active = state.images[state.activeIdx];
+        const baseName = state.mode === 'collage'
+          ? (state.layout === 'freestyle' ? 'freestyle-collage' : 'collage-' + state.images.length + '-images')
+          : (active ? active.name.replace(/\.[^.]+$/, '') : 'edited');
+        return { blob, fileName: 'edited-' + baseName + '.png', mimeType: 'image/png' };
+      }
+      if (window.ToolBridge) {
+        window.ToolBridge.injectSendToButton($('#downloadBtn').parentElement, buildEditedOutput);
+        const pd = $('#previewDownload');
+        if (pd) window.ToolBridge.injectSendToButton(pd.parentElement, buildEditedOutput);
+      }
       $('#previewDownload').addEventListener('click', async () => {
         $('#previewModal').classList.remove('show'); await downloadImage();
       });
@@ -2133,21 +2152,14 @@
       dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } });
       fi.addEventListener('change', () => { if (fi.files && fi.files.length) addFiles(fi.files); fi.value = ''; });
 
-      // Receive a file selected in the PDFnest homepage workspace.
-      (async function receiveWorkspaceFile() {
+      (async function receiveIncomingFiles() {
         try {
-          if (!window.ToolBridge) return;
-          const incoming = await window.ToolBridge.consumeIncoming();
-          if (!incoming || !incoming.blob) return;
-          const received = new File(
-            [incoming.blob],
-            incoming.fileName || 'received-image.png',
-            { type: incoming.mimeType || incoming.blob.type || 'image/png' }
-          );
-          await addFiles([received]);
-          if (typeof toast === 'function') toast('Received from PDFnest workspace');
-        } catch (error) {
-          console.error('[workspace] Could not receive image:', error);
+          const files = await window.ToolBridge?.consumeIncomingFiles?.();
+          if (!files || !files.length) return;
+          await addFiles(files);
+          try { toast('📥 Received from another tool'); } catch (_) { }
+        } catch (err) {
+          console.error('[bridge] receive failed:', err);
         }
       })();
 

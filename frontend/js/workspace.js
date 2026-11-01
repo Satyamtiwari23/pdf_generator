@@ -93,17 +93,19 @@
     tools.forEach(tool => { const btn = document.createElement("button"); btn.className = "suggested-tool-card"; btn.type = "button"; btn.innerHTML = `<span class="suggested-tool-icon">${tool.icon}</span><span><strong>${safe(tool.name)}</strong><small>${safe(tool.desc)}</small></span><b>→</b>`; btn.addEventListener("click", () => launchTool(tool)); c.appendChild(btn); });
   }
   async function launchTool(tool) {
-    const chosen = state.files.filter(x => tool.types.includes(x.info.kind));
+    // Exactly the files this tool accepts (kinds + counts are validated by the registry).
+    const chosen = window.PDFnestToolRegistry.pick(tool, state.files);
     if (!chosen.length) return;
     addActivity(tool, chosen);
     try {
       setStatus(`Preparing ${tool.name}…`);
-      if (tool.multi) {
-        await window.ToolBridge.sendFilesToTool(tool.id, chosen.map(x => ({ blob: x.file, fileName: x.file.name, mimeType: x.file.type || x.info.mime })));
-      } else {
-        if (chosen.length !== 1) throw new Error("This tool currently accepts one file at a time.");
-        await window.ToolBridge.sendToTool(tool.id, chosen[0].file, chosen[0].file.name, chosen[0].file.type || chosen[0].info.mime);
-      }
+      // Every tool reads its hand-off through ToolBridge.consumeIncomingFiles(),
+      // so single and multiple files travel the same way.
+      await window.ToolBridge.sendFilesToTool(tool.id, chosen.map(x => ({
+        blob: x.file,
+        fileName: x.file.name,
+        mimeType: x.file.type || x.info.mime || ""
+      })));
     } catch (err) { setStatus(err.message || "Could not open tool.", true); }
   }
 
@@ -225,4 +227,11 @@
   state.history = readList(HISTORY_KEY).filter(x => x.at > Date.now() - RETENTION_DAYS * 86400000).slice(0, MAX_HISTORY);
   state.favorites = readList(FAV_KEY);
   persistHistory(); renderPopular(); renderAllTools(); renderFavorites(); renderHistory();
+
+  const startView = location.hash.replace("#", "");
+  if (["all-tools", "recent", "favorites", "settings"].includes(startView)) setView(startView);
+  window.addEventListener("hashchange", () => {
+    const v = location.hash.replace("#", "");
+    if (["dashboard", "all-tools", "recent", "favorites", "settings"].includes(v)) setView(v);
+  });
 })();

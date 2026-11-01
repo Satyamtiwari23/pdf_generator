@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../js/tool-registry.js"></script>
   <script src="../tool-bridge.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -84,38 +85,37 @@
         <div class="page-heading">
           <span class="workspace-kicker">PDF TOOL</span>
           <h1>Make your PDF <span class="grad">smaller</span></h1>
-          <p>Pick a compression level and we'll re-render every page as a compressed image. Best for scans and
-            image-heavy PDFs.</p>
+          <p>Pick a compression level and we'll re-render every page as a compressed image. Best for scans and image-heavy PDFs.</p>
         </div>
-        <section class="card">
-          <div class="field">
-            <label>Your PDF</label>
-            <div class="dropzone" id="dropzone" tabindex="0" role="button">
-              <div class="dz-icon">🗜️</div>
-              <div class="dz-title">Drag &amp; drop a PDF here</div>
-              <div class="dz-sub">or <span class="link">browse files</span></div>
-            </div>
-            <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden />
-          </div>
+<section class="card">
+      <div class="field">
+        <label>Your PDF</label>
+        <div class="dropzone" id="dropzone" tabindex="0" role="button">
+          <div class="dz-icon">🗜️</div>
+          <div class="dz-title">Drag &amp; drop a PDF here</div>
+          <div class="dz-sub">or <span class="link">browse files</span></div>
+        </div>
+        <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden />
+      </div>
 
-          <div class="file-list" id="fileList"></div>
+      <div class="file-list" id="fileList"></div>
 
-          <div class="options" id="optionsBlock" hidden>
-            <div class="field">
-              <label for="level">Compression level</label>
-              <select id="level">
-                <option value="low">Low — smallest file</option>
-                <option value="medium" selected>Medium — balanced</option>
-                <option value="high">High — best quality</option>
-              </select>
-            </div>
-          </div>
+      <div class="options" id="optionsBlock" hidden>
+        <div class="field">
+          <label for="level">Compression level</label>
+          <select id="level">
+            <option value="low">Low — smallest file</option>
+            <option value="medium" selected>Medium — balanced</option>
+            <option value="high">High — best quality</option>
+          </select>
+        </div>
+      </div>
 
-          <div class="actions">
-            <button class="btn btn-primary" id="compressBtn" disabled>🗜️ Compress &amp; download</button>
-          </div>
-        </section>
-      </main>
+      <div class="actions">
+        <button class="btn btn-primary" id="compressBtn" disabled>🗜️ Compress &amp; download</button>
+      </div>
+    </section>
+  </main>
 
       <footer class="site-footer">Powered by pdf.js + jsPDF · Files never leave your device.</footer>
     </div>
@@ -157,20 +157,11 @@
         } catch (err) { console.error(err); toast('Could not read that PDF'); }
       }
 
-      /* ==== Tool Bridge: receive incoming PDF ==== */
-      (async function bridgeReceiveIncoming() {
+      (async function receiveIncomingFiles() {
         try {
-          if (!window.ToolBridge) return;
-
-          const incoming = await window.ToolBridge.consumeIncoming();
-          if (!incoming) return;
-
-          const file = new File([incoming.blob], incoming.fileName, {
-            type: incoming.mimeType || incoming.blob.type
-          });
-
-          await addFile([file]);
-
+          const files = await window.ToolBridge?.consumeIncomingFiles?.();
+          if (!files || !files.length) return;
+          await addFile(files);
           try { toast('📥 Received from another tool'); } catch (_) { }
         } catch (err) {
           console.error('[bridge] receive failed:', err);

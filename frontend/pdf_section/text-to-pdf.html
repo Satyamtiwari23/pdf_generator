@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../js/tool-registry.js"></script>
   <script src="../tool-bridge.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -397,6 +398,19 @@ Blank lines create new paragraphs. Long text is automatically split across pages
       $('#generateBtn').addEventListener('click', onGenerate);
       $('#downloadBtn').addEventListener('click', downloadPdf);
       $('#downloadBtnTop').addEventListener('click', downloadPdf);
+
+      /* ===== Tool Bridge: send the generated PDF onwards ===== */
+      if (window.ToolBridge) {
+        window.ToolBridge.injectSendToButton(document.querySelector('.preview-foot'), function () {
+          if (!state.pages.length) { toast('Generate a preview first'); return null; }
+          const doc = buildPdf();
+          return {
+            blob: doc.output('blob'),
+            fileName: 'PDFnest-text-' + new Date().toISOString().slice(0, 10) + '.pdf',
+            mimeType: 'application/pdf'
+          };
+        });
+      }
       initDragDrop();
 
     })();

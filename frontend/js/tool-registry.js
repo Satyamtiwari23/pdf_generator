@@ -1,37 +1,104 @@
+/* ============================================================
+   PDFnest — Tool registry (single source of truth)
+   ------------------------------------------------------------
+   Every tool declares what it ACCEPTS as { kind: [min, max] }.
+   The dashboard (selected files) and the "Send to…" menu (a
+   tool's output) both ask the same functions, so they always
+   agree on which tools are relevant.
+
+   kinds: pdf · image · docx · text
+   ============================================================ */
 (function () {
   "use strict";
+
+  const INF = Infinity;
+
   const tools = [
-    {id:"image_section/image-compressor.html",name:"Image Compressor",icon:"🗜️",category:"image",desc:"Reduce image file size.",types:["image"],multi:false},
-    {id:"image_section/image-resizer.html",name:"Image Resizer",icon:"📐",category:"image",desc:"Resize to exact dimensions.",types:["image"],multi:false},
-    {id:"image_section/image-to-text.html",name:"Image to Text (OCR)",icon:"🔍",category:"image",desc:"Extract text from images.",types:["image"],multi:false},
-    {id:"image_section/remove-background.html",name:"Remove Background",icon:"✂️",category:"image",desc:"Remove an image background.",types:["image"],multi:false},
-    {id:"image_section/remove-watermark.html",name:"Remove Watermark",icon:"💧",category:"image",desc:"Remove unwanted marks.",types:["image"],multi:false},
-    {id:"image_section/photo-editor.html",name:"Photo Editor",icon:"🎨",category:"image",desc:"Edit and enhance photos.",types:["image"],multi:false},
-    {id:"image_section/image-upscale.html",name:"Image Upscale",icon:"✨",category:"image",desc:"Increase image dimensions.",types:["image"],multi:false},
-    {id:"image_section/image-converter.html",name:"Image Type Converter",icon:"🔄",category:"converter",desc:"Convert image formats.",types:["image"],multi:false},
-    {id:"pdf_section/compress-pdf.html",name:"Compress PDF",icon:"🗜️",category:"pdf",desc:"Reduce PDF file size.",types:["pdf"],multi:false},
-    {id:"pdf_section/edit-pdf.html",name:"Edit PDF",icon:"✏️",category:"pdf",desc:"Add text and edits to PDF pages.",types:["pdf"],multi:false},
-    {id:"pdf_section/extract-images.html",name:"Extract Images",icon:"🖼️",category:"pdf",desc:"Export PDF pages as images.",types:["pdf"],multi:false},
-    {id:"pdf_section/pdf-to-docx.html",name:"PDF to DOCX",icon:"📝",category:"converter",desc:"Convert PDF text into Word.",types:["pdf"],multi:false},
-    {id:"pdf_section/merge-pdf.html",name:"Merge PDFs",icon:"🔗",category:"pdf",desc:"Combine multiple PDFs.",types:["pdf"],multi:true,requires:"2+pdf"},
-    {id:"pdf_section/merge-pdf-images.html",name:"Merge PDF + Images",icon:"🧩",category:"pdf",desc:"Combine one PDF with multiple images.",types:["pdf","image"],multi:true,requires:"pdf+images"},
-    {id:"pdf_section/images-to-pdf.html",name:"Images to PDF",icon:"📷",category:"converter",desc:"Turn multiple images into one PDF.",types:["image"],multi:true,requires:"2+images"},
-    {id:"pdf_section/word-to-pdf.html",name:"Word to PDF",icon:"📄",category:"converter",desc:"Convert DOCX documents to PDF.",types:["document"],multi:false},
-    {id:"pdf_section/text-to-pdf.html",name:"Text to PDF",icon:"✍️",category:"converter",desc:"Create a PDF from text.",types:["document"],multi:false}
+    { id: "image_section/image-compressor.html", name: "Image Compressor", icon: "🗜️", category: "image", desc: "Reduce image file size.", accepts: { image: [1, INF] } },
+    { id: "image_section/image-resizer.html", name: "Image Resizer", icon: "📐", category: "image", desc: "Resize to exact dimensions.", accepts: { image: [1, 1] } },
+    { id: "image_section/image-to-text.html", name: "Image to Text (OCR)", icon: "🔍", category: "image", desc: "Extract text from images.", accepts: { image: [1, INF] } },
+    { id: "image_section/remove-background.html", name: "Remove Background", icon: "✂️", category: "image", desc: "Remove an image background.", accepts: { image: [1, 1] } },
+    { id: "image_section/remove-watermark.html", name: "Remove Watermark", icon: "💧", category: "image", desc: "Remove unwanted marks.", accepts: { image: [1, 1] } },
+    { id: "image_section/photo-editor.html", name: "Photo Editor", icon: "🎨", category: "image", desc: "Edit, enhance or make a collage.", accepts: { image: [1, INF] } },
+    { id: "image_section/image-upscale.html", name: "Image Upscale", icon: "✨", category: "image", desc: "Increase image dimensions.", accepts: { image: [1, 1] } },
+    { id: "image_section/image-converter.html", name: "Image Type Converter", icon: "🔄", category: "converter", desc: "Convert image formats.", accepts: { image: [1, 1] } },
+    { id: "pdf_section/compress-pdf.html", name: "Compress PDF", icon: "🗜️", category: "pdf", desc: "Reduce PDF file size.", accepts: { pdf: [1, 1] } },
+    { id: "pdf_section/edit-pdf.html", name: "Edit PDF", icon: "✏️", category: "pdf", desc: "Add text and edits to PDF pages.", accepts: { pdf: [1, 1] } },
+    { id: "pdf_section/extract-images.html", name: "Extract Images", icon: "🖼️", category: "pdf", desc: "Export PDF pages as images.", accepts: { pdf: [1, 1] } },
+    { id: "pdf_section/pdf-to-docx.html", name: "PDF to DOCX", icon: "📝", category: "converter", desc: "Convert PDF text into Word.", accepts: { pdf: [1, 1] } },
+    { id: "pdf_section/merge-pdf.html", name: "Merge PDFs", icon: "🔗", category: "pdf", desc: "Combine multiple PDFs.", accepts: { pdf: [1, INF] } },
+    { id: "pdf_section/merge-pdf-images.html", name: "Merge PDF + Images", icon: "🧩", category: "pdf", desc: "Combine one PDF with images.", accepts: { pdf: [0, 1], image: [0, INF] } },
+    { id: "pdf_section/images-to-pdf.html", name: "Images to PDF", icon: "📷", category: "converter", desc: "Turn images into one PDF.", accepts: { image: [1, INF] } },
+    { id: "pdf_section/word-to-pdf.html", name: "Word to PDF", icon: "📄", category: "converter", desc: "Convert a DOCX document to PDF.", accepts: { docx: [1, 1] } },
+    { id: "pdf_section/text-to-pdf.html", name: "Text to PDF", icon: "✍️", category: "converter", desc: "Create a PDF from text.", accepts: { text: [1, 1] } }
   ];
-  window.PDFnestToolRegistry = {
-    getAll: () => tools.slice(),
-    getPopular: () => [tools[8],tools[12],tools[1],tools[7],tools[14],tools[2]],
-    getById: id => tools.find(t=>t.id===id),
-    getRelevant: items => {
-      const pdfs=items.filter(x=>x.info.kind==="pdf"), images=items.filter(x=>x.info.kind==="image"), docs=items.filter(x=>x.info.kind==="document");
-      if (items.length===1) return tools.filter(t=>!t.requires && t.types.includes(items[0].info.kind));
-      const result=[];
-      if (pdfs.length>=2 && pdfs.length===items.length) result.push(tools.find(t=>t.id==="pdf_section/merge-pdf.html"));
-      if (images.length>=2 && images.length===items.length) result.push(tools.find(t=>t.id==="pdf_section/images-to-pdf.html"));
-      if (pdfs.length===1 && images.length>=1 && pdfs.length+images.length===items.length) result.push(tools.find(t=>t.id==="pdf_section/merge-pdf-images.html"));
-      if (docs.length===1 && items.length===1) result.push(tools.find(t=>t.id==="pdf_section/word-to-pdf.html"));
-      return result.filter(Boolean);
+
+  /* ---------- file kind detection (File, Blob or {name,type}) ---------- */
+  const IMAGE_EXT = new Set(["png", "jpg", "jpeg", "webp", "gif", "bmp", "avif", "heic", "heif", "ico"]);
+  const TEXT_EXT = new Set(["txt", "md", "text"]);
+
+  function kindOf(file, mimeHint) {
+    const name = String((file && (file.name || file.fileName)) || "");
+    const ext = (name.split(".").pop() || "").toLowerCase();
+    const mime = String(mimeHint || (file && (file.type || file.mimeType)) || "").toLowerCase();
+    if (mime === "application/pdf" || ext === "pdf") return "pdf";
+    if (mime.startsWith("image/") || IMAGE_EXT.has(ext)) return "image";
+    if (ext === "docx" || mime.includes("wordprocessingml")) return "docx";
+    if (mime.startsWith("text/") || TEXT_EXT.has(ext)) return "text";
+    return "other";
+  }
+
+  function countKinds(list) {
+    const counts = {};
+    list.forEach(k => { if (k && k !== "other") counts[k] = (counts[k] || 0) + 1; });
+    return counts;
+  }
+
+  /* Does a tool accept exactly this mix of kinds? */
+  function fits(tool, counts) {
+    let total = 0;
+    for (const kind in counts) {
+      const rule = tool.accepts[kind];
+      if (!rule || counts[kind] > rule[1]) return false;
+      total += counts[kind];
     }
+    for (const kind in tool.accepts) {
+      if (tool.accepts[kind][0] > 0 && !(counts[kind] > 0)) return false;
+    }
+    return total > 0;
+  }
+
+  function forKinds(kinds, excludeId) {
+    const counts = countKinds(kinds);
+    return tools.filter(t => t.id !== excludeId && fits(t, counts));
+  }
+
+  /* outputs = [{ blob, fileName, mimeType }] */
+  function forOutputs(outputs, excludeId) {
+    return forKinds(outputs.map(o => kindOf({ name: o.fileName }, o.mimeType || (o.blob && o.blob.type))), excludeId);
+  }
+
+  /* Dashboard items = [{ file, info }] */
+  function itemKind(item) {
+    if (item.info && item.info.kind === "unsupported") return "other";
+    return kindOf(item.file, item.file && item.file.type);
+  }
+
+  function describe(tool) {
+    return Object.assign({}, tool, {
+      types: Object.keys(tool.accepts),
+      multi: Object.keys(tool.accepts).some(k => tool.accepts[k][1] > 1)
+    });
+  }
+
+  window.PDFnestToolRegistry = {
+    getAll: () => tools.map(describe),
+    getPopular: () => [tools[8], tools[12], tools[1], tools[7], tools[14], tools[2]].map(describe),
+    getById: id => { const t = tools.find(x => x.id === id); return t ? describe(t) : undefined; },
+    getRelevant: items => forKinds(items.map(itemKind)).map(describe),
+    pick: (tool, items) => items.filter(item => !!tool.accepts[itemKind(item)]),
+    kindOf,
+    forKinds: (k, ex) => forKinds(k, ex).map(describe),
+    forOutputs: (o, ex) => forOutputs(o, ex).map(describe)
   };
 })();

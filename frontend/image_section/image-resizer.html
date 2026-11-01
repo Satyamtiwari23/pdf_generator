@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../js/tool-registry.js"></script>
   <script src="../tool-bridge.js"></script>
 </head>
 
@@ -788,25 +789,14 @@
          TOOL BRIDGE INTEGRATION
          ========================================================== */
 
-      // 1. Receive images from other PDFnest tools.
-      (async function receiveIncoming() {
+      (async function receiveIncomingFiles() {
         try {
-          if (!window.ToolBridge) return;
-
-          const incoming = await window.ToolBridge.consumeIncoming();
-          if (!incoming) return;
-
-          const file = new File(
-            [incoming.blob],
-            incoming.fileName || 'received-image.png',
-            { type: incoming.mimeType || incoming.blob.type || 'image/png' }
-          );
-
-          await addFile([file]);
-          toast('📥 Received from another tool');
+          const files = await window.ToolBridge?.consumeIncomingFiles?.();
+          if (!files || !files.length) return;
+          await addFile(files);
+          try { toast('📥 Received from another tool'); } catch (_) { }
         } catch (err) {
-          console.error('[bridge] Image Resizer receive failed:', err);
-          toast('Could not receive the image');
+          console.error('[bridge] receive failed:', err);
         }
       })();
 

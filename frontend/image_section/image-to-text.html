@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../js/tool-registry.js"></script>
   <script src="../tool-bridge.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -848,7 +849,7 @@
             fileName: 'PDFnest-ocr-' + stamp + '.pdf',
             mimeType: 'application/pdf'
           };
-        });
+        }, { key: 'pdf', label: 'Send as PDF to…' });
       }
 
       function buildOcrPdfBlob() {
@@ -994,21 +995,14 @@
       });
       fi.addEventListener('change', () => { addFiles(fi.files); fi.value = ''; });
 
-      // Receive a file selected in the PDFnest homepage workspace.
-      (async function receiveWorkspaceFile() {
+      (async function receiveIncomingFiles() {
         try {
-          if (!window.ToolBridge) return;
-          const incoming = await window.ToolBridge.consumeIncoming();
-          if (!incoming || !incoming.blob) return;
-          const received = new File(
-            [incoming.blob],
-            incoming.fileName || 'received-image.png',
-            { type: incoming.mimeType || incoming.blob.type || 'image/png' }
-          );
-          await addFiles([received]);
-          if (typeof toast === 'function') toast('Received from PDFnest workspace');
-        } catch (error) {
-          console.error('[workspace] Could not receive image:', error);
+          const files = await window.ToolBridge?.consumeIncomingFiles?.();
+          if (!files || !files.length) return;
+          await addFiles(files);
+          try { toast('📥 Received from another tool'); } catch (_) { }
+        } catch (err) {
+          console.error('[bridge] receive failed:', err);
         }
       })();
 
@@ -1102,65 +1096,6 @@
 
       $('#ocrBtn').addEventListener('click', runOCR);
 
-      /* ============================================================
-   SEND TO — PDFnest tool bridge
-   ============================================================ */
-      (function setupSendTo() {
-        if (!window.ToolBridge) return;
-
-        window.ToolBridge.injectSendToButton(
-          $('#sendToContainer'),
-          function () {
-            if (!state.results.length) {
-              toast('Please extract text first');
-              return null;
-            }
-
-            // Create a PDF containing the extracted text.
-            // This allows the existing bridge to show PDF-compatible tools.
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-
-            const margin = 45;
-            const maxWidth = doc.internal.pageSize.getWidth() - margin * 2;
-            const pageHeight = doc.internal.pageSize.getHeight();
-            let y = margin;
-
-            state.results.forEach((result, index) => {
-              if (index > 0) {
-                doc.addPage();
-                y = margin;
-              }
-
-              doc.setFontSize(11);
-              doc.setTextColor(100);
-              doc.text('Image ' + (index + 1) + ': ' + result.imageName, margin, y);
-              y += 22;
-
-              doc.setFontSize(10);
-              doc.setTextColor(0);
-
-              const lines = doc.splitTextToSize(result.text || '', maxWidth);
-
-              lines.forEach(line => {
-                if (y > pageHeight - margin) {
-                  doc.addPage();
-                  y = margin;
-                }
-
-                doc.text(line, margin, y);
-                y += 14;
-              });
-            });
-
-            return {
-              blob: doc.output('blob'),
-              fileName: 'PDFnest-extracted-text.pdf',
-              mimeType: 'text/plain'
-            };
-          }
-        );
-      })();
       /* ===== Tool Bridge: Send extracted text to compatible tools ===== */
       if (window.ToolBridge) {
         const actions = document.querySelector('.act-row');
@@ -1186,7 +1121,7 @@
               fileName: 'PDFnest-extracted-text.txt',
               mimeType: 'text/plain'
             };
-          });
+          }, { key: 'text', label: 'Send text to…' });
         }
       }
     })();

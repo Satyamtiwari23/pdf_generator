@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="../theme.js"></script>
   <script src="../auth-guard.js"></script>
+  <script src="../js/tool-registry.js"></script>
   <script src="../tool-bridge.js"></script>
 </head>
 
@@ -315,25 +316,16 @@
       updateBgSwatchesUI();
     }
 
-    /* ==== Tool Bridge: receive incoming image ==== */
-    (async function bridgeReceiveIncoming() {
-      try {
-        if (!window.ToolBridge) return;
-
-        const incoming = await window.ToolBridge.consumeIncoming();
-        if (!incoming) return;
-
-        const file = new File([incoming.blob], incoming.fileName, {
-          type: incoming.mimeType || incoming.blob.type
-        });
-
-        await addFile([file]);
-
-        try { toast('📥 Received from another tool'); } catch (_) { }
-      } catch (err) {
-        console.error('[bridge] receive failed:', err);
-      }
-    })();
+    (async function receiveIncomingFiles() {
+        try {
+          const files = await window.ToolBridge?.consumeIncomingFiles?.();
+          if (!files || !files.length) return;
+          await addFile(files);
+          try { toast('📥 Received from another tool'); } catch (_) { }
+        } catch (err) {
+          console.error('[bridge] receive failed:', err);
+        }
+      })();
     /* ============================================================
        STEP 2 — REMOVE BACKGROUND
        ============================================================ */
