@@ -4,7 +4,7 @@
    Gives each tool the same sidebar behaviour as the homepage:
    • account menu (opens beside the account row, Logout, profile
      photo settings, name / email / avatar from the saved login)
-   • Help & Support → toast for ~2.5 s, then opens the portfolio
+   • Help & Support → opens the Help page on the homepage
    • mobile menu button
    • PDFnestUI.showResult(): "do the operation → preview → download
      (or Download all + Send all)" panel used by the tools
@@ -60,7 +60,6 @@
     ensureAccountMarkup();
     initProfile();
     initAccountMenu();
-    initHelpLink();
     initMobileMenu();
   }
 
@@ -1235,39 +1234,6 @@
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closeMenu(); });
     window.addEventListener('resize', () => { if (menu.classList.contains('show')) positionMenu(); });
     window.addEventListener('scroll', () => { if (menu.classList.contains('show')) positionMenu(); }, true);
-  }
-
-  /* ============================================================
-     HELP & SUPPORT — toast, then the portfolio (same as homepage)
-     ============================================================ */
-  function initHelpLink() {
-    const helpLink = document.getElementById('helpSupportLink') ||
-      document.querySelector('.app-sidebar a[href*="satyamtiwari23.github.io/Portfolio"]');
-    if (!helpLink) return;
-    helpLink.id = 'helpSupportLink';
-    helpLink.addEventListener('click', function (event) {
-      event.preventDefault();
-      const portfolioUrl = 'https://satyamtiwari23.github.io/Portfolio/';
-      let toast = document.getElementById('pdfnestHelpToast');
-      if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'pdfnestHelpToast';
-        toast.setAttribute('role', 'status');
-        Object.assign(toast.style, {
-          position: 'fixed', left: '50%', bottom: '28px', transform: 'translateX(-50%)',
-          zIndex: '2147483647', padding: '13px 20px', borderRadius: '12px',
-          background: '#241b38', color: '#ffffff', border: '1px solid rgba(167,139,250,.55)',
-          boxShadow: '0 12px 36px rgba(0,0,0,.28)', font: '600 13px/1.4 system-ui, sans-serif'
-        });
-        document.body.appendChild(toast);
-      }
-      toast.textContent = 'You are being redirected to my portfolio... Please Visit Contact Section.';
-      toast.style.display = 'block';
-      window.setTimeout(() => {
-        toast.style.display = 'none';
-        window.open(portfolioUrl, '_blank');
-      }, 2500);
-    });
   }
 
   /* ============================================================

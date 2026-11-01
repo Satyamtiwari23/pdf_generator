@@ -23,7 +23,7 @@
     state.view = view;
     $$(".app-view").forEach(el => el.classList.toggle("active", el.dataset.viewPanel === view));
     $$(".sidebar-link[data-view]").forEach(el => el.classList.toggle("active", el.dataset.view === view));
-    $("#viewBreadcrumb").textContent = ({ dashboard: "Dashboard", "all-tools": "All Tools", recent: "Recent Files", favorites: "Favorites", settings: "Settings" })[view] || "Dashboard";
+    $("#viewBreadcrumb").textContent = ({ dashboard: "Dashboard", "all-tools": "All Tools", recent: "Recent Files", favorites: "Favorites", settings: "Settings", help: "Help & Support" })[view] || "Dashboard";
     if (view === "recent") renderHistory(); if (view === "favorites") renderFavorites(); if (view === "all-tools") renderAllTools();
     $("#appSidebar").classList.remove("mobile-open");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -228,10 +228,26 @@
   state.favorites = readList(FAV_KEY);
   persistHistory(); renderPopular(); renderAllTools(); renderFavorites(); renderHistory();
 
+  // Settings → Text size
+  function syncFontButtons() {
+    const current = window.PDFnestFont ? window.PDFnestFont.get() : 100;
+    $$(".font-scale-btn").forEach(b => {
+      const on = Number(b.dataset.fontScale) === current;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-checked", on ? "true" : "false");
+    });
+  }
+  $$(".font-scale-btn").forEach(b => b.addEventListener("click", () => {
+    if (window.PDFnestFont) window.PDFnestFont.set(Number(b.dataset.fontScale));
+    syncFontButtons();
+  }));
+  window.addEventListener("pdfnest:fontchange", syncFontButtons);
+  syncFontButtons();
+
   const startView = location.hash.replace("#", "");
-  if (["all-tools", "recent", "favorites", "settings"].includes(startView)) setView(startView);
+  if (["all-tools", "recent", "favorites", "settings", "help"].includes(startView)) setView(startView);
   window.addEventListener("hashchange", () => {
     const v = location.hash.replace("#", "");
-    if (["dashboard", "all-tools", "recent", "favorites", "settings"].includes(v)) setView(v);
+    if (["dashboard", "all-tools", "recent", "favorites", "settings", "help"].includes(v)) setView(v);
   });
 })();

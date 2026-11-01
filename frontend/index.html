@@ -34,8 +34,7 @@
       <div class="sidebar-label sidebar-label-spaced">PREFERENCES</div>
       <nav class="sidebar-nav" aria-label="Preferences">
         <button class="sidebar-link" type="button" data-view="settings"><span>⚙</span> Settings</button>
-        <a class="sidebar-link" href="https://satyamtiwari23.github.io/Portfolio/" id="helpSupportLink" target="_blank"
-          rel="noopener noreferrer"><span>?</span> Help &amp; Support</a>
+        <button class="sidebar-link" type="button" data-view="help"><span>?</span> Help &amp; Support</button>
       </nav>
 
       <div class="sidebar-bottom">
@@ -226,6 +225,19 @@
             </div><button type="button" class="settings-action" id="settingsThemeToggle">Toggle light / dark
               theme</button>
           </div>
+          <div class="settings-card settings-card-stack" id="fontSettingsCard">
+            <div>
+              <h2>Text size</h2>
+              <p>Make text bigger across every PDFnest page. Saved on this browser.</p>
+              <p class="font-sample" id="fontSample">The quick brown fox jumps over the lazy dog.</p>
+            </div>
+            <div class="font-scale-options" role="radiogroup" aria-label="Text size">
+              <button type="button" class="font-scale-btn" role="radio" data-font-scale="90"><span style="font-size:14px">A</span><small>Small</small></button>
+              <button type="button" class="font-scale-btn" role="radio" data-font-scale="100"><span style="font-size:17px">A</span><small>Default</small></button>
+              <button type="button" class="font-scale-btn" role="radio" data-font-scale="115"><span style="font-size:21px">A</span><small>Large</small></button>
+              <button type="button" class="font-scale-btn" role="radio" data-font-scale="130"><span style="font-size:25px">A</span><small>Extra large</small></button>
+            </div>
+          </div>
           <div class="settings-card">
             <div>
               <h2>Activity history</h2>
@@ -246,6 +258,20 @@
               <h2>Account</h2>
               <p>Profile details, profile photo and authentication are managed by your existing account.</p>
             </div><button type="button" class="settings-action" id="openProfileSettings">Open profile menu</button>
+          </div>
+        </section>
+
+        <section class="app-view" id="view-help" data-view-panel="help">
+          <div class="page-heading"><span class="workspace-kicker">SUPPORT</span>
+            <h1>Help &amp; Support</h1>
+            <p>Need help with PDFnest? Get in touch through the portfolio.</p>
+          </div>
+          <div class="settings-card">
+            <div>
+              <h2>Visit the portfolio</h2>
+              <p>You are being redirected to my portfolio... Please Visit Contact Section.</p>
+            </div><a class="settings-action" href="https://satyamtiwari23.github.io/Portfolio/" target="_blank"
+              rel="noopener noreferrer">Visit portfolio ↗</a>
           </div>
         </section>
       </main>
@@ -2048,50 +2074,7 @@
       }
 
 
-      const helpLink = document.getElementById('helpSupportLink');
 
-      helpLink?.addEventListener('click', function (event) {
-        event.preventDefault();
-
-        const portfolioUrl = 'https://satyamtiwari23.github.io/Portfolio/';
-
-        let toast = document.getElementById('pdfnestHelpToast');
-
-        if (!toast) {
-          toast = document.createElement('div');
-          toast.id = 'pdfnestHelpToast';
-          toast.setAttribute('role', 'status');
-
-          Object.assign(toast.style, {
-            position: 'fixed',
-            left: '50%',
-            bottom: '28px',
-            transform: 'translateX(-50%)',
-            zIndex: '2147483647',
-            padding: '13px 20px',
-            borderRadius: '12px',
-            background: '#241b38',
-            color: '#ffffff',
-            border: '1px solid rgba(167,139,250,.55)',
-            boxShadow: '0 12px 36px rgba(0,0,0,.28)',
-            font: '600 13px/1.4 system-ui, sans-serif'
-          });
-
-          document.body.appendChild(toast);
-        }
-
-        toast.textContent =
-          'You are being redirected to my portfolio... Please Visit Contact Section.';
-
-        toast.style.display = 'block';
-
-        // After 2.5 seconds, hide the toast and open the portfolio in a new tab.
-        window.setTimeout(() => {
-          toast.style.display = 'none';
-
-          window.open(portfolioUrl, '_blank');
-        }, 2500);
-      });
     })();
   </script>
 

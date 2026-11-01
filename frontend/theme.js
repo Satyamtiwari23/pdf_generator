@@ -4,6 +4,35 @@
   const STORAGE_KEY = "pdfnest-theme";
   const DEFAULT_THEME = "light";
 
+  /* ---------- text size (Settings → Text size) ---------- */
+  const FONT_KEY = "pdfnest-font-scale";
+  const FONT_MIN = 85, FONT_MAX = 150, FONT_DEFAULT = 100;
+
+  function readFont() {
+    try {
+      const v = parseInt(localStorage.getItem(FONT_KEY), 10);
+      return v >= FONT_MIN && v <= FONT_MAX ? v : FONT_DEFAULT;
+    } catch (_) { return FONT_DEFAULT; }
+  }
+
+  function applyFont(percent) {
+    const p = Math.min(FONT_MAX, Math.max(FONT_MIN, Number(percent) || FONT_DEFAULT));
+    const root = document.documentElement;
+    root.style.fontSize = p + "%";                     // every rem-based size scales with it
+    root.style.setProperty("--font-scale", String(p / 100));
+    root.style.setProperty("--sidebar-w", Math.round(248 * Math.min(p / 100, 1.3)) + "px");
+    return p;
+  }
+
+  function setFont(percent) {
+    const p = applyFont(percent);
+    try { localStorage.setItem(FONT_KEY, String(p)); } catch (_) { }
+    window.dispatchEvent(new CustomEvent("pdfnest:fontchange", { detail: { percent: p } }));
+    return p;
+  }
+
+  applyFont(readFont());
+
   function readTheme() {
     try {
       const value = localStorage.getItem(STORAGE_KEY);
@@ -62,7 +91,10 @@
 
   window.addEventListener("storage", function (event) {
     if (event.key === STORAGE_KEY) applyTheme(event.newValue === "dark" ? "dark" : "light");
+    if (event.key === FONT_KEY) applyFont(readFont());
   });
+
+  window.PDFnestFont = { get: readFont, set: setFont, apply: applyFont, default: FONT_DEFAULT };
 
   window.PDFnestTheme = {
     apply: applyTheme,
