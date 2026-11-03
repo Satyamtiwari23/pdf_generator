@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat with PDF — PDFnest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../style.css" />
+  <script src="../theme.js"></script>
+  <script src="../auth-guard.js"></script>
+  <script src="../js/tool-registry.js"></script>
+  <script src="../tool-bridge.js"></script>
+  <script src="../js/app-shell.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+
+<body class="has-custom-cursor" data-page="chat-with-pdf">
+
+  <!-- App Layout Wrapper -->
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="app-sidebar" id="appSidebar">
+      <a href="../index.html" class="sidebar-brand">
+        <span class="sidebar-logo">✦</span>
+        <span><strong>PDFnest</strong><small>FILE WORKSPACE</small></span>
+      </a>
+
+      <div class="sidebar-label">WORKSPACE</div>
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <button class="sidebar-link" type="button" data-view="dashboard"><span>▦</span> Dashboard</button>
+        <button class="sidebar-link" type="button" data-view="all-tools"><span>⌘</span> All Tools</button>
+        <button class="sidebar-link" type="button" data-view="recent"><span>◷</span> Recent Files</button>
+        <button class="sidebar-link" type="button" data-view="favorites"><span>♡</span> Favorites</button>
+      </nav>
+
+      <div class="sidebar-label sidebar-label-spaced">PREFERENCES</div>
+      <nav class="sidebar-nav" aria-label="Preferences">
+        <button class="sidebar-link" type="button" data-view="settings"><span>⚙</span> Settings</button>
+        <button class="sidebar-link" type="button" data-view="help"><span>?</span> Help &amp; Support</button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="sidebar-plan"><span class="plan-dot"></span><span><strong>Browser processing</strong><small>Your
+              files stay on your device</small></span></div>
+        <div class="sidebar-account-wrap">
+          <button class="sidebar-user" type="button" id="sidebarProfileBtn" aria-label="Open account menu"
+            aria-expanded="false">
+            <span class="sidebar-user-avatar" id="sidebarUserAvatar">
+              <span id="sidebarUserInitial">S</span>
+              <img id="profileAvatar" class="profile-avatar" alt="Profile picture" />
+            </span>
+            <span class="sidebar-user-copy"><strong id="sidebarUserName">Your account</strong><small
+                id="sidebarUserEmail">Signed in</small></span>
+            <span class="sidebar-user-more">···</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="app-main">
+
+      <!-- TOPBAR -->
+      <header class="workspace-topbar">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Toggle navigation">☰</button>
+        <div class="topbar-breadcrumb"><span>Workspace</span><b>/</b><strong>Chat with PDF</strong></div>
+        <div class="topbar-actions">
+          <button class="topbar-icon" id="themeToggle" type="button" aria-label="Switch to dark theme"
+            title="Toggle light / dark theme">
+            <span id="themeIcon" aria-hidden="true">☾</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- TOOL CONTENT -->
+      <main class="workspace-content">
+
+        <div class="page-heading">
+          <span class="workspace-kicker">PDF TOOL · AI</span>
+          <h1>Chat with <span class="grad">your PDF</span></h1>
+          <p>Ask questions, get summaries, pull out tables and search for any detail — in English, हिन्दी or Hinglish.</p>
+        </div>
+
+        <section class="card" id="uploadCard">
+          <div class="field">
+            <label>Your PDF</label>
+            <div class="dropzone" id="dropzone" tabindex="0" role="button">
+              <div class="dz-icon">💬</div>
+              <div class="dz-title">Drag &amp; drop a PDF here</div>
+              <div class="dz-sub">or <span class="link">browse files</span> · one PDF · text-based PDFs work best</div>
+            </div>
+            <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden />
+          </div>
+          <div class="load-progress" id="loadProgress" hidden>
+            <div class="load-progress-top"><span id="loadLabel">Reading PDF…</span></div>
+            <div class="load-progress-track"><div id="loadBar"></div></div>
+          </div>
+          <div class="chat-privacy">
+            <span aria-hidden="true">🔒</span>
+            <p>Your PDF is opened and read <b>in your browser</b>. When you ask a question, the PDF's text is sent securely to PDFnest's server and an AI model (Claude by Anthropic) to write the answer. PDFnest does not store your PDF or your chat.</p>
+          </div>
+        </section>
+
+        <section id="chatApp" hidden>
+          <div class="chat-split" id="chatSplit">
+
+            <!-- LEFT: the PDF -->
+            <aside class="viewer-pane card" id="viewerPane">
+              <div class="viewer-search">
+                <div class="find-box">
+                  <input type="text" id="findInput" placeholder="Find in PDF…" aria-label="Find in PDF" autocomplete="off" />
+                  <span class="find-count" id="findCount" aria-live="polite"></span>
+                  <button type="button" class="find-clear" id="findClear" aria-label="Clear search" hidden>✕</button>
+                </div>
+                <button type="button" class="btn btn-ghost find-step" id="findPrev" aria-label="Previous match" title="Previous match (Shift+Enter)" disabled>▲</button>
+                <button type="button" class="btn btn-ghost find-step" id="findNext" aria-label="Next match" title="Next match (Enter)" disabled>▼</button>
+              </div>
+              <div class="viewer-canvas" id="viewerCanvasWrap">
+                <div class="page-stage" id="pageStage">
+                  <canvas id="pageCanvas" aria-label="PDF page preview"></canvas>
+                  <div class="hl-layer" id="hlLayer" aria-hidden="true"></div>
+                </div>
+              </div>
+              <div class="viewer-nav">
+                <button type="button" class="btn btn-ghost" id="prevPage" aria-label="Previous page">‹</button>
+                <span class="viewer-page">Page <input type="number" id="pageNum" min="1" value="1" aria-label="Page number" /> of <span id="pageTotal">1</span></span>
+                <button type="button" class="btn btn-ghost" id="nextPage" aria-label="Next page">›</button>
+              </div>
+            </aside>
+
+            <!-- drag to resize -->
+            <div class="split-handle" id="splitHandle" role="separator" aria-orientation="vertical" tabindex="0"
+              aria-label="Resize the PDF and chat panels" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"
+              title="Drag to resize · double-click to reset"><span></span></div>
+
+            <!-- RIGHT: the chat -->
+            <div class="chat-pane card">
+              <div class="chat-head">
+                <div class="chat-doc">
+                  <span class="file-icon">PDF</span>
+                  <div><strong id="docName"></strong><small id="docMeta"></small></div>
+                </div>
+                <div class="chat-tools">
+                  <label class="chat-lang" for="langSelect"><span>Reply in</span>
+                    <select id="langSelect" aria-label="Reply language">
+                      <option value="auto" selected>Auto (match my question)</option>
+                      <option value="en">English</option>
+                      <option value="hi">हिन्दी</option>
+                      <option value="hinglish">Hinglish</option>
+                    </select>
+                  </label>
+                  <button type="button" class="btn btn-ghost" id="clearChat">Clear chat</button>
+                  <button type="button" class="btn btn-ghost" id="changePdf">Change PDF</button>
+                </div>
+              </div>
+              <div class="chat-messages" id="messages" aria-live="polite"></div>
+              <div class="chat-quick" id="quick"></div>
+              <form class="chat-composer" id="composer" autocomplete="off">
+                <textarea id="input" rows="1" placeholder="Ask anything about this PDF… (English, हिन्दी, Hinglish)" aria-label="Your question"></textarea>
+                <button type="submit" class="btn btn-primary" id="sendBtn">Send ➤</button>
+                <button type="button" class="btn btn-ghost" id="stopBtn" hidden>■ Stop</button>
+              </form>
+            </div>
+
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">Answers are generated by AI from your PDF · check important details against the document.</footer>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+(function () {
+  'use strict';
+  const $ = (s, c = document) => c.querySelector(s);
+  const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ? 'http://localhost:5050' : 'https://pdf-generator-ochre-two.vercel.app';
+  const ENDPOINT = API_BASE + '/api/chat-pdf';
+
+  const DOC_LIMIT = 420000;          // characters sent per question; longer PDFs use the most relevant pages
+  const MAX_TURNS = 10;              // earlier turns kept for follow-up questions
+  const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js';
+
+  const state = { file: null, pdf: null, pages: [], items: {}, norm: {}, lastVp: null, keepScroll: false, totalChars: 0, messages: [], busy: false, abort: null, viewPage: 1, renderToken: 0, scanned: false };
+
+  /* ---------------- small helpers ---------------- */
+  let toastTimer = null;
+  function toast(m) {
+    const el = $('#toast'); el.textContent = m; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+  const fmtSize = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(2) + ' MB';
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* ---------------- PDF text extraction (keeps rows and column gaps so tables survive) ---------------- */
+  async function extractPage(page) {
+    const content = await page.getTextContent();
+    const raw = content.items.filter(i => typeof i.str === 'string');
+    const items = raw.filter(i => i.str !== '' || i.hasEOL);
+    const rows = [];
+    items.forEach(it => {
+      const x = it.transform[4], y = it.transform[5];
+      let row = rows.find(r => Math.abs(r.y - y) <= 3);
+      if (!row) { row = { y, items: [] }; rows.push(row); }
+      row.items.push({ x, w: it.width || 0, s: it.str });
+    });
+    rows.sort((a, b) => b.y - a.y);
+    const text = rows.map(r => {
+      r.items.sort((a, b) => a.x - b.x);
+      let line = '', prevEnd = null;
+      r.items.forEach(it => {
+        // pdf.js reports a wide column gap as a whitespace-only item
+        if (!it.s.trim()) {
+          if (it.w > 14) { if (line && !line.endsWith('\t')) line += '\t'; }
+          else if (line && !/\s$/.test(line)) line += ' ';
+          prevEnd = it.x + it.w;
+          return;
+        }
+        if (prevEnd !== null) {
+          const gap = it.x - prevEnd;
+          if (gap > 14) line += '\t';
+          else if (gap > 1 && !/\s$/.test(line) && !/^\s/.test(it.s)) line += ' ';
+        }
+        line += it.s;
+        prevEnd = it.x + it.w;
+      });
+      return line.replace(/[ \t]+$/g, '');
+    }).filter(l => l.trim() !== '').join('\n');
+    // compact copy used by Find (and for drawing the highlight boxes)
+    const compact = raw.map(i => ({ s: i.str, x: i.transform[4], y: i.transform[5], w: i.width || 0, h: Math.abs(i.height) || Math.abs(i.transform[3]) || 10, e: !!i.hasEOL }));
+    return { text, items: compact };
+  }
+
+  /* ---------------- search index: lower-cased text with single spaces, and (optionally) where each character sits ---------------- */
+  const lowerChar = c => { const l = c.toLowerCase(); return l.length === c.length ? l : c; };
+  function buildNorm(items, withMap) {
+    let norm = ''; const itemOf = [], offOf = [];
+    const push = (ch, ii, off) => { norm += ch; if (withMap) { itemOf.push(ii); offOf.push(off); } };
+    items.forEach((it, ii) => {
+      const s = it.s;
+      for (let k = 0; k < s.length; k++) {
+        const c = s[k];
+        if (/\s/.test(c)) { if (norm.length && norm[norm.length - 1] !== ' ') push(' ', ii, k); }
+        else push(lowerChar(c), ii, k);
+      }
+      if (it.e && norm.length && norm[norm.length - 1] !== ' ') push(' ', ii, s.length);
+    });
+    return { norm, itemOf, offOf };
+  }
+  const normQuery = q => { let out = ''; for (const c of q.trim().replace(/\s+/g, ' ')) out += lowerChar(c); return out; };
+
+  async function loadFile(file) {
+    if (!file || !(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) { toast('Please choose a PDF'); return; }
+    const progress = $('#loadProgress'), bar = $('#loadBar'), label = $('#loadLabel');
+    progress.hidden = false; bar.style.width = '2%'; label.textContent = 'Reading PDF…';
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const pdf = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise;
+      const pages = [], items = {}, norm = {}; let total = 0;
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const pg = await pdf.getPage(i);
+        const ex = await extractPage(pg);
+        pages.push({ n: i, text: ex.text }); items[i] = ex.items; norm[i] = buildNorm(ex.items, false).norm; total += ex.text.length;
+        if (i % 3 === 0 || i === pdf.numPages) { bar.style.width = Math.round(i / pdf.numPages * 100) + '%'; label.textContent = 'Reading page ' + i + ' of ' + pdf.numPages + '…'; await new Promise(r => setTimeout(r)); }
+      }
+      Object.assign(state, { file, pdf, pages, items, norm, totalChars: total, messages: [], viewPage: 1, lastVp: null });
+      state.scanned = total < pdf.numPages * 25;
+      openChat();
+    } catch (err) {
+      console.error(err);
+      toast('Could not read that PDF. It may be damaged or password-protected.');
+    } finally { progress.hidden = true; }
+  }
+
+  function openChat() {
+    $('#uploadCard').hidden = true; $('#chatApp').hidden = false;
+    $('#docName').textContent = state.file.name;
+    $('#docMeta').textContent = state.pdf.numPages + ' page' + (state.pdf.numPages > 1 ? 's' : '') + ' · ' + fmtSize(state.file.size) + ' · ' + state.totalChars.toLocaleString() + ' characters';
+    $('#pageTotal').textContent = state.pdf.numPages;
+    $('#pageNum').max = state.pdf.numPages;
+    clearFind(); applySplit();
+    resetMessages();
+    gotoPage(1);
+    $('#input').focus();
+  }
+
+  /* ---------------- viewer ---------------- */
+  async function gotoPage(n) {
+    n = Math.min(Math.max(1, Number(n) || 1), state.pdf.numPages);
+    state.viewPage = n; $('#pageNum').value = n;
+    const token = ++state.renderToken;
+    const page = await state.pdf.getPage(n);
+    const wrap = $('#viewerCanvasWrap');
+    const width = Math.max(240, wrap.clientWidth - 8);
+    const base = page.getViewport({ scale: 1 });
+    const scale = Math.min(2.2, width / base.width) * (window.devicePixelRatio > 1 ? 1.5 : 1.2);
+    const vp = page.getViewport({ scale });
+    const canvas = $('#pageCanvas');
+    const off = document.createElement('canvas'); off.width = Math.floor(vp.width); off.height = Math.floor(vp.height);
+    const ctx = off.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, off.width, off.height);
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    if (token !== state.renderToken) return;
+    canvas.width = off.width; canvas.height = off.height; canvas.getContext('2d').drawImage(off, 0, 0);
+    state.lastVp = { n, vp };
+    drawHighlights();
+    if (!state.keepScroll) wrap.scrollTop = 0;
+    state.keepScroll = false;
+  }
+
+  /* ---------------- find in PDF: highlight on the page + "1 / N" up/down ---------------- */
+  const find = { q: '', matches: [], idx: -1, ran: '' };
+
+  function runSearch(q) {
+    find.ran = q; find.matches = []; find.idx = -1;
+    const needle = normQuery(q);
+    if (!needle) return;
+    for (const p of state.pages) {
+      const hay = state.norm[p.n]; let from = 0, at;
+      while ((at = hay.indexOf(needle, from)) !== -1 && find.matches.length < 3000) {
+        find.matches.push({ n: p.n, start: at, len: needle.length });
+        from = at + Math.max(1, needle.length);
+      }
+    }
+  }
+
+  function updateFindUI() {
+    const has = find.matches.length > 0, typed = $('#findInput').value.trim() !== '';
+    const c = $('#findCount');
+    c.textContent = has ? (find.idx + 1) + ' / ' + find.matches.length : (typed ? 'No results' : '');
+    c.classList.toggle('find-none', typed && !has);
+    $('#findPrev').disabled = !has; $('#findNext').disabled = !has;
+    $('#findClear').hidden = !typed;
+  }
+
+  // share of a text run's width that lies before character k (uses real glyph widths, so boxes line up with the word)
+  const measureCtx = document.createElement('canvas').getContext('2d');
+  measureCtx.font = '20px Helvetica, Arial, "Noto Sans", "Noto Sans Devanagari", sans-serif';
+  function fracAt(str, k) {
+    if (k <= 0) return 0;
+    if (k >= str.length) return 1;
+    const whole = measureCtx.measureText(str).width;
+    return whole > 0 ? measureCtx.measureText(str.slice(0, k)).width / whole : k / str.length;
+  }
+
+  function drawHighlights() {
+    const layer = $('#hlLayer'); layer.innerHTML = '';
+    if (!find.matches.length || !state.lastVp || state.lastVp.n !== state.viewPage) return;
+    const mine = []; find.matches.forEach((m, i) => { if (m.n === state.viewPage) mine.push([m, i]); });
+    if (!mine.length) return;
+    const { vp } = state.lastVp, items = state.items[state.viewPage], map = buildNorm(items, true), W = vp.width, H = vp.height;
+    mine.forEach(([m, i]) => {
+      // characters of the match grouped by the text run (item) they belong to
+      const segs = [];
+      for (let c = m.start; c < m.start + m.len; c++) {
+        const ii = map.itemOf[c], off = map.offOf[c];
+        if (ii === undefined) continue;
+        if (map.norm[c] === ' ' && !(segs.length && segs[segs.length - 1].ii === ii)) continue;   // never box the empty gap between columns
+        const last = segs[segs.length - 1];
+        if (last && last.ii === ii) last.b = off + 1; else segs.push({ ii, a: off, b: off + 1 });
+      }
+      segs.forEach(sg => {
+        const it = items[sg.ii], len = Math.max(1, it.s.length);
+        if (sg.a >= len) return;
+        const x0 = it.x + it.w * fracAt(it.s, sg.a), x1 = it.x + it.w * fracAt(it.s, Math.min(sg.b, len));
+        const r = vp.convertToViewportRectangle([x0, it.y - 0.2 * it.h, x1, it.y + 0.85 * it.h]);
+        const el = document.createElement('div');
+        el.className = 'hl' + (i === find.idx ? ' hl-active' : '');
+        el.style.left = (Math.min(r[0], r[2]) / W * 100) + '%';
+        el.style.top = (Math.min(r[1], r[3]) / H * 100) + '%';
+        el.style.width = (Math.abs(r[2] - r[0]) / W * 100) + '%';
+        el.style.height = (Math.abs(r[3] - r[1]) / H * 100) + '%';
+        layer.appendChild(el);
+      });
+    });
+  }
+
+  function scrollToActive() {
+    const el = document.querySelector('#hlLayer .hl-active'), wrap = $('#viewerCanvasWrap');
+    if (!el) return;
+    const top = $('#pageStage').offsetTop + el.offsetTop;
+    wrap.scrollTo({ top: Math.max(0, top - wrap.clientHeight / 3), behavior: 'smooth' });
+  }
+
+  async function goToMatch(i) {
+    if (!find.matches.length) { updateFindUI(); return; }
+    const total = find.matches.length;
+    find.idx = (i % total + total) % total;
+    const m = find.matches[find.idx];
+    updateFindUI();
+    if (state.lastVp && state.lastVp.n === m.n && state.viewPage === m.n) drawHighlights();
+    else { state.keepScroll = true; await gotoPage(m.n); }
+    scrollToActive();
+  }
+
+  function startSearch() {
+    const q = $('#findInput').value;
+    runSearch(q);
+    find.idx = find.matches.length ? Math.max(0, find.matches.findIndex(m => m.n >= state.viewPage)) : -1;
+    updateFindUI();
+    if (find.matches.length) goToMatch(find.idx); else drawHighlights();
+  }
+
+  function clearFind() {
+    $('#findInput').value = ''; find.matches = []; find.idx = -1; find.ran = '';
+    const layer = $('#hlLayer'); if (layer) layer.innerHTML = '';
+    updateFindUI();
+  }
+
+  /* ---------------- resizable split: PDF (left) | chat (right) ---------------- */
+  const SPLIT_KEY = 'pdfnest-chat-split', SPLIT_MIN_PX = 300;
+  function splitClamp(frac) {
+    const split = $('#chatSplit'), handle = $('#splitHandle'), W = split.clientWidth - handle.offsetWidth;
+    if (W <= SPLIT_MIN_PX * 2) return 0.5;
+    return Math.min(Math.max(frac, SPLIT_MIN_PX / W), 1 - SPLIT_MIN_PX / W);
+  }
+  function setSplit(frac, save) {
+    frac = splitClamp(frac);
+    $('#chatSplit').style.setProperty('--split', String(frac));
+    $('#splitHandle').setAttribute('aria-valuenow', String(Math.round(frac * 100)));
+    if (save) { try { localStorage.setItem(SPLIT_KEY, String(frac)); } catch (_) { } }
+    return frac;
+  }
+  function applySplit() {
+    let saved = 0.5; try { const v = parseFloat(localStorage.getItem(SPLIT_KEY)); if (isFinite(v)) saved = v; } catch (_) { }
+    setSplit(saved, false);
+  }
+  (function initSplit() {
+    const split = $('#chatSplit'), handle = $('#splitHandle'); let dragging = false;
+    const fracFromEvent = e => { const r = split.getBoundingClientRect(); return (e.clientX - r.left - handle.offsetWidth / 2) / (r.width - handle.offsetWidth); };
+    handle.addEventListener('pointerdown', e => { dragging = true; handle.setPointerCapture(e.pointerId); document.body.classList.add('is-resizing'); e.preventDefault(); });
+    handle.addEventListener('pointermove', e => { if (dragging) setSplit(fracFromEvent(e), false); });
+    const stop = e => { if (!dragging) return; dragging = false; document.body.classList.remove('is-resizing'); setSplit(fracFromEvent(e), true); };
+    handle.addEventListener('pointerup', stop); handle.addEventListener('pointercancel', stop);
+    handle.addEventListener('dblclick', () => setSplit(0.5, true));
+    handle.addEventListener('keydown', e => {
+      const cur = parseFloat(split.style.getPropertyValue('--split')) || 0.5;
+      if (e.key === 'ArrowLeft') { setSplit(cur - 0.02, true); e.preventDefault(); }
+      else if (e.key === 'ArrowRight') { setSplit(cur + 0.02, true); e.preventDefault(); }
+      else if (e.key === 'Home') { setSplit(0, true); e.preventDefault(); }
+      else if (e.key === 'End') { setSplit(1, true); e.preventDefault(); }
+      else if (e.key === 'Enter') { setSplit(0.5, true); e.preventDefault(); }
+    });
+    window.addEventListener('resize', () => { const cur = parseFloat(split.style.getPropertyValue('--split')); if (isFinite(cur)) setSplit(cur, false); });
+  })();
+
+  /* ---------------- markdown (small, safe) ---------------- */
+  function inline(s) {
+    s = esc(s);
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>');
+    // page citations: (p. 4) (pp. 4-6) [page 3] (पृष्ठ 2)
+    s = s.replace(/[(\[]\s*((?:p{1,2}|pages?|pg|पृष्ठ|पेज)\.?\s*)(\d{1,4})((?:\s*[-–,]\s*\d{1,4})*)\s*[)\]]/gi,
+      (m, label, first, rest) => {
+        const l = label.trim().replace(/\.$/, '');
+        const shown = /^pp?$/i.test(l) ? l.toLowerCase() + '.' : l;
+        return '<button type="button" class="cite" data-page="' + first + '" data-raw="' + m + '">' + shown + ' ' + first + rest + '</button>';
+      });
+    return s;
+  }
+  function splitRow(line) {
+    let t = line.trim(); if (t.startsWith('|')) t = t.slice(1); if (t.endsWith('|')) t = t.slice(0, -1);
+    return t.split('|').map(c => c.trim());
+  }
+  function md(src) {
+    const lines = String(src).replace(/\r/g, '').split('\n'); let html = ''; let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      if (/^```/.test(line)) { let code = []; i++; while (i < lines.length && !/^```/.test(lines[i])) code.push(lines[i++]); i++; html += '<pre class="md-code"><code>' + esc(code.join('\n')) + '</code></pre>'; continue; }
+      if (/^\s*\|.*\|\s*$/.test(line) && i + 1 < lines.length && /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/.test(lines[i + 1])) {
+        const head = splitRow(line); i += 2; const body = [];
+        while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) body.push(splitRow(lines[i++]));
+        html += '<div class="md-table-wrap"><table class="md-table"><thead><tr>' + head.map(c => '<th>' + inline(c) + '</th>').join('') + '</tr></thead><tbody>' +
+          body.map(r => '<tr>' + head.map((_, k) => '<td>' + inline(r[k] || '') + '</td>').join('') + '</tr>').join('') + '</tbody></table>' +
+          '<div class="md-table-tools"><button type="button" class="tbl-copy">Copy table</button><button type="button" class="tbl-csv">Download CSV</button></div></div>';
+        continue;
+      }
+      const h = line.match(/^(#{1,4})\s+(.*)$/);
+      if (h) { const lv = Math.min(4, h[1].length + 1); html += '<h' + lv + '>' + inline(h[2]) + '</h' + lv + '>'; i++; continue; }
+      if (/^\s*([-*_])\1{2,}\s*$/.test(line)) { html += '<hr>'; i++; continue; }
+      if (/^\s*>\s?/.test(line)) { const q = []; while (i < lines.length && /^\s*>\s?/.test(lines[i])) q.push(lines[i++].replace(/^\s*>\s?/, '')); html += '<blockquote>' + inline(q.join(' ')) + '</blockquote>'; continue; }
+      if (/^\s*([-*•])\s+/.test(line)) { html += '<ul>'; while (i < lines.length && /^\s*([-*•])\s+/.test(lines[i])) html += '<li>' + inline(lines[i++].replace(/^\s*([-*•])\s+/, '')) + '</li>'; html += '</ul>'; continue; }
+      if (/^\s*\d+[.)]\s+/.test(line)) { html += '<ol>'; while (i < lines.length && /^\s*\d+[.)]\s+/.test(lines[i])) html += '<li>' + inline(lines[i++].replace(/^\s*\d+[.)]\s+/, '')) + '</li>'; html += '</ol>'; continue; }
+      if (line.trim() === '') { i++; continue; }
+      const para = [line]; i++;
+      while (i < lines.length && lines[i].trim() !== '' && !/^(#{1,4}\s|```|\s*[-*•]\s+|\s*\d+[.)]\s+|\s*>|\s*\|)/.test(lines[i])) para.push(lines[i++]);
+      html += '<p>' + inline(para.join('\n')).replace(/\n/g, '<br>') + '</p>';
+    }
+    return html;
+  }
+
+  /* ---------------- messages UI ---------------- */
+  const CHIPS = [
+    ['📝 Summarize', 'Summarize this document'],
+    ['🔑 Key points', 'Give the key points of this document as bullet points'],
+    ['📊 Extract tables', 'Extract all tables from this document as Markdown tables'],
+    ['📅 Dates & amounts', 'List all important dates, names and amounts with their page numbers'],
+    ['🇮🇳 Hindi me samjhao', 'Is document ko simple Hindi me samjhao']
+  ];
+
+  function resetMessages() {
+    state.messages = [];
+    const box = $('#messages'); box.innerHTML = '';
+    const w = document.createElement('div'); w.className = 'msg msg-ai msg-welcome';
+    w.innerHTML = '<div class="msg-body"><p><strong>Namaste! 👋</strong> I have read <b>' + esc(state.file.name) + '</b>. Ask me anything about it — in <b>English</b>, <b>हिन्दी</b> or <b>Hinglish</b>.</p>' +
+      '<p class="muted">Try: “is document ka summary do”, “total amount kitna hai?”, “सभी तारीखें निकालो”, or “make a table of all items”.</p></div>';
+    box.appendChild(w);
+    if (state.scanned) {
+      const n = document.createElement('div'); n.className = 'chat-warn';
+      n.textContent = '⚠ This PDF has almost no selectable text — it may be a scan or images. Answers will be limited. Run it through an OCR tool first for better results.';
+      box.appendChild(n);
+    }
+    const quick = $('#quick'); quick.innerHTML = '';
+    CHIPS.forEach(([label, q]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = label; b.dataset.q = q; quick.appendChild(b); });
+  }
+
+  function addUser(text) {
+    const d = document.createElement('div'); d.className = 'msg msg-user';
+    d.innerHTML = '<div class="msg-body"></div>'; d.querySelector('.msg-body').textContent = text;
+    $('#messages').appendChild(d); scrollDown(); return d;
+  }
+  function addAi() {
+    const d = document.createElement('div'); d.className = 'msg msg-ai';
+    d.innerHTML = '<div class="msg-body"><span class="typing"><i></i><i></i><i></i></span></div>';
+    $('#messages').appendChild(d); scrollDown(); return d;
+  }
+  function scrollDown() { const m = $('#messages'); m.scrollTop = m.scrollHeight; }
+
+  function finishAi(el, raw, note) {
+    el.querySelector('.msg-body').innerHTML = md(raw);
+    if (note) { const n = document.createElement('div'); n.className = 'msg-note'; n.textContent = note; el.querySelector('.msg-body').appendChild(n); }
+    const bar = document.createElement('div'); bar.className = 'msg-actions';
+    const copy = document.createElement('button'); copy.type = 'button'; copy.className = 'msg-act'; copy.textContent = '⧉ Copy';
+    copy.addEventListener('click', async () => { try { await navigator.clipboard.writeText(raw); toast('Answer copied'); } catch { toast('Could not copy'); } });
+    bar.appendChild(copy);
+    if (window.ToolBridge) bar.appendChild(window.ToolBridge.createSendButton(() => ({ blob: new Blob([raw], { type: 'text/plain' }), fileName: 'PDFnest-chat-answer.txt', mimeType: 'text/plain' }), { compact: true, label: 'Send to…', key: 'ans' }));
+    el.appendChild(bar);
+  }
+
+  /* ---------------- choosing which pages to send ---------------- */
+  const STOP = new Set(['the', 'and', 'for', 'are', 'this', 'that', 'with', 'what', 'which', 'from', 'about', 'tell', 'give', 'show', 'document', 'pdf', 'please', 'hai', 'hain', 'kya', 'ka', 'ki', 'ke', 'me', 'mein', 'se', 'ko', 'is', 'in', 'of', 'to', 'a', 'an', 'kitna', 'kitni', 'batao', 'bataiye', 'karo', 'do']);
+  const tok = s => (String(s).toLowerCase().match(/[\p{L}\p{N}]{2,}/gu) || []).filter(w => !STOP.has(w));
+
+  function selectPages(question) {
+    if (state.totalChars <= DOC_LIMIT) return { pages: state.pages, partial: false };
+    const q = tok(question + ' ' + (lastUserQuestion() || ''));
+    const N = state.pages.length, df = new Map();
+    const bags = state.pages.map(p => { const m = new Map(); tok(p.text).forEach(w => m.set(w, (m.get(w) || 0) + 1)); m.forEach((_, w) => df.set(w, (df.get(w) || 0) + 1)); return m; });
+    const scores = bags.map((m, i) => { let s = 0; q.forEach(w => { const tf = m.get(w); if (tf) s += (1 + Math.log(tf)) * Math.log(1 + N / (df.get(w) || 1)); }); return { i, s }; });
+    const chosen = new Set([0, 1].filter(i => i < N));
+    const ranked = scores.filter(x => x.s > 0).sort((a, b) => b.s - a.s);
+    let used = state.pages.slice(0, 2).reduce((n, p) => n + p.text.length, 0);
+    const add = i => { if (i < 0 || i >= N || chosen.has(i)) return; const len = state.pages[i].text.length; if (used + len > DOC_LIMIT) return; chosen.add(i); used += len; };
+    ranked.slice(0, 3).forEach(x => { add(x.i); add(x.i - 1); add(x.i + 1); });
+    ranked.forEach(x => add(x.i));
+    if (!ranked.length) { const step = Math.max(1, Math.floor(N / 40)); for (let i = 0; i < N; i += step) add(i); }
+    for (let i = 0; used < DOC_LIMIT * 0.85 && i < N; i++) add(i);       // fill any space left, in page order
+    return { pages: [...chosen].sort((a, b) => a - b).map(i => state.pages[i]), partial: true };
+  }
+  function lastUserQuestion() { for (let i = state.messages.length - 1; i >= 0; i--) if (state.messages[i].role === 'user') return state.messages[i].content; return ''; }
+
+  /* ---------------- ask ---------------- */
+  async function ask(question) {
+    question = question.trim();
+    if (!question || state.busy) return;
+    const token = localStorage.getItem('token');
+    if (!token) { toast('Please log in again'); return; }
+
+    $('#quick').innerHTML = '';
+    const wel = $('.msg-welcome'); if (wel) wel.classList.add('msg-faded');
+    addUser(question);
+    const turns = state.messages.slice(-(MAX_TURNS * 2));
+    const history = turns.length && turns[0].role === 'assistant' ? turns.slice(1) : turns;
+    state.messages.push({ role: 'user', content: question });
+    const sent = history.concat([{ role: 'user', content: question }]);
+    const sel = selectPages(question);
+    const aiEl = addAi();
+
+    state.busy = true; setBusy(true);
+    const controller = new AbortController(); state.abort = controller;
+    let raw = '', note = '', errored = false, finished = false;
+
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: 'POST', signal: controller.signal,
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+        body: JSON.stringify({
+          pages: sel.pages, partial: sel.partial, totalPages: state.pdf.numPages, fileName: state.file.name,
+          language: $('#langSelect').value, messages: sent
+        })
+      });
+      if (!res.ok) {
+        let msg = 'Something went wrong. Please try again.';
+        try { msg = (await res.json()).message || msg; } catch (_) { }
+        if (res.status === 401) msg = 'Your session has expired. Please log in again.';
+        throw new Error(msg);
+      }
+      const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '', pending = false;
+      const paint = () => { pending = false; if (finished) return; aiEl.querySelector('.msg-body').innerHTML = md(raw) + '<span class="caret"></span>'; scrollDown(); };
+      for (;;) {
+        const { value, done } = await reader.read(); if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let cut;
+        while ((cut = buf.indexOf('\n\n')) !== -1) {
+          const line = buf.slice(0, cut).replace(/^data:\s*/, ''); buf = buf.slice(cut + 2);
+          if (!line) continue; let evt; try { evt = JSON.parse(line); } catch { continue; }
+          if (evt.t) { raw += evt.t; if (!pending) { pending = true; requestAnimationFrame(paint); } }
+          if (evt.truncated) note = 'The answer was cut because it reached the length limit. Ask me to continue.';
+          if (evt.error) throw new Error(evt.error);
+        }
+      }
+      if (!raw.trim()) throw new Error('I did not get an answer. Please try again.');
+      if (sel.partial) note = (note ? note + ' ' : '') + 'Long PDF: answered from the ' + sel.pages.length + ' most relevant pages out of ' + state.pdf.numPages + '.';
+      finished = true;
+      state.messages.push({ role: 'assistant', content: raw });
+      finishAi(aiEl, raw, note);
+    } catch (err) {
+      errored = true; finished = true;
+      if (err.name === 'AbortError') {
+        if (raw.trim()) { state.messages.push({ role: 'assistant', content: raw }); finishAi(aiEl, raw, 'Stopped.'); errored = false; }
+        else aiEl.remove();
+        if (!raw.trim()) state.messages.pop();
+      } else {
+        state.messages.pop();
+        const body = aiEl.querySelector('.msg-body');
+        body.innerHTML = '<p class="msg-error">⚠ ' + esc(err.message || 'Something went wrong.') + '</p>';
+        const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'msg-act'; retry.textContent = '↻ Try again';
+        retry.addEventListener('click', () => { aiEl.previousElementSibling && aiEl.previousElementSibling.remove(); aiEl.remove(); ask(question); });
+        body.appendChild(retry);
+      }
+    } finally { state.busy = false; state.abort = null; setBusy(false); scrollDown(); }
+  }
+
+  function setBusy(b) { $('#sendBtn').hidden = b; $('#stopBtn').hidden = !b; $('#input').disabled = false; }
+
+  /* ---------------- tables: copy / CSV ---------------- */
+  function cellText(cell) {
+    const c = cell.cloneNode(true);
+    c.querySelectorAll('.cite').forEach(b => b.replaceWith(document.createTextNode(b.dataset.raw || b.textContent)));
+    return c.textContent.trim();
+  }
+  function tableRows(table) { return [...table.querySelectorAll('tr')].map(tr => [...tr.children].map(cellText)); }
+  function download(name, text, type) {
+    const blob = new Blob(['\ufeff' + text], { type }); const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  /* ---------------- events ---------------- */
+  const dz = $('#dropzone'), fileInput = $('#fileInput');
+  dz.addEventListener('click', () => fileInput.click());
+  dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+  fileInput.addEventListener('change', () => { if (fileInput.files[0]) loadFile(fileInput.files[0]); fileInput.value = ''; });
+  ['dragenter', 'dragover'].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); dz.classList.add('dragover'); }));
+  ['dragleave', 'drop'].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); if (t === 'dragleave' && dz.contains(e.relatedTarget)) return; dz.classList.remove('dragover'); }));
+  dz.addEventListener('drop', e => { if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
+  ['dragover', 'drop'].forEach(t => window.addEventListener(t, e => { if (!e.target.closest || !e.target.closest('#dropzone')) e.preventDefault(); }));
+
+  $('#composer').addEventListener('submit', e => { e.preventDefault(); const v = $('#input').value; if (!v.trim()) return; $('#input').value = ''; autosize(); ask(v); });
+  $('#input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#composer').requestSubmit(); } });
+  const autosize = () => { const t = $('#input'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 160) + 'px'; };
+  $('#input').addEventListener('input', autosize);
+  $('#stopBtn').addEventListener('click', () => state.abort && state.abort.abort());
+  $('#clearChat').addEventListener('click', () => { if (state.abort) state.abort.abort(); resetMessages(); });
+  $('#changePdf').addEventListener('click', () => { if (state.abort) state.abort.abort(); $('#chatApp').hidden = true; $('#uploadCard').hidden = false; });
+
+  $('#quick').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) ask(b.dataset.q); });
+  $('#messages').addEventListener('click', e => {
+    const cite = e.target.closest('.cite'); if (cite) { gotoPage(cite.dataset.page); $('#viewerPane').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); return; }
+    const wrap = e.target.closest('.md-table-wrap'); if (!wrap) return; const rows = tableRows(wrap.querySelector('table'));
+    if (e.target.closest('.tbl-copy')) { navigator.clipboard.writeText(rows.map(r => r.join('\t')).join('\n')).then(() => toast('Table copied — paste it into Excel or Sheets'), () => toast('Could not copy')); }
+    if (e.target.closest('.tbl-csv')) { download('PDFnest-table.csv', rows.map(r => r.map(c => '"' + c.replace(/"/g, '""') + '"').join(',')).join('\r\n'), 'text/csv;charset=utf-8'); }
+  });
+
+  let findTimer = null;
+  $('#findInput').addEventListener('input', () => { clearTimeout(findTimer); findTimer = setTimeout(startSearch, 220); updateFindUI(); });
+  $('#findInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); clearTimeout(findTimer);
+      if ($('#findInput').value !== find.ran) startSearch();
+      else goToMatch(find.idx + (e.shiftKey ? -1 : 1));
+    } else if (e.key === 'Escape') { clearFind(); }
+  });
+  $('#findNext').addEventListener('click', () => goToMatch(find.idx + 1));
+  $('#findPrev').addEventListener('click', () => goToMatch(find.idx - 1));
+  $('#findClear').addEventListener('click', () => { clearFind(); $('#findInput').focus(); });
+  $('#prevPage').addEventListener('click', () => gotoPage(state.viewPage - 1));
+  $('#nextPage').addEventListener('click', () => gotoPage(state.viewPage + 1));
+  $('#pageNum').addEventListener('change', e => gotoPage(e.target.value));
+  // sharper page when the PDF panel is resized (drag the divider, or resize the window)
+  if (window.ResizeObserver) {
+    let rz = null;
+    new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(() => { if (state.pdf && !$('#chatApp').hidden) { state.keepScroll = true; gotoPage(state.viewPage); } }, 200); }).observe($('#viewerCanvasWrap'));
+  }
+
+  /* ---- file handed over from another tool / the dashboard ---- */
+  (async function receiveIncomingFiles() {
+    try {
+      const files = await window.ToolBridge?.consumeIncomingFiles?.();
+      if (files && files.length) { await loadFile(files[0]); toast('📥 Received from another tool'); }
+    } catch (err) { console.error('[bridge] receive failed:', err); }
+  })();
+})();
+
+
+    (function initProfessionalCursor() {
+      // Disable the custom cursor on touch devices; keep normal touch interaction.
+      if (window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
+      // Create canvas for cursor trail
+      const canvas = document.createElement('canvas');
+      canvas.id = 'cursor-trail-canvas';
+      canvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:99999;';
+      document.body.appendChild(canvas);
+
+      const ctx = canvas.getContext('2d');
+      let width, height;
+
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      let mouse = { x: -100, y: -100 };
+      let trail = [];
+      const maxTrail = 15; // Length of the trail
+
+      document.addEventListener('mousemove', e => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      });
+
+      // Hide the default system cursor globally
+      const style = document.createElement('style');
+      style.textContent = `* { cursor: none !important; }`;
+      document.head.appendChild(style);
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        // Add current position to trail
+        trail.push({ x: mouse.x, y: mouse.y });
+        if (trail.length > maxTrail) {
+          trail.shift();
+        }
+
+        // Draw the trail
+        for (let i = 0; i < trail.length; i++) {
+          const p = trail[i];
+          const ratio = i / trail.length; // 0 at oldest, 1 at newest
+          const radius = 8 * ratio; // Tapering effect
+
+          if (radius <= 0) continue;
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+
+          // Soft purple glow for the trail
+          ctx.fillStyle = `rgba(139, 92, 246, ${ratio * 0.5})`;
+          ctx.fill();
+        }
+
+        // Draw the main glowing dot
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+
+        // Outer glow for main dot
+        ctx.beginPath();
+        ctx.arc(mouse.x, mouse.y, 12, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(139, 92, 246, 0.4)';
+        ctx.fill();
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+  </script>
+</body>
+
+</html>

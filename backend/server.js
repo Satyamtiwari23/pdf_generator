@@ -56,6 +56,14 @@ app.get('/api/config', (req, res) => {
   });
 });
 
+// ============================================================
+// CHAT WITH PDF
+// Mounted BEFORE the global JSON parser below: this route carries the
+// PDF text, so it uses its own larger body limit (see chatPdf.js).
+// ============================================================
+
+app.use('/api/chat-pdf', require('./chatWithPdf')({ authenticateToken }));
+
 app.use(express.json({
   limit: '200kb'
 }));
