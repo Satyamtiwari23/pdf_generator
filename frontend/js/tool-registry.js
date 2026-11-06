@@ -31,7 +31,7 @@
     { id: "pdf_section/images-to-pdf.html",       name: "Images to PDF",        icon: "📷", category: "converter", desc: "Turn images into one PDF.",            accepts: { image: [1, INF] } },
     { id: "pdf_section/word-to-pdf.html",         name: "Word to PDF",          icon: "📄", category: "converter", desc: "Convert a DOCX document to PDF.",      accepts: { docx: [1, 1] } },
     { id: "pdf_section/text-to-pdf.html",         name: "Text to PDF",          icon: "✍️", category: "converter", desc: "Create a PDF from text.",              accepts: { text: [1, 1] } },
-    { id: "pdf_section/chat-with-pdf.html",       name: "Chat with PDF",        icon: "💬", category: "pdf",       desc: "Ask questions, summarize, extract tables.", accepts: { pdf: [1, 1] } }
+    { id: "pdf_section/Chat-with-pdf.html",       name: "Chat with PDF",        icon: "💬", category: "pdf",       desc: "Ask questions, summarize, extract tables.", accepts: { pdf: [1, 1] } }
   ];
 
   /* ---------- file kind detection (File, Blob or {name,type}) ---------- */
