@@ -62,7 +62,7 @@ app.get('/api/config', (req, res) => {
 // PDF text, so it uses its own larger body limit (see chatPdf.js).
 // ============================================================
 
-app.use('/api/chat-pdf', require('./chatWithPdf')({ authenticateToken }));
+app.use('/api/chat-pdf', require('./Pdfchatroute')({ authenticateToken }));
 
 app.use(express.json({
   limit: '200kb'

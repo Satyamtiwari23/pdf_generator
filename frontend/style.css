@@ -4127,18 +4127,43 @@ body.is-resizing {
   background: var(--dash-panel-2);
 }
 
-.page-stage {
-  position: relative;
-  width: 100%;
+
+
+.pages-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.page-stage canvas {
-  display: block;
+.pdf-page {
+  position: relative;
   width: 100%;
-  height: auto;
+  flex: none;
+  overflow: hidden;
   border-radius: 4px;
   background: #fff;
   box-shadow: 0 6px 22px -10px rgba(0, 0, 0, .55);
+}
+
+.pdf-page canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pg-badge {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: rgba(15, 19, 28, .72);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 700;
+  pointer-events: none;
 }
 
 .hl-layer {

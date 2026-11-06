@@ -103,7 +103,7 @@
           </div>
           <div class="chat-privacy">
             <span aria-hidden="true">🔒</span>
-            <p>Your PDF is opened and read <b>in your browser</b>. When you ask a question, the PDF's text is sent securely to PDFnest's server and an AI model (Claude by Anthropic) to write the answer. PDFnest does not store your PDF or your chat.</p>
+            <p>Your PDF is opened and read <b>in your browser</b>. When you ask a question, the PDF's text is sent securely to PDFnest's server and an AI model hosted by Groq to write the answer. PDFnest does not store your PDF or your chat.</p>
           </div>
         </section>
 
@@ -122,10 +122,7 @@
                 <button type="button" class="btn btn-ghost find-step" id="findNext" aria-label="Next match" title="Next match (Enter)" disabled>▼</button>
               </div>
               <div class="viewer-canvas" id="viewerCanvasWrap">
-                <div class="page-stage" id="pageStage">
-                  <canvas id="pageCanvas" aria-label="PDF page preview"></canvas>
-                  <div class="hl-layer" id="hlLayer" aria-hidden="true"></div>
-                </div>
+                <div class="pages-wrap" id="pagesWrap"></div>
               </div>
               <div class="viewer-nav">
                 <button type="button" class="btn btn-ghost" id="prevPage" aria-label="Previous page">‹</button>
@@ -186,12 +183,11 @@
     ? 'http://localhost:5050' : 'https://pdf-generator-ochre-two.vercel.app';
   const ENDPOINT = API_BASE + '/api/chat-pdf';
 
-  const DOC_LIMIT = 420000;          // characters sent per question; longer PDFs use the most relevant pages
   const MAX_TURNS = 10;              // earlier turns kept for follow-up questions
   const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
   if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js';
 
-  const state = { file: null, pdf: null, pages: [], items: {}, norm: {}, lastVp: null, keepScroll: false, totalChars: 0, messages: [], busy: false, abort: null, viewPage: 1, renderToken: 0, scanned: false };
+  const state = { file: null, pdf: null, pages: [], items: {}, norm: {}, dims: {}, vps: {}, docLimit: 420000, budgetScale: 1, config: null, totalChars: 0, messages: [], busy: false, abort: null, viewPage: 1, renderToken: 0, scanned: false };
 
   /* ---------------- small helpers ---------------- */
   let toastTimer = null;
@@ -266,14 +262,15 @@
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       const pdf = await pdfjsLib.getDocument({ data: bytes.slice(0) }).promise;
-      const pages = [], items = {}, norm = {}; let total = 0;
+      const pages = [], items = {}, norm = {}, dims = {}, vps = {}; let total = 0;
       for (let i = 1; i <= pdf.numPages; i++) {
         const pg = await pdf.getPage(i);
+        const vp1 = pg.getViewport({ scale: 1 }); dims[i] = { w: vp1.width, h: vp1.height }; vps[i] = vp1;
         const ex = await extractPage(pg);
         pages.push({ n: i, text: ex.text }); items[i] = ex.items; norm[i] = buildNorm(ex.items, false).norm; total += ex.text.length;
         if (i % 3 === 0 || i === pdf.numPages) { bar.style.width = Math.round(i / pdf.numPages * 100) + '%'; label.textContent = 'Reading page ' + i + ' of ' + pdf.numPages + '…'; await new Promise(r => setTimeout(r)); }
       }
-      Object.assign(state, { file, pdf, pages, items, norm, totalChars: total, messages: [], viewPage: 1, lastVp: null });
+      Object.assign(state, { file, pdf, pages, items, norm, dims, vps, totalChars: total, messages: [], viewPage: 1, budgetScale: 1 });
       state.scanned = total < pdf.numPages * 25;
       openChat();
     } catch (err) {
@@ -288,37 +285,100 @@
     $('#docMeta').textContent = state.pdf.numPages + ' page' + (state.pdf.numPages > 1 ? 's' : '') + ' · ' + fmtSize(state.file.size) + ' · ' + state.totalChars.toLocaleString() + ' characters';
     $('#pageTotal').textContent = state.pdf.numPages;
     $('#pageNum').max = state.pdf.numPages;
-    clearFind(); applySplit();
+    applySplit();
+    buildViewer();
+    clearFind();
     resetMessages();
-    gotoPage(1);
+    loadConfig();
+    scrollToPage(1, false);
     $('#input').focus();
   }
 
-  /* ---------------- viewer ---------------- */
-  async function gotoPage(n) {
-    n = Math.min(Math.max(1, Number(n) || 1), state.pdf.numPages);
-    state.viewPage = n; $('#pageNum').value = n;
-    const token = ++state.renderToken;
+  /* ---------------- viewer: all pages in one scrolling column (pages are drawn only when near the screen) ---------------- */
+  const view = { io: null, rendered: new Map(), visible: new Set(), tokens: {}, raf: 0 };
+  const pageEl = n => $('#pagesWrap').children[n - 1];
+
+  function buildViewer() {
+    const wrap = $('#viewerCanvasWrap'), host = $('#pagesWrap');
+    if (view.io) view.io.disconnect();
+    host.innerHTML = ''; view.rendered.clear(); view.visible.clear(); view.tokens = {};
+    const frag = document.createDocumentFragment();
+    for (let n = 1; n <= state.pdf.numPages; n++) {
+      const d = state.dims[n];
+      const el = document.createElement('div');
+      el.className = 'pdf-page'; el.dataset.n = n; el.style.aspectRatio = d.w + ' / ' + d.h;
+      el.innerHTML = '<canvas></canvas><div class="hl-layer" aria-hidden="true"></div><span class="pg-badge">' + n + '</span>';
+      frag.appendChild(el);
+    }
+    host.appendChild(frag);
+    view.io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        const n = Number(e.target.dataset.n);
+        if (e.isIntersecting) { view.visible.add(n); renderPageCanvas(n); } else view.visible.delete(n);
+      });
+      evictFarPages();
+      updateCurrentPage();
+    }, { root: wrap, rootMargin: '900px 0px' });
+    host.querySelectorAll('.pdf-page').forEach(el => view.io.observe(el));
+    wrap.onscroll = () => { if (!view.raf) view.raf = requestAnimationFrame(() => { view.raf = 0; updateCurrentPage(); }); };
+    wrap.scrollTop = 0;
+  }
+
+  async function renderPageCanvas(n) {
+    const el = pageEl(n); if (!el) return;
+    const cssW = el.clientWidth; if (!cssW) return;
+    const done = view.rendered.get(n);
+    if (done && Math.abs(done.cssW - cssW) < cssW * 0.08) return;
+    const token = view.tokens[n] = (view.tokens[n] || 0) + 1;
     const page = await state.pdf.getPage(n);
-    const wrap = $('#viewerCanvasWrap');
-    const width = Math.max(240, wrap.clientWidth - 8);
-    const base = page.getViewport({ scale: 1 });
-    const scale = Math.min(2.2, width / base.width) * (window.devicePixelRatio > 1 ? 1.5 : 1.2);
+    const scale = Math.min(3, (cssW / state.vps[n].width) * Math.min(window.devicePixelRatio || 1, 2) * 1.1);
     const vp = page.getViewport({ scale });
-    const canvas = $('#pageCanvas');
     const off = document.createElement('canvas'); off.width = Math.floor(vp.width); off.height = Math.floor(vp.height);
     const ctx = off.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, off.width, off.height);
     await page.render({ canvasContext: ctx, viewport: vp }).promise;
-    if (token !== state.renderToken) return;
+    if (token !== view.tokens[n]) return;
+    if (!view.visible.has(n) && Math.abs(n - state.viewPage) > 6) return;      // the person already scrolled away: don't keep it
+    const canvas = el.querySelector('canvas');
     canvas.width = off.width; canvas.height = off.height; canvas.getContext('2d').drawImage(off, 0, 0);
-    state.lastVp = { n, vp };
-    drawHighlights();
-    if (!state.keepScroll) wrap.scrollTop = 0;
-    state.keepScroll = false;
+    view.rendered.set(n, { cssW });
+    evictFarPages();
   }
 
+  function evictFarPages() {                                   // keep memory low on long PDFs
+    if (view.rendered.size <= 12) return;
+    [...view.rendered.keys()].filter(n => !view.visible.has(n))
+      .sort((a, b) => Math.abs(b - state.viewPage) - Math.abs(a - state.viewPage))
+      .slice(0, view.rendered.size - 12)
+      .forEach(n => { const c = pageEl(n).querySelector('canvas'); c.width = 0; c.height = 0; view.rendered.delete(n); });
+  }
+
+  // the page number box follows the scroll: the page that fills most of the panel is the current one
+  function updateCurrentPage() {
+    const wrap = $('#viewerCanvasWrap'), wr = wrap.getBoundingClientRect();
+    let best = null, bestOverlap = -1;
+    view.visible.forEach(n => {
+      const r = pageEl(n).getBoundingClientRect();
+      const overlap = Math.min(r.bottom, wr.bottom) - Math.max(r.top, wr.top);
+      if (overlap > bestOverlap) { bestOverlap = overlap; best = n; }
+    });
+    if (best !== null && best !== state.viewPage) {
+      state.viewPage = best;
+      if (document.activeElement !== $('#pageNum')) $('#pageNum').value = best;
+    }
+  }
+
+  function scrollToPage(n, smooth) {
+    n = Math.min(Math.max(1, Number(n) || 1), state.pdf.numPages);
+    const wrap = $('#viewerCanvasWrap'), el = pageEl(n);
+    state.viewPage = n; $('#pageNum').value = n;
+    const top = el.getBoundingClientRect().top - wrap.getBoundingClientRect().top + wrap.scrollTop - 8;
+    wrap.scrollTo({ top: Math.max(0, top), behavior: smooth && Math.abs(top - wrap.scrollTop) < wrap.clientHeight * 3 ? 'smooth' : 'auto' });   // long jumps are instant
+    renderPageCanvas(n);
+  }
+  const gotoPage = n => scrollToPage(n, true);
+
   /* ---------------- find in PDF: highlight on the page + "1 / N" up/down ---------------- */
-  const find = { q: '', matches: [], idx: -1, ran: '' };
+  const find = { q: '', matches: [], idx: -1, ran: '', els: new Map() };
 
   function runSearch(q) {
     find.ran = q; find.matches = []; find.idx = -1;
@@ -352,67 +412,73 @@
     return whole > 0 ? measureCtx.measureText(str.slice(0, k)).width / whole : k / str.length;
   }
 
-  function drawHighlights() {
-    const layer = $('#hlLayer'); layer.innerHTML = '';
-    if (!find.matches.length || !state.lastVp || state.lastVp.n !== state.viewPage) return;
-    const mine = []; find.matches.forEach((m, i) => { if (m.n === state.viewPage) mine.push([m, i]); });
-    if (!mine.length) return;
-    const { vp } = state.lastVp, items = state.items[state.viewPage], map = buildNorm(items, true), W = vp.width, H = vp.height;
-    mine.forEach(([m, i]) => {
-      // characters of the match grouped by the text run (item) they belong to
-      const segs = [];
-      for (let c = m.start; c < m.start + m.len; c++) {
-        const ii = map.itemOf[c], off = map.offOf[c];
-        if (ii === undefined) continue;
-        if (map.norm[c] === ' ' && !(segs.length && segs[segs.length - 1].ii === ii)) continue;   // never box the empty gap between columns
-        const last = segs[segs.length - 1];
-        if (last && last.ii === ii) last.b = off + 1; else segs.push({ ii, a: off, b: off + 1 });
-      }
-      segs.forEach(sg => {
-        const it = items[sg.ii], len = Math.max(1, it.s.length);
-        if (sg.a >= len) return;
-        const x0 = it.x + it.w * fracAt(it.s, sg.a), x1 = it.x + it.w * fracAt(it.s, Math.min(sg.b, len));
-        const r = vp.convertToViewportRectangle([x0, it.y - 0.2 * it.h, x1, it.y + 0.85 * it.h]);
-        const el = document.createElement('div');
-        el.className = 'hl' + (i === find.idx ? ' hl-active' : '');
-        el.style.left = (Math.min(r[0], r[2]) / W * 100) + '%';
-        el.style.top = (Math.min(r[1], r[3]) / H * 100) + '%';
-        el.style.width = (Math.abs(r[2] - r[0]) / W * 100) + '%';
-        el.style.height = (Math.abs(r[3] - r[1]) / H * 100) + '%';
-        layer.appendChild(el);
+  // draws the boxes for EVERY match on EVERY page (page boxes have their final size even before the page image is drawn)
+  function drawAllHighlights() {
+    document.querySelectorAll('#pagesWrap .hl-layer').forEach(l => { if (l.firstChild) l.innerHTML = ''; });
+    find.els = new Map();
+    if (!find.matches.length) return;
+    const byPage = new Map();
+    find.matches.forEach((m, i) => { if (!byPage.has(m.n)) byPage.set(m.n, []); byPage.get(m.n).push([m, i]); });
+    byPage.forEach((list, n) => {
+      const el = pageEl(n); if (!el) return;
+      const layer = el.querySelector('.hl-layer'), items = state.items[n], map = buildNorm(items, true), vp = state.vps[n], W = vp.width, H = vp.height;
+      list.forEach(([m, i]) => {
+        const segs = [];
+        for (let c = m.start; c < m.start + m.len; c++) {
+          const ii = map.itemOf[c], off = map.offOf[c];
+          if (ii === undefined) continue;
+          if (map.norm[c] === ' ' && !(segs.length && segs[segs.length - 1].ii === ii)) continue;   // never box the empty gap between columns
+          const last = segs[segs.length - 1];
+          if (last && last.ii === ii) last.b = off + 1; else segs.push({ ii, a: off, b: off + 1 });
+        }
+        segs.forEach(sg => {
+          const it = items[sg.ii], len = Math.max(1, it.s.length);
+          if (sg.a >= len) return;
+          const x0 = it.x + it.w * fracAt(it.s, sg.a), x1 = it.x + it.w * fracAt(it.s, Math.min(sg.b, len));
+          const r = vp.convertToViewportRectangle([x0, it.y - 0.2 * it.h, x1, it.y + 0.85 * it.h]);
+          const box = document.createElement('div');
+          box.className = 'hl' + (i === find.idx ? ' hl-active' : '');
+          box.style.left = (Math.min(r[0], r[2]) / W * 100) + '%';
+          box.style.top = (Math.min(r[1], r[3]) / H * 100) + '%';
+          box.style.width = (Math.abs(r[2] - r[0]) / W * 100) + '%';
+          box.style.height = (Math.abs(r[3] - r[1]) / H * 100) + '%';
+          layer.appendChild(box);
+          if (!find.els.has(i)) find.els.set(i, []);
+          find.els.get(i).push(box);
+        });
       });
     });
   }
 
   function scrollToActive() {
-    const el = document.querySelector('#hlLayer .hl-active'), wrap = $('#viewerCanvasWrap');
-    if (!el) return;
-    const top = $('#pageStage').offsetTop + el.offsetTop;
-    wrap.scrollTo({ top: Math.max(0, top - wrap.clientHeight / 3), behavior: 'smooth' });
+    const box = (find.els.get(find.idx) || [])[0], wrap = $('#viewerCanvasWrap');
+    if (!box) return;
+    const top = box.getBoundingClientRect().top - wrap.getBoundingClientRect().top + wrap.scrollTop;
+    const target = Math.max(0, top - wrap.clientHeight / 3);
+    wrap.scrollTo({ top: target, behavior: Math.abs(target - wrap.scrollTop) < wrap.clientHeight * 3 ? 'smooth' : 'auto' });
   }
 
-  async function goToMatch(i) {
+  function goToMatch(i) {
     if (!find.matches.length) { updateFindUI(); return; }
     const total = find.matches.length;
+    (find.els.get(find.idx) || []).forEach(b => b.classList.remove('hl-active'));
     find.idx = (i % total + total) % total;
-    const m = find.matches[find.idx];
+    (find.els.get(find.idx) || []).forEach(b => b.classList.add('hl-active'));
     updateFindUI();
-    if (state.lastVp && state.lastVp.n === m.n && state.viewPage === m.n) drawHighlights();
-    else { state.keepScroll = true; await gotoPage(m.n); }
     scrollToActive();
   }
 
   function startSearch() {
-    const q = $('#findInput').value;
-    runSearch(q);
+    runSearch($('#findInput').value);
     find.idx = find.matches.length ? Math.max(0, find.matches.findIndex(m => m.n >= state.viewPage)) : -1;
+    drawAllHighlights();
     updateFindUI();
-    if (find.matches.length) goToMatch(find.idx); else drawHighlights();
+    scrollToActive();
   }
 
   function clearFind() {
     $('#findInput').value = ''; find.matches = []; find.idx = -1; find.ran = '';
-    const layer = $('#hlLayer'); if (layer) layer.innerHTML = '';
+    drawAllHighlights();
     updateFindUI();
   }
 
@@ -551,21 +617,49 @@
   const STOP = new Set(['the', 'and', 'for', 'are', 'this', 'that', 'with', 'what', 'which', 'from', 'about', 'tell', 'give', 'show', 'document', 'pdf', 'please', 'hai', 'hain', 'kya', 'ka', 'ki', 'ke', 'me', 'mein', 'se', 'ko', 'is', 'in', 'of', 'to', 'a', 'an', 'kitna', 'kitni', 'batao', 'bataiye', 'karo', 'do']);
   const tok = s => (String(s).toLowerCase().match(/[\p{L}\p{N}]{2,}/gu) || []).filter(w => !STOP.has(w));
 
+  // How many characters of PDF text one question may carry. The server tells us (it depends on the Groq plan/model);
+  // if a request is still too large we shrink this and retry (see ask()).
+  const budget = () => Math.max(1500, Math.floor(state.docLimit * state.budgetScale));
+
   function selectPages(question) {
-    if (state.totalChars <= DOC_LIMIT) return { pages: state.pages, partial: false };
+    const limit = budget();
+    if (state.totalChars <= limit) return { pages: state.pages, partial: false };
     const q = tok(question + ' ' + (lastUserQuestion() || ''));
     const N = state.pages.length, df = new Map();
     const bags = state.pages.map(p => { const m = new Map(); tok(p.text).forEach(w => m.set(w, (m.get(w) || 0) + 1)); m.forEach((_, w) => df.set(w, (df.get(w) || 0) + 1)); return m; });
-    const scores = bags.map((m, i) => { let s = 0; q.forEach(w => { const tf = m.get(w); if (tf) s += (1 + Math.log(tf)) * Math.log(1 + N / (df.get(w) || 1)); }); return { i, s }; });
-    const chosen = new Set([0, 1].filter(i => i < N));
-    const ranked = scores.filter(x => x.s > 0).sort((a, b) => b.s - a.s);
-    let used = state.pages.slice(0, 2).reduce((n, p) => n + p.text.length, 0);
-    const add = i => { if (i < 0 || i >= N || chosen.has(i)) return; const len = state.pages[i].text.length; if (used + len > DOC_LIMIT) return; chosen.add(i); used += len; };
-    ranked.slice(0, 3).forEach(x => { add(x.i); add(x.i - 1); add(x.i + 1); });
-    ranked.forEach(x => add(x.i));
-    if (!ranked.length) { const step = Math.max(1, Math.floor(N / 40)); for (let i = 0; i < N; i += step) add(i); }
-    for (let i = 0; used < DOC_LIMIT * 0.85 && i < N; i++) add(i);       // fill any space left, in page order
-    return { pages: [...chosen].sort((a, b) => a - b).map(i => state.pages[i]), partial: true };
+    const ranked = bags.map((m, i) => { let sc = 0; q.forEach(w => { const tf = m.get(w); if (tf) sc += (1 + Math.log(tf)) * Math.log(1 + N / (df.get(w) || 1)); }); return { i, sc }; })
+      .filter(x => x.sc > 0).sort((a, b) => b.sc - a.sc);
+
+    // priority order: cover pages, best matches with their neighbours, other matches, then an even spread / fill
+    const order = []; const seen = new Set();
+    const want = i => { if (i >= 0 && i < N && !seen.has(i)) { seen.add(i); order.push(i); } };
+    want(0); want(1);
+    ranked.slice(0, 3).forEach(x => { want(x.i); want(x.i - 1); want(x.i + 1); });
+    ranked.forEach(x => want(x.i));
+    const step = Math.max(1, Math.floor(N / 30)); for (let i = 0; i < N; i += step) want(i);
+    for (let i = 0; i < N; i++) want(i);
+
+    const chosen = []; let used = 0;
+    for (const i of order) {
+      const text = state.pages[i].text, remaining = limit - used;
+      const cap = i < 2 ? Math.floor(limit * 0.2) : remaining;       // cover/title pages never take over the budget
+      const len = Math.min(text.length, cap);
+      if (len <= 0 || remaining < 600) { if (remaining < 600) break; continue; }
+      if (text.length <= Math.min(cap, remaining)) { chosen.push({ n: state.pages[i].n, text }); used += text.length; }
+      else if (remaining >= 1200) { chosen.push({ n: state.pages[i].n, text: text.slice(0, Math.min(cap, remaining)) }); used += Math.min(cap, remaining); }
+      if (used >= limit * 0.98) break;
+    }
+    chosen.sort((a, b) => a.n - b.n);
+    return { pages: chosen, partial: true };
+  }
+
+  // ask the server how much text it accepts (once per PDF)
+  function loadConfig() {
+    state.docLimit = 420000;
+    state.config = fetch(ENDPOINT + '/config', { headers: { Authorization: 'Bearer ' + localStorage.getItem('token') } })
+      .then(r => r.ok ? r.json() : null)
+      .then(c => { if (c && c.maxContextChars > 0) state.docLimit = c.maxContextChars; return c; })
+      .catch(() => null);
   }
   function lastUserQuestion() { for (let i = state.messages.length - 1; i >= 0; i--) if (state.messages[i].role === 'user') return state.messages[i].content; return ''; }
 
@@ -583,7 +677,8 @@
     const history = turns.length && turns[0].role === 'assistant' ? turns.slice(1) : turns;
     state.messages.push({ role: 'user', content: question });
     const sent = history.concat([{ role: 'user', content: question }]);
-    const sel = selectPages(question);
+    if (state.config) await state.config;
+    let sel = selectPages(question);
     const aiEl = addAi();
 
     state.busy = true; setBusy(true);
@@ -591,14 +686,23 @@
     let raw = '', note = '', errored = false, finished = false;
 
     try {
-      const res = await fetch(ENDPOINT, {
-        method: 'POST', signal: controller.signal,
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-        body: JSON.stringify({
-          pages: sel.pages, partial: sel.partial, totalPages: state.pdf.numPages, fileName: state.file.name,
-          language: $('#langSelect').value, messages: sent
-        })
-      });
+      let res;
+      for (let attempt = 0; ; attempt++) {
+        sel = selectPages(question);
+        res = await fetch(ENDPOINT, {
+          method: 'POST', signal: controller.signal,
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({
+            pages: sel.pages, partial: sel.partial, totalPages: state.pdf.numPages, fileName: state.file.name,
+            language: $('#langSelect').value, messages: sent
+          })
+        });
+        if (res.status === 413 && attempt < 4) {
+          let j = {}; try { j = await res.clone().json(); } catch (_) { }
+          if (j.code === 'context_too_large') { state.budgetScale = Math.max(0.08, state.budgetScale * 0.55); continue; }   // too much text for the AI plan: send fewer pages and try again
+        }
+        break;
+      }
       if (!res.ok) {
         let msg = 'Something went wrong. Please try again.';
         try { msg = (await res.json()).message || msg; } catch (_) { }
@@ -693,13 +797,14 @@
   $('#findNext').addEventListener('click', () => goToMatch(find.idx + 1));
   $('#findPrev').addEventListener('click', () => goToMatch(find.idx - 1));
   $('#findClear').addEventListener('click', () => { clearFind(); $('#findInput').focus(); });
-  $('#prevPage').addEventListener('click', () => gotoPage(state.viewPage - 1));
-  $('#nextPage').addEventListener('click', () => gotoPage(state.viewPage + 1));
-  $('#pageNum').addEventListener('change', e => gotoPage(e.target.value));
-  // sharper page when the PDF panel is resized (drag the divider, or resize the window)
+  $('#prevPage').addEventListener('click', () => scrollToPage(state.viewPage - 1, true));
+  $('#nextPage').addEventListener('click', () => scrollToPage(state.viewPage + 1, true));
+  $('#pageNum').addEventListener('change', e => scrollToPage(e.target.value, true));
+  $('#pageNum').addEventListener('keydown', e => { if (e.key === 'Enter') { scrollToPage(e.target.value, true); e.target.blur(); } });
+  // sharper pages when the PDF panel is resized (drag the divider, or resize the window)
   if (window.ResizeObserver) {
     let rz = null;
-    new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(() => { if (state.pdf && !$('#chatApp').hidden) { state.keepScroll = true; gotoPage(state.viewPage); } }, 200); }).observe($('#viewerCanvasWrap'));
+    new ResizeObserver(() => { clearTimeout(rz); rz = setTimeout(() => { if (state.pdf && !$('#chatApp').hidden) view.visible.forEach(n => renderPageCanvas(n)); }, 200); }).observe($('#viewerCanvasWrap'));
   }
 
   /* ---- file handed over from another tool / the dashboard ---- */
