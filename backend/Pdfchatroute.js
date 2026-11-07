@@ -15,10 +15,13 @@
 // ENV (put these in backend/.env locally and in Vercel -> Settings ->
 // Environment Variables for the deployed site):
 //
-//   GROQ_API_KEY                 REQUIRED  your key, starts with gsk_
-//   CHAT_PDF_MODEL               optional  default: llama-3.3-70b-versatile
+//   GROQ_API_KEY                 REQUIRED  your key, starts with gsk_   <- the only one you need
+//   CHAT_PDF_MODEL               optional  force one model. Leave it UNSET: the server asks Groq which
+//                                          models exist and picks a working one by itself
+//                                          (Groq retires models often - llama-3.3-70b-versatile and
+//                                          llama-3.1-8b-instant were shut down on 16 Aug 2026).
 //   CHAT_PDF_MAX_CONTEXT_CHARS   optional  how much PDF text one question may carry
-//   CHAT_PDF_MAX_TOKENS          optional  max length of an answer (default 1024)
+//   CHAT_PDF_MAX_TOKENS          optional  max length of an answer (default 2048)
 //   GROQ_BASE_URL                optional  default: https://api.groq.com/openai/v1
 //
 // Nothing is stored: the document text lives only for the request.
@@ -34,17 +37,20 @@ const MAX_MESSAGE_CHARS = 8000;
 const HISTORY_KEEP = 6;            // last 3 question/answer pairs go to the model (keeps token use low)
 const HISTORY_CHAR_CAP = 7000;
 
-// Groq's FREE plan counts input + output tokens against a per-minute limit
-// (about 12,000 for llama-3.3-70b, 6,000 for llama-3.1-8b-instant, 8,000 for gpt-oss-120b).
-// These are the PDF-text sizes that fit under those limits with room for the answer.
-// On a paid Groq plan raise it with CHAT_PDF_MAX_CONTEXT_CHARS (e.g. 300000).
+// Groq's FREE plan counts input + output tokens against a per-minute limit (roughly 8,000 for gpt-oss-120b).
+// These are PDF-text sizes that fit under that with room for the answer. If a request is still too large the
+// page automatically retries with fewer pages. On a paid Groq plan raise it with CHAT_PDF_MAX_CONTEXT_CHARS.
 const MODEL_PROFILES = {
-  'llama-3.3-70b-versatile': 26000,
-  'llama-3.1-8b-instant': 12000,
   'openai/gpt-oss-120b': 16000,
-  'openai/gpt-oss-20b': 16000
+  'openai/gpt-oss-20b': 16000,
+  'qwen/qwen3.6-27b': 16000
 };
-const DEFAULT_CONTEXT_CHARS = 20000;
+const DEFAULT_CONTEXT_CHARS = 14000;
+
+// Models are tried in this order. If none of them is listed any more, the largest active chat model is used.
+const PREFERRED_MODELS = ['openai/gpt-oss-120b', 'qwen/qwen3.6-27b', 'openai/gpt-oss-20b'];
+const NOT_CHAT = /whisper|tts|guard|embed|orpheus|playai|safeguard|moderation|transcri/i;
+const MODEL_CACHE_MS = 10 * 60 * 1000;
 
 const LANGUAGE_RULES = {
   auto:
@@ -77,16 +83,43 @@ Safety
 Language
 `;
 
-const model = () => process.env.CHAT_PDF_MODEL || 'llama-3.3-70b-versatile';
-const maxContextChars = () => {
+const isReasoningModel = id => /^openai\/gpt-oss/.test(id);
+const contextCharsFor = id => {
   const env = Number(process.env.CHAT_PDF_MAX_CONTEXT_CHARS);
   if (env > 0) return Math.min(env, MAX_DOC_CHARS);
-  return MODEL_PROFILES[model()] || DEFAULT_CONTEXT_CHARS;
+  return MODEL_PROFILES[id] || DEFAULT_CONTEXT_CHARS;
 };
+
+let modelCache = { id: null, at: 0 };
+
+async function listModels() {
+  const r = await fetch(upstreamBase() + '/models', { headers: { authorization: 'Bearer ' + process.env.GROQ_API_KEY } });
+  if (!r.ok) throw new Error('models list failed: ' + r.status);
+  const j = await r.json();
+  return Array.isArray(j.data) ? j.data : [];
+}
+
+// Which model to use right now.  force=true ignores CHAT_PDF_MODEL and the cache (used after a "model gone" error).
+async function pickModel(force) {
+  if (!force && process.env.CHAT_PDF_MODEL) return process.env.CHAT_PDF_MODEL;
+  if (!force && modelCache.id && Date.now() - modelCache.at < MODEL_CACHE_MS) return modelCache.id;
+  let id = PREFERRED_MODELS[0];
+  try {
+    const models = (await listModels()).filter(m => m && m.id && m.active !== false && !NOT_CHAT.test(m.id));
+    const ids = new Set(models.map(m => m.id));
+    id = PREFERRED_MODELS.find(p => ids.has(p))
+      || models.sort((a, b) => (b.context_window || 0) - (a.context_window || 0)).map(m => m.id)[0]
+      || id;
+  } catch (err) {
+    console.warn('chat-pdf: could not list Groq models, using', id, '-', err.message);
+  }
+  modelCache = { id, at: Date.now() };
+  return id;
+}
 
 function problem(status, message, code) { return { status, message, code }; }
 
-function validate(body) {
+function validate(body, limit) {
   if (!body || typeof body !== 'object') return problem(400, 'Invalid request');
   const { pages, messages } = body;
 
@@ -100,7 +133,7 @@ function validate(body) {
   }
   if (total > MAX_DOC_CHARS) return problem(413, 'The PDF text is too large for one request', 'context_too_large');
   if (readable === 0) return problem(400, 'The PDF has no readable text');
-  if (total > maxContextChars()) {
+  if (total > (limit || DEFAULT_CONTEXT_CHARS)) {
     return problem(413, 'That is more PDF text than the AI plan allows in one question.', 'context_too_large');
   }
 
@@ -127,7 +160,7 @@ function trimHistory(messages) {
   return kept;
 }
 
-function buildUpstream(body) {
+function buildUpstream(body, modelId) {
   const lang = LANGUAGE_RULES[body.language] || LANGUAGE_RULES.auto;
   const docText = body.pages.map(p => `[Page ${p.n}]\n${p.text.trim()}`).join('\n\n');
 
@@ -145,29 +178,45 @@ function buildUpstream(body) {
     ? { role: 'user', content: docBlock + '\n\nQuestion: ' + m.content }
     : { role: m.role, content: m.content }));
 
-  return {
-    model: model(),
+  const payload = {
+    model: modelId,
     messages,
     temperature: 0.2,
-    max_completion_tokens: Math.min(Number(process.env.CHAT_PDF_MAX_TOKENS) || 1024, 8192)
+    max_completion_tokens: Math.min(Number(process.env.CHAT_PDF_MAX_TOKENS) || 2048, 8192)
   };
+  if (isReasoningModel(modelId)) payload.reasoning_effort = 'low';      // short thinking = fewer tokens, faster, same quality for document Q&A
+  return payload;
 }
 
-const upstreamUrl = () => (process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1').replace(/\/+$/, '') + '/chat/completions';
+const upstreamBase = () => (process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1').replace(/\/+$/, '');
+const upstreamUrl = () => upstreamBase() + '/chat/completions';
 const upstreamHeaders = () => ({ 'content-type': 'application/json', authorization: 'Bearer ' + process.env.GROQ_API_KEY });
 
-// turn a Groq error into something the person can act on
-async function mapUpstreamError(upstream) {
+// read a failed Groq response
+async function readError(upstream) {
   const raw = await upstream.text().catch(() => '');
-  let msg = '';
-  try { msg = JSON.parse(raw).error.message || ''; } catch (_) { msg = raw; }
-  const status = upstream.status;
+  let msg = raw, code = '';
+  try { const e = JSON.parse(raw).error || {}; msg = e.message || raw; code = e.code || ''; } catch (_) { }
+  return { status: upstream.status, msg, code, retryAfterHeader: Number(upstream.headers.get('retry-after')) || 0 };
+}
 
-  if (status === 413 || /request too large|reduce your message size|context length/i.test(msg)) {
+// "this model no longer exists / was shut down"
+const modelGone = e => e.code === 'model_decommissioned' || e.code === 'model_not_found' || e.status === 404
+  || /decommission|does not exist or you do not have access|model_not_found|has been shut down/i.test(e.msg);
+
+// turn a Groq error into something the person can act on
+function mapUpstreamError(e, modelId) {
+  const { status, msg } = e;
+
+  if (modelGone(e)) {
+    return { status: 502, body: { message: 'The AI model "' + modelId + '" is not available on Groq any more. ' +
+      (process.env.CHAT_PDF_MODEL ? 'Remove CHAT_PDF_MODEL from the server settings (or set a current model such as openai/gpt-oss-120b).' : 'Please try again in a moment.'), code: 'model_unavailable' } };
+  }
+  if (status === 413 || /request too large|reduce your message size|context length|maximum context/i.test(msg)) {
     return { status: 413, body: { message: 'That is more PDF text than the AI plan allows in one question.', code: 'context_too_large' } };
   }
   if (status === 429) {
-    let wait = Number(upstream.headers.get('retry-after')) || 0;
+    let wait = e.retryAfterHeader || 0;
     if (!wait) { const m = msg.match(/try again in\s+(?:(\d+)m)?\s*([\d.]+)s/i); if (m) wait = (Number(m[1] || 0) * 60) + Math.ceil(Number(m[2])); }
     const daily = /per day|TPD|RPD/i.test(msg);
     return { status: 429, body: {
@@ -176,10 +225,39 @@ async function mapUpstreamError(upstream) {
         : 'The AI limit for this minute is used up' + (wait ? ' — please try again in about ' + wait + ' seconds.' : '. Please try again shortly.'),
       code: daily ? 'daily_limit' : 'rate_limited', retryAfter: wait || null } };
   }
-  if (status === 401 || status === 403) return { status: 502, body: { message: 'The AI service key is not valid on the server.' } };
-  if (status === 404 || (status === 400 && /model/i.test(msg))) return { status: 502, body: { message: 'The configured AI model is not available. Check CHAT_PDF_MODEL on the server.' } };
+  if (status === 401 || status === 403) return { status: 502, body: { message: 'The AI service key (GROQ_API_KEY) is not valid on the server.' } };
   if (status === 400) return { status: 400, body: { message: 'The AI service could not process this request.' } };
   return { status: 503, body: { message: 'The AI service is temporarily unavailable. Please try again.' } };
+}
+
+// Some reasoning models put their thinking inside <think>…</think> in the normal text. Remove it while streaming,
+// even when a tag is split between two network chunks.
+function createThinkFilter() {
+  let inThink = false, hold = '';
+  const OPEN = '<think>', CLOSE = '</think>';
+  return function filter(chunk) {
+    let text = hold + chunk; hold = ''; let out = '';
+    while (text) {
+      if (!inThink) {
+        const i = text.indexOf(OPEN);
+        if (i === -1) {
+          let keep = 0;                                           // a partial "<thi" at the very end may be the start of a tag
+          for (let k = Math.min(OPEN.length - 1, text.length); k > 0; k--) if (OPEN.startsWith(text.slice(-k))) { keep = k; break; }
+          out += text.slice(0, text.length - keep); hold = text.slice(text.length - keep); break;
+        }
+        out += text.slice(0, i); text = text.slice(i + OPEN.length); inThink = true;
+      } else {
+        const i = text.indexOf(CLOSE);
+        if (i === -1) {
+          let keep = 0;
+          for (let k = Math.min(CLOSE.length - 1, text.length); k > 0; k--) if (CLOSE.startsWith(text.slice(-k))) { keep = k; break; }
+          hold = text.slice(text.length - keep); break;
+        }
+        text = text.slice(i + CLOSE.length).replace(/^\s+/, ''); inThink = false;
+      }
+    }
+    return out;
+  };
 }
 
 module.exports = function createChatPdfRouter({ authenticateToken }) {
@@ -197,47 +275,68 @@ module.exports = function createChatPdfRouter({ authenticateToken }) {
     message: { message: 'Too many questions in a short time. Please wait a few minutes.' }
   });
 
-  // the page asks how much PDF text one question may carry
-  router.get('/config', authenticateToken, (req, res) => {
-    res.json({ provider: 'groq', model: model(), maxContextChars: maxContextChars() });
+  // the page asks which model is used and how much PDF text one question may carry
+  router.get('/config', authenticateToken, async (req, res) => {
+    if (!process.env.GROQ_API_KEY) return res.json({ provider: 'groq', model: null, maxContextChars: DEFAULT_CONTEXT_CHARS });
+    const id = await pickModel(false);
+    res.json({ provider: 'groq', model: id, maxContextChars: contextCharsFor(id) });
   });
 
   router.post('/', authenticateToken, limiter, jsonBody, async (req, res) => {
     if (!process.env.GROQ_API_KEY) {
       return res.status(503).json({ message: 'Chat with PDF is not configured on the server (GROQ_API_KEY is missing).' });
     }
-    const bad = validate(req.body);
+
+    let modelId = await pickModel(false);
+    const bad = validate(req.body, contextCharsFor(modelId));
     if (bad) return res.status(bad.status).json({ message: bad.message, code: bad.code });
 
     const wantsStream = req.body.stream !== false;
-    const payload = buildUpstream(req.body);
     const controller = new AbortController();
     res.on('close', () => { if (!res.writableEnded) controller.abort(); });
 
-    let upstream;
-    try {
-      upstream = await fetch(upstreamUrl(), {
+    const call = id => {
+      const payload = buildUpstream(req.body, id);
+      return fetch(upstreamUrl(), {
         method: 'POST',
         headers: upstreamHeaders(),
         body: JSON.stringify(wantsStream ? { ...payload, stream: true, stream_options: { include_usage: true } } : payload),
         signal: controller.signal
       });
+    };
+
+    let upstream;
+    try {
+      upstream = await call(modelId);
+      if (!upstream.ok) {
+        const err = await readError(upstream);
+        console.error('chat-pdf upstream status', err.status, err.code, String(err.msg).slice(0, 200));
+        if (modelGone(err)) {
+          // the model was retired: find a working one and try once more
+          const next = await pickModel(true);
+          if (next !== modelId) {
+            console.warn('chat-pdf: model', modelId, 'is gone, switching to', next);
+            modelId = next;
+            upstream = await call(modelId);
+            if (!upstream.ok) { const err2 = await readError(upstream); const m2 = mapUpstreamError(err2, modelId); return res.status(m2.status).json(m2.body); }
+          } else {
+            const m = mapUpstreamError(err, modelId); return res.status(m.status).json(m.body);
+          }
+        } else {
+          const m = mapUpstreamError(err, modelId); return res.status(m.status).json(m.body);
+        }
+      }
     } catch (err) {
       if (controller.signal.aborted) return;
       console.error('chat-pdf upstream error:', err.message);
       return res.status(503).json({ message: 'Could not reach the AI service. Please try again.' });
     }
 
-    if (!upstream.ok) {
-      const mapped = await mapUpstreamError(upstream);
-      console.error('chat-pdf upstream status', upstream.status);
-      return res.status(mapped.status).json(mapped.body);
-    }
-
     // ---------- non-streaming fallback ----------
     if (!wantsStream) {
       const data = await upstream.json();
-      const text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+      let text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+      text = createThinkFilter()(text);
       return res.json({ text, usage: data.usage || null });
     }
 
@@ -250,6 +349,7 @@ module.exports = function createChatPdfRouter({ authenticateToken }) {
     if (res.flushHeaders) res.flushHeaders();
 
     const send = obj => res.write('data: ' + JSON.stringify(obj) + '\n\n');
+    const filterThink = createThinkFilter();
     let usage = null;
 
     try {
@@ -274,7 +374,10 @@ module.exports = function createChatPdfRouter({ authenticateToken }) {
 
           if (evt.error) { send({ error: 'The AI service stopped while answering. Please try again.' }); continue; }
           const choice = evt.choices && evt.choices[0];
-          if (choice && choice.delta && typeof choice.delta.content === 'string' && choice.delta.content) send({ t: choice.delta.content });
+          if (choice && choice.delta && typeof choice.delta.content === 'string' && choice.delta.content) {
+            const clean = filterThink(choice.delta.content);
+            if (clean) send({ t: clean });
+          }
           if (choice && choice.finish_reason === 'length') send({ truncated: true });
           if (evt.usage) usage = evt.usage;
           else if (evt.x_groq && evt.x_groq.usage) usage = evt.x_groq.usage;
@@ -297,4 +400,6 @@ module.exports = function createChatPdfRouter({ authenticateToken }) {
 // exported for tests
 module.exports.validate = validate;
 module.exports.buildUpstream = buildUpstream;
-module.exports.maxContextChars = maxContextChars;
+module.exports.createThinkFilter = createThinkFilter;
+module.exports.pickModel = pickModel;
+module.exports._resetModelCache = () => { modelCache = { id: null, at: 0 }; };
