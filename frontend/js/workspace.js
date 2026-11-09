@@ -23,7 +23,9 @@
     state.view = view;
     $$(".app-view").forEach(el => el.classList.toggle("active", el.dataset.viewPanel === view));
     $$(".sidebar-link[data-view]").forEach(el => el.classList.toggle("active", el.dataset.view === view));
-    $("#viewBreadcrumb").textContent = ({ dashboard: "Dashboard", "all-tools": "All Tools", recent: "Recent Files", favorites: "Favorites", settings: "Settings", help: "Help & Support" })[view] || "Dashboard";
+    $$(".sidebar-rate").forEach(el => el.classList.toggle("active", view === "rate"));
+    if (view === "rate") loadMyRating();
+    $("#viewBreadcrumb").textContent = ({ dashboard: "Dashboard", "all-tools": "All Tools", recent: "Recent Files", favorites: "Favorites", settings: "Settings", help: "Help & Support", rate: "Rate PDFnest" })[view] || "Dashboard";
     if (view === "recent") renderHistory(); if (view === "favorites") renderFavorites(); if (view === "all-tools") renderAllTools();
     $("#appSidebar").classList.remove("mobile-open");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -228,6 +230,89 @@
   state.favorites = readList(FAV_KEY);
   persistHistory(); renderPopular(); renderAllTools(); renderFavorites(); renderHistory();
 
+
+  // ---------- Rate PDFnest: stars + suggestion box ----------
+  const API_BASE = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+    ? "http://localhost:5050" : "https://pdf-generator-ochre-two.vercel.app";
+  const RATE_LABELS = ["", "Poor", "Could be better", "Good", "Very good", "Excellent!"];
+  const rate = { value: 0, sending: false, loaded: false };
+
+  function paintStars(v) {
+    $$(".rate-star").forEach(b => b.classList.toggle("on", Number(b.dataset.value) <= v));
+    $("#rateLabel").textContent = v ? RATE_LABELS[v] : "Tap a star";
+  }
+  function selectStar(v, focus) {
+    rate.value = v;
+    $$(".rate-star").forEach(b => {
+      const n = Number(b.dataset.value), on = n === v;
+      b.setAttribute("aria-checked", on ? "true" : "false");
+      b.tabIndex = (v ? on : n === 1) ? 0 : -1;
+      if (on && focus) b.focus();
+    });
+    paintStars(v);
+  }
+  function rateStatus(msg, kind) {
+    const el = $("#rateStatus"); el.textContent = msg || ""; el.className = "rate-status" + (kind ? " is-" + kind : "");
+  }
+  function updateRateCount() { $("#rateCount").textContent = $("#rateSuggestion").value.length + " / 1000"; }
+
+  $$(".rate-star").forEach(b => {
+    const v = Number(b.dataset.value);
+    b.addEventListener("click", () => { selectStar(v); rateStatus(""); });
+    b.addEventListener("mouseenter", () => paintStars(v));
+    b.addEventListener("mouseleave", () => paintStars(rate.value));
+    b.addEventListener("keydown", e => {
+      if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); selectStar(Math.min(5, (rate.value || 0) + 1), true); }
+      else if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); selectStar(Math.max(1, (rate.value || 2) - 1), true); }
+      else if (e.key === " " || e.key === "Enter") { e.preventDefault(); selectStar(v); }
+    });
+  });
+  $("#rateSuggestion").addEventListener("input", () => { updateRateCount(); rateStatus(""); });
+
+  async function loadMyRating() {
+    if (rate.loaded) return;
+    const token = localStorage.getItem("token"); if (!token) return;
+    rate.loaded = true;
+    try {
+      const res = await fetch(API_BASE + "/api/feedback/mine", { headers: { Authorization: "Bearer " + token } });
+      if (!res.ok) { rate.loaded = false; return; }
+      const mine = await res.json();
+      if (mine && mine.rating) {
+        selectStar(mine.rating);
+        if (!$("#rateSuggestion").value) $("#rateSuggestion").value = mine.suggestion || "";
+        updateRateCount();
+        const when = mine.createdAt ? new Date(mine.createdAt).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" }) : "";
+        const note = $("#ratePrevious"); note.hidden = false;
+        note.textContent = "You rated PDFnest " + mine.rating + " / 5" + (when ? " on " + when : "") + ". You can update it below.";
+        $("#rateSubmit").textContent = "Update feedback";
+      }
+    } catch (_) { rate.loaded = false; }
+  }
+
+  $("#rateForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    if (rate.sending) return;
+    if (!rate.value) { rateStatus("Please choose a star rating first.", "error"); $$(".rate-star")[0].focus(); return; }
+    const token = localStorage.getItem("token");
+    if (!token) { rateStatus("Please log in again to send feedback.", "error"); return; }
+    const btn = $("#rateSubmit"), label = btn.textContent;
+    rate.sending = true; btn.disabled = true; btn.textContent = "Sending…"; rateStatus("");
+    try {
+      const res = await fetch(API_BASE + "/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ rating: rate.value, suggestion: $("#rateSuggestion").value.trim(), page: "dashboard" })
+      });
+      let data = {}; try { data = await res.json(); } catch (_) { }
+      if (!res.ok) throw new Error(res.status === 401 ? "Your session has expired. Please log in again." : (data.message || "Could not send your feedback. Please try again."));
+      rateStatus("✓ " + (data.message || "Thank you for your feedback!"), "ok");
+      btn.textContent = "Update feedback";
+      const note = $("#ratePrevious"); note.hidden = false; note.textContent = "You rated PDFnest " + rate.value + " / 5 just now. You can update it below.";
+    } catch (err) {
+      rateStatus(err.message || "Could not send your feedback.", "error"); btn.textContent = label;
+    } finally { rate.sending = false; btn.disabled = false; }
+  });
+
   // Settings → Text size
   function syncFontButtons() {
     const current = window.PDFnestFont ? window.PDFnestFont.get() : 100;
@@ -245,9 +330,9 @@
   syncFontButtons();
 
   const startView = location.hash.replace("#", "");
-  if (["all-tools", "recent", "favorites", "settings", "help"].includes(startView)) setView(startView);
+  if (["all-tools", "recent", "favorites", "settings", "help", "rate"].includes(startView)) setView(startView);
   window.addEventListener("hashchange", () => {
     const v = location.hash.replace("#", "");
-    if (["dashboard", "all-tools", "recent", "favorites", "settings", "help"].includes(v)) setView(v);
+    if (["dashboard", "all-tools", "recent", "favorites", "settings", "help", "rate"].includes(v)) setView(v);
   });
 })();

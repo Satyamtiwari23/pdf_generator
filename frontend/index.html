@@ -40,6 +40,7 @@
       <div class="sidebar-bottom">
         <div class="sidebar-plan"><span class="plan-dot"></span><span><strong>Browser processing</strong><small>Your
               files stay on your device</small></span></div>
+        <button class="sidebar-rate" type="button" data-view="rate"><span aria-hidden="true">★</span> Rate PDFnest</button>
         <div class="sidebar-account-wrap">
           <button class="sidebar-user" type="button" id="sidebarProfileBtn" aria-label="Open account menu"
             aria-expanded="false">
@@ -273,6 +274,58 @@
             </div><a class="settings-action" href="https://satyamtiwari23.github.io/Portfolio/" target="_blank"
               rel="noopener noreferrer">Visit portfolio ↗</a>
           </div>
+
+          <div class="section-heading dev-heading">
+            <div>
+              <span class="workspace-kicker">MORE FROM THE DEVELOPER</span>
+              <h2>Other projects</h2>
+              <p>More things built by the developer of PDFnest.</p>
+            </div>
+          </div>
+          <div class="dev-projects">
+            <!-- ↓↓ PUT THE REAL PROJECT LINKS IN THE href="…" OF THESE TWO CARDS ↓↓ -->
+            <a class="dev-card" id="devCyberShield" href="https://satyamtiwari23.github.io/Portfolio/" target="_blank" rel="noopener noreferrer">
+              <span class="dev-card-icon" aria-hidden="true">🛡️</span>
+              <span class="dev-card-copy"><strong>CyberShield Hub</strong><small>Cybersecurity toolkit with an AI assistant.</small></span>
+              <span class="dev-card-arrow" aria-hidden="true">↗</span>
+            </a>
+            <a class="dev-card" id="devResumeScreening" href="https://satyamtiwari23.github.io/Portfolio/" target="_blank" rel="noopener noreferrer">
+              <span class="dev-card-icon" aria-hidden="true">📄</span>
+              <span class="dev-card-copy"><strong>AI Resume Screening System</strong><small>Resume screening powered by AI.</small></span>
+              <span class="dev-card-arrow" aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="app-view" id="view-rate" data-view-panel="rate">
+          <div class="page-heading"><span class="workspace-kicker">FEEDBACK</span>
+            <h1>Rate PDFnest</h1>
+            <p>Tell us how PDFnest is working for you. It takes about 10 seconds.</p>
+          </div>
+          <form class="rate-card" id="rateForm" novalidate>
+            <div class="rate-block">
+              <h2 id="rateQuestion">How would you rate PDFnest?</h2>
+              <div class="rate-stars" id="rateStars" role="radiogroup" aria-labelledby="rateQuestion">
+                <button type="button" class="rate-star" role="radio" aria-checked="false" aria-label="1 star" data-value="1" tabindex="0">★</button>
+                <button type="button" class="rate-star" role="radio" aria-checked="false" aria-label="2 stars" data-value="2" tabindex="-1">★</button>
+                <button type="button" class="rate-star" role="radio" aria-checked="false" aria-label="3 stars" data-value="3" tabindex="-1">★</button>
+                <button type="button" class="rate-star" role="radio" aria-checked="false" aria-label="4 stars" data-value="4" tabindex="-1">★</button>
+                <button type="button" class="rate-star" role="radio" aria-checked="false" aria-label="5 stars" data-value="5" tabindex="-1">★</button>
+                <span class="rate-label" id="rateLabel" aria-live="polite">Tap a star</span>
+              </div>
+              <p class="rate-previous" id="ratePrevious" hidden></p>
+            </div>
+            <div class="rate-block">
+              <label class="rate-suggest-label" for="rateSuggestion">Suggestion box <small>(optional)</small></label>
+              <textarea id="rateSuggestion" maxlength="1000" rows="6"
+                placeholder="What should we improve? Which tool or feature would you like next? Any problem you faced? (English, हिन्दी or Hinglish — anything works)"></textarea>
+              <div class="rate-meta"><span id="rateCount">0 / 1000</span></div>
+            </div>
+            <div class="rate-actions">
+              <button type="submit" class="btn btn-primary" id="rateSubmit">Send feedback</button>
+              <span class="rate-status" id="rateStatus" role="status" aria-live="polite"></span>
+            </div>
+          </form>
         </section>
       </main>
 

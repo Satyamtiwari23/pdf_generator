@@ -62,7 +62,7 @@ app.get('/api/config', (req, res) => {
 // PDF text, so it uses its own larger body limit (see chatPdf.js).
 // ============================================================
 
-app.use('/api/chat-pdf', require('./Pdfchatroute')({ authenticateToken }));
+app.use('/api/chat-pdf', require('./pdfChatRoute')({ authenticateToken }));
 
 app.use(express.json({
   limit: '200kb'
@@ -168,6 +168,13 @@ const userSchema = new mongoose.Schema(
 );
 
 const User = mongoose.model('User', userSchema);
+
+// ============================================================
+// RATINGS + SUGGESTIONS  (Rate PDFnest page)
+// Mounted after the User model because it looks up the name/email.
+// ============================================================
+
+app.use('/api/feedback', require('./feedbackRoute')({ authenticateToken, connectDB, User }));
 
 // ============================================================
 // GOOGLE OAUTH STATE AND TICKET MODELS
