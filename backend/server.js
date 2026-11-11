@@ -167,7 +167,7 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 // ============================================================
 // RATINGS + SUGGESTIONS  (Rate PDFnest page)
@@ -203,10 +203,8 @@ const oauthStateSchema = new mongoose.Schema({
   timestamps: true
 });
 
-const OAuthState = mongoose.model(
-  'OAuthState',
-  oauthStateSchema
-);
+const OAuthState = mongoose.models.OAuthState ||
+  mongoose.model('OAuthState', oauthStateSchema);
 
 const oauthTicketSchema = new mongoose.Schema({
   ticketHash: {
@@ -231,10 +229,8 @@ const oauthTicketSchema = new mongoose.Schema({
   timestamps: true
 });
 
-const OAuthTicket = mongoose.model(
-  'OAuthTicket',
-  oauthTicketSchema
-);
+const OAuthTicket = mongoose.models.OAuthTicket ||
+  mongoose.model('OAuthTicket', oauthTicketSchema);
 
 // ============================================================
 // OAUTH HELPERS
