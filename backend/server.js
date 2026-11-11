@@ -173,8 +173,8 @@ const User = mongoose.models.User || mongoose.model('User', userSchema);
 // RATINGS + SUGGESTIONS  (Rate PDFnest page)
 // Mounted after the User model because it looks up the name/email.
 // ============================================================
-// Temporarily disabled: feedbackRoute.js is not present yet.
-//app.use('/api/feedback', require('./feedbackRoute')({ authenticateToken, connectDB, User }));
+
+app.use('/api/feedback', require('./feedbackRoute')({ authenticateToken, connectDB, User }));
 
 // ============================================================
 // GOOGLE OAUTH STATE AND TICKET MODELS
