@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="style.css" />
     <script src="auth-guard.js"></script>
     <script src="theme.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
@@ -55,7 +54,20 @@
                     <span>OR</span>
                 </div>
 
-                <div id="googleButtonContainer"></div>
+                <a href="https://pdf-generator-ochre-two.vercel.app/api/auth/google?mode=login"
+                    class="google-auth-button" aria-label="Continue with Google">
+                    <svg viewBox="0 0 48 48" aria-hidden="true">
+                        <path fill="#EA4335"
+                            d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z" />
+                        <path fill="#4285F4"
+                            d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.73 7.18l7.27 5.64c4.25-3.93 7.5-9.72 7.5-17.29Z" />
+                        <path fill="#FBBC05"
+                            d="M10.54 28.59a14.5 14.5 0 0 1 0-9.18l-7.98-6.19a24 24 0 0 0 0 21.56l7.98-6.19Z" />
+                        <path fill="#34A853"
+                            d="M24 48c6.48 0 11.93-2.13 15.91-5.81l-7.27-5.64c-2.02 1.35-4.6 2.15-8.64 2.15-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z" />
+                    </svg>
+                    <span>Continue with Google</span>
+                </a>
             </div>
 
 
@@ -73,107 +85,56 @@
         const passwordInput = document.getElementById('password');
         const passwordToggle = document.getElementById('passwordToggle');
 
+        // Complete Google OAuth after returning from the backend.
+        async function completeGoogleLogin() {
+            const params = new URLSearchParams(window.location.search);
 
+            const ticket = params.get('google_ticket');
+            const googleError = params.get('google_error');
 
-        let googleInitialized = false;
+            if (googleError) {
+                errorMsg.textContent = 'Google login failed. Please try again.';
+                window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+            }
 
-        window.handleGoogleCredential = async function (response) {
+            if (!ticket) return;
+
             errorMsg.textContent = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Completing Google login...';
 
             try {
-                const res = await fetch(`${API_URL}/google`, {
+                const response = await fetch(`${API_URL}/google/exchange`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        credential: response.credential
-                    })
+                    body: JSON.stringify({ ticket })
                 });
 
-                const data = await res.json();
+                const data = await response.json();
 
-                if (!res.ok) {
+                if (!response.ok) {
                     throw new Error(data.message || 'Google login failed.');
                 }
 
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
 
+                window.history.replaceState({}, document.title, window.location.pathname);
                 window.location.replace('index.html');
+
             } catch (error) {
-                console.error('Google login error:', error);
-                errorMsg.textContent = error.message || 'Google login failed.';
-            }
-        };
-
-        async function loadGoogleConfiguration() {
-            try {
-                const response = await fetch(
-                    'https://pdf-generator-ochre-two.vercel.app/api/config'
-                );
-
-                if (!response.ok) {
-                    throw new Error(`Configuration request failed: ${response.status}`);
-                }
-
-                const config = await response.json();
-
-                if (!config.googleClientId) {
-                    throw new Error('Google Client ID is missing.');
-                }
-
-                if (!window.google?.accounts?.id) {
-                    throw new Error('Google Identity Services has not loaded.');
-                }
-
-                window.google.accounts.id.initialize({
-                    client_id: config.googleClientId,
-                    callback: window.handleGoogleCredential,
-                    auto_select: false
-                });
-
-                window.google.accounts.id.renderButton(
-                    document.getElementById('googleButtonContainer'),
-                    {
-                        type: 'icon',
-                        shape: 'circle',
-                        theme: 'outline',
-                        size: 'large'
-                    }
-                );
-
-                googleInitialized = true;
-                console.log('Google Sign-In initialized successfully.');
-            } catch (error) {
-                googleInitialized = false;
-                console.error('Google configuration error:', error);
-                errorMsg.textContent =
-                    'Google sign-in is unavailable. Please reload the page.';
+                console.error('Google login completion error:', error);
+                errorMsg.textContent = error.message;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Log In';
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
 
-
-
-        const googleScript = document.querySelector(
-            'script[src="https://accounts.google.com/gsi/client"]'
-        );
-
-        if (window.google?.accounts?.id) {
-            loadGoogleConfiguration();
-        } else if (googleScript) {
-            googleScript.addEventListener(
-                'load',
-                loadGoogleConfiguration,
-                { once: true }
-            );
-
-            googleScript.addEventListener('error', () => {
-                console.error('Google Identity Services failed to load.');
-                errorMsg.textContent =
-                    'Could not load Google Sign-In. Please try again.';
-            }, { once: true });
-        }
+        completeGoogleLogin();
 
 
 
