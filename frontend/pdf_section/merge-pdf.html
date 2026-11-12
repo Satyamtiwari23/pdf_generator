@@ -87,24 +87,24 @@
           <h1>Merge <span class="grad">multiple PDFs</span> into one</h1>
           <p>Drop in your PDFs, drag to reorder, and combine them into a single document.</p>
         </div>
-<section class="card">
-      <div class="field">
-        <label>Your PDF files</label>
-        <div class="dropzone" id="dropzone" tabindex="0" role="button">
-          <div class="dz-icon">📎</div>
-          <div class="dz-title">Drag &amp; drop PDFs here</div>
-          <div class="dz-sub">or <span class="link">browse files</span> · multiple allowed</div>
-        </div>
-        <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple hidden />
-      </div>
+        <section class="card">
+          <div class="field">
+            <label>Your PDF files</label>
+            <div class="dropzone" id="dropzone" tabindex="0" role="button">
+              <div class="dz-icon">📎</div>
+              <div class="dz-title">Drag &amp; drop PDFs here</div>
+              <div class="dz-sub">or <span class="link">browse files</span> · multiple allowed</div>
+            </div>
+            <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple hidden />
+          </div>
 
-      <div class="file-list" id="fileList"></div>
+          <div class="file-list" id="fileList"></div>
 
-      <div class="actions">
-        <button class="btn btn-primary" id="mergeBtn" disabled>🔗 Merge</button>
-      </div>
-    </section>
-  </main>
+          <div class="actions">
+            <button class="btn btn-primary" id="mergeBtn" disabled>🔗 Merge</button>
+          </div>
+        </section>
+      </main>
 
       <footer class="site-footer">Powered by pdf-lib · Files never leave your device.</footer>
     </div>
@@ -148,7 +148,7 @@
         renderFiles();
       }
 
-      
+
 
       function renderFiles() {
         const list = $('#fileList'); list.innerHTML = '';
@@ -218,7 +218,14 @@
           const bytes = await out.save();
           const blob = new Blob([bytes], { type: 'application/pdf' });
           if (window.PDFnestUI) {
-            await window.PDFnestUI.showResult({ outputs: [{ blob: blob, fileName: 'PDFnest-merged-' + new Date().toISOString().slice(0, 10) + '.pdf', mimeType: 'application/pdf' }] });
+            await window.PDFnestUI.showResult({
+              outputs: [{
+                blob,
+                fileName: 'PDFnest-merged-' + new Date().toISOString().slice(0, 10) + '.pdf',
+                mimeType: 'application/pdf',
+                previewAllPages: true
+              }]
+            });
           }
           toast('Merged PDF ready 🎉');
         } catch (err) { console.error(err); toast('Merge failed — try again'); }
@@ -343,6 +350,6 @@
     })();
   </script>
 
-  </body>
+</body>
 
 </html>

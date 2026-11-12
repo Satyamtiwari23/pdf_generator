@@ -68,667 +68,958 @@
      PROFILE (copied 1:1 from the homepage so both behave the same)
      ============================================================ */
   function initProfile() {
-        /* ==========================================================
-           API CONFIGURATION
-           ========================================================== */
+    /* ==========================================================
+       API CONFIGURATION
+       ========================================================== */
 
-        /*
-           IMPORTANT:
-           Put your ACTUAL PDFnest production backend URL here.
-    
-           Do NOT use your CyberShield backend URL.
-    
-           Example:
-    
-           const API_BASE =
-             'https://pdf-generator-ochre-two.vercel.app';
-    
-           For local development:
-    
-           const API_BASE =
-             'http://localhost:5050';
-        */
+    /*
+       IMPORTANT:
+       Put your ACTUAL PDFnest production backend URL here.
+ 
+       Do NOT use your CyberShield backend URL.
+ 
+       Example:
+ 
+       const API_BASE =
+         'https://pdf-generator-ochre-two.vercel.app';
+ 
+       For local development:
+ 
+       const API_BASE =
+         'http://localhost:5050';
+    */
 
-        const API_BASE =
-          'https://pdf-generator-ochre-two.vercel.app';
-
-
-        /* ==========================================================
-           PROFILE ELEMENTS
-           ========================================================== */
-
-        const profileBtn =
-          document.getElementById('sidebarProfileBtn');
-
-        const sidebarUserName =
-          document.getElementById('sidebarUserName');
-
-        const sidebarUserEmail =
-          document.getElementById('sidebarUserEmail');
-
-        const profileDropdown =
-          document.getElementById('profileDropdown');
-
-        const profileInitial =
-          document.getElementById('sidebarUserInitial');
-
-        const profileAvatar =
-          document.getElementById('profileAvatar');
-
-        const profileName =
-          document.getElementById('profileName');
-
-        const dropdownProfileInitial =
-          document.getElementById('dropdownProfileInitial');
-
-        const dropdownProfileAvatar =
-          document.getElementById('dropdownProfileAvatar');
-
-        const profileEditBtn =
-          document.getElementById('profileEditBtn');
-
-        const profilePhotoMenu =
-          document.getElementById('profilePhotoMenu');
-
-        const changeProfilePictureBtn =
-          document.getElementById('changeProfilePictureBtn');
-
-        const deleteProfilePictureBtn =
-          document.getElementById('deleteProfilePictureBtn');
-
-        const profileEmail =
-          document.getElementById('profileEmail');
-
-        const settingsBtn =
-          document.getElementById('profileManageBtn');
-
-        const settingsModal =
-          document.getElementById('profileSettingsModal');
-
-        const closeSettingsBtn =
-          document.getElementById('closeSettingsBtn');
-
-        const profilePictureInput =
-          document.getElementById('profilePictureInput');
-
-        const removeProfilePictureBtn =
-          document.getElementById('removeProfilePictureBtn');
-
-        const settingsInitial =
-          document.getElementById('settingsInitial');
-
-        const settingsAvatarImage =
-          document.getElementById('settingsAvatarImage');
-
-        const profilePictureStatus =
-          document.getElementById('profilePictureStatus');
+    const API_BASE =
+      'https://pdf-generator-ochre-two.vercel.app';
 
 
-        /* ==========================================================
-           USER
-           ========================================================== */
+    /* ==========================================================
+       PROFILE ELEMENTS
+       ========================================================== */
 
-        let user = null;
+    const profileBtn =
+      document.getElementById('sidebarProfileBtn');
 
-        try {
+    const sidebarUserName =
+      document.getElementById('sidebarUserName');
 
-          user = JSON.parse(
-            localStorage.getItem('user') || 'null'
-          );
+    const sidebarUserEmail =
+      document.getElementById('sidebarUserEmail');
 
-        } catch (error) {
+    const profileDropdown =
+      document.getElementById('profileDropdown');
 
-          console.error(
-            'Unable to read user:',
-            error
-          );
+    const profileInitial =
+      document.getElementById('sidebarUserInitial');
+
+    const profileAvatar =
+      document.getElementById('profileAvatar');
+
+    const profileName =
+      document.getElementById('profileName');
+
+    const dropdownProfileInitial =
+      document.getElementById('dropdownProfileInitial');
+
+    const dropdownProfileAvatar =
+      document.getElementById('dropdownProfileAvatar');
+
+    const profileEditBtn =
+      document.getElementById('profileEditBtn');
+
+    const profilePhotoMenu =
+      document.getElementById('profilePhotoMenu');
+
+    const changeProfilePictureBtn =
+      document.getElementById('changeProfilePictureBtn');
+
+    const deleteProfilePictureBtn =
+      document.getElementById('deleteProfilePictureBtn');
+
+    const profileEmail =
+      document.getElementById('profileEmail');
+
+    const settingsBtn =
+      document.getElementById('profileManageBtn');
+
+    const settingsModal =
+      document.getElementById('profileSettingsModal');
+
+    const closeSettingsBtn =
+      document.getElementById('closeSettingsBtn');
+
+    const profilePictureInput =
+      document.getElementById('profilePictureInput');
+
+    const removeProfilePictureBtn =
+      document.getElementById('removeProfilePictureBtn');
+
+    const settingsInitial =
+      document.getElementById('settingsInitial');
+
+    const settingsAvatarImage =
+      document.getElementById('settingsAvatarImage');
+
+    const profilePictureStatus =
+      document.getElementById('profilePictureStatus');
+
+
+    /* ==========================================================
+       USER
+       ========================================================== */
+
+    let user = null;
+
+    try {
+
+      user = JSON.parse(
+        localStorage.getItem('user') || 'null'
+      );
+
+    } catch (error) {
+
+      console.error(
+        'Unable to read user:',
+        error
+      );
+
+    }
+
+
+
+    /* ==========================================================
+       RENDER PROFILE
+       ========================================================== */
+
+    function renderProfile() {
+
+      if (!user) return;
+
+
+      const name =
+        user.name || 'User';
+
+      const email =
+        user.email || '';
+
+      const initial =
+        name
+          .trim()
+          .charAt(0)
+          .toUpperCase() || 'U';
+
+
+      /* --------------------------------------------------------
+         Name + email
+         -------------------------------------------------------- */
+
+      if (profileName) {
+        profileName.textContent = name;
+      }
+
+      if (profileEmail) {
+        profileEmail.textContent = email;
+      }
+
+      if (sidebarUserName) {
+        sidebarUserName.textContent = name;
+      }
+
+      if (sidebarUserEmail) {
+        sidebarUserEmail.textContent = email || 'Signed in';
+      }
+
+
+      /* --------------------------------------------------------
+         Initial
+         -------------------------------------------------------- */
+
+      if (profileInitial) {
+        profileInitial.textContent = initial;
+      }
+
+      if (dropdownProfileInitial) {
+        dropdownProfileInitial.textContent = initial;
+      }
+
+      if (settingsInitial) {
+        settingsInitial.textContent = initial;
+      }
+
+
+      /* --------------------------------------------------------
+         PROFILE PICTURE EXISTS
+         -------------------------------------------------------- */
+
+      if (
+        user.profilePicture &&
+        typeof user.profilePicture === 'string'
+      ) {
+
+        /* Header avatar */
+
+        if (profileAvatar) {
+
+          profileAvatar.src =
+            user.profilePicture;
+
+          profileAvatar.style.display =
+            'block';
+
+        }
+
+        if (profileInitial) {
+
+          profileInitial.style.display =
+            'none';
+
+        }
+
+
+        /* Settings preview */
+
+        if (settingsAvatarImage) {
+
+          settingsAvatarImage.src =
+            user.profilePicture;
+
+          settingsAvatarImage.style.display =
+            'block';
+
+        }
+
+        if (settingsInitial) {
+
+          settingsInitial.style.display =
+            'none';
 
         }
 
 
 
-        /* ==========================================================
-           RENDER PROFILE
-           ========================================================== */
-
-        function renderProfile() {
-
-          if (!user) return;
+      }
 
 
-          const name =
-            user.name || 'User';
+      /* --------------------------------------------------------
+         NO PROFILE PICTURE
+         -------------------------------------------------------- */
 
-          const email =
-            user.email || '';
+      else {
 
-          const initial =
-            name
-              .trim()
-              .charAt(0)
-              .toUpperCase() || 'U';
+        if (profileAvatar) {
 
+          profileAvatar.removeAttribute('src');
 
-          /* --------------------------------------------------------
-             Name + email
-             -------------------------------------------------------- */
+          profileAvatar.style.display =
+            'none';
 
-          if (profileName) {
-            profileName.textContent = name;
-          }
+        }
 
-          if (profileEmail) {
-            profileEmail.textContent = email;
-          }
+        if (profileInitial) {
 
-          if (sidebarUserName) {
-            sidebarUserName.textContent = name;
-          }
+          profileInitial.style.display =
+            'grid';
 
-          if (sidebarUserEmail) {
-            sidebarUserEmail.textContent = email || 'Signed in';
-          }
+        }
 
 
-          /* --------------------------------------------------------
-             Initial
-             -------------------------------------------------------- */
+        if (settingsAvatarImage) {
 
-          if (profileInitial) {
-            profileInitial.textContent = initial;
-          }
+          settingsAvatarImage.removeAttribute(
+            'src'
+          );
+
+          settingsAvatarImage.style.display =
+            'none';
+
+        }
+
+        if (settingsInitial) {
+
+          settingsInitial.style.display =
+            'block';
+
+        }
+
+      }
+
+      /* --------------------------------------------------------
+ DROPDOWN PROFILE PICTURE
+ -------------------------------------------------------- */
+
+      if (dropdownProfileAvatar) {
+
+        if (
+          user.profilePicture &&
+          typeof user.profilePicture === 'string'
+        ) {
+
+          dropdownProfileAvatar.src =
+            user.profilePicture;
+
+          dropdownProfileAvatar.style.display =
+            'block';
 
           if (dropdownProfileInitial) {
-            dropdownProfileInitial.textContent = initial;
+            dropdownProfileInitial.style.display =
+              'none';
           }
 
-          if (settingsInitial) {
-            settingsInitial.textContent = initial;
-          }
+        } else {
 
+          dropdownProfileAvatar.removeAttribute('src');
 
-          /* --------------------------------------------------------
-             PROFILE PICTURE EXISTS
-             -------------------------------------------------------- */
+          dropdownProfileAvatar.style.display =
+            'none';
 
-          if (
-            user.profilePicture &&
-            typeof user.profilePicture === 'string'
-          ) {
-
-            /* Header avatar */
-
-            if (profileAvatar) {
-
-              profileAvatar.src =
-                user.profilePicture;
-
-              profileAvatar.style.display =
-                'block';
-
-            }
-
-            if (profileInitial) {
-
-              profileInitial.style.display =
-                'none';
-
-            }
-
-
-            /* Settings preview */
-
-            if (settingsAvatarImage) {
-
-              settingsAvatarImage.src =
-                user.profilePicture;
-
-              settingsAvatarImage.style.display =
-                'block';
-
-            }
-
-            if (settingsInitial) {
-
-              settingsInitial.style.display =
-                'none';
-
-            }
-
-
-
-          }
-
-
-          /* --------------------------------------------------------
-             NO PROFILE PICTURE
-             -------------------------------------------------------- */
-
-          else {
-
-            if (profileAvatar) {
-
-              profileAvatar.removeAttribute('src');
-
-              profileAvatar.style.display =
-                'none';
-
-            }
-
-            if (profileInitial) {
-
-              profileInitial.style.display =
-                'grid';
-
-            }
-
-
-            if (settingsAvatarImage) {
-
-              settingsAvatarImage.removeAttribute(
-                'src'
-              );
-
-              settingsAvatarImage.style.display =
-                'none';
-
-            }
-
-            if (settingsInitial) {
-
-              settingsInitial.style.display =
-                'block';
-
-            }
-
-          }
-
-          /* --------------------------------------------------------
-     DROPDOWN PROFILE PICTURE
-     -------------------------------------------------------- */
-
-          if (dropdownProfileAvatar) {
-
-            if (
-              user.profilePicture &&
-              typeof user.profilePicture === 'string'
-            ) {
-
-              dropdownProfileAvatar.src =
-                user.profilePicture;
-
-              dropdownProfileAvatar.style.display =
-                'block';
-
-              if (dropdownProfileInitial) {
-                dropdownProfileInitial.style.display =
-                  'none';
-              }
-
-            } else {
-
-              dropdownProfileAvatar.removeAttribute('src');
-
-              dropdownProfileAvatar.style.display =
-                'none';
-
-              if (dropdownProfileInitial) {
-                dropdownProfileInitial.style.display =
-                  'block';
-              }
-
-            }
+          if (dropdownProfileInitial) {
+            dropdownProfileInitial.style.display =
+              'block';
           }
 
         }
+      }
+
+    }
 
 
-        /* Render immediately */
+    /* Render immediately */
 
-        renderProfile();
-
-
-        /* Account menu events are delegated in the final script at the end of this page. */
+    renderProfile();
 
 
-        /* ==========================================================
-     PROFILE PHOTO EDIT MENU
-     ========================================================== */
+    /* Account menu events are delegated in the final script at the end of this page. */
 
-        profileEditBtn?.addEventListener(
-          'click',
-          function (event) {
 
-            event.preventDefault();
-            event.stopPropagation();
+    /* ==========================================================
+ PROFILE PHOTO EDIT MENU
+ ========================================================== */
 
-            profilePhotoMenu?.classList.toggle('show');
+    profileEditBtn?.addEventListener(
+      'click',
+      function (event) {
 
-          }
+        event.preventDefault();
+        event.stopPropagation();
+
+        profilePhotoMenu?.classList.toggle('show');
+
+      }
+    );
+
+
+    /* ==========================================================
+       CHANGE PROFILE PICTURE
+       ========================================================== */
+
+    changeProfilePictureBtn?.addEventListener(
+      'click',
+      function (event) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        profilePhotoMenu?.classList.remove('show');
+
+        profilePictureInput?.click();
+
+      }
+    );
+
+
+    /* ==========================================================
+       DELETE PROFILE PICTURE
+       ========================================================== */
+
+    deleteProfilePictureBtn?.addEventListener(
+      'click',
+      async function (event) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        profilePhotoMenu?.classList.remove('show');
+
+        if (!user?.profilePicture) {
+          return;
+        }
+
+        const confirmed =
+          confirm('Delete your profile picture?');
+
+        if (!confirmed) {
+          return;
+        }
+
+        /* Use your existing remove-picture logic */
+        removeProfilePictureBtn?.click();
+
+      }
+    );
+
+
+    /* ==========================================================
+       OPEN SETTINGS
+       ========================================================== */
+
+    settingsBtn?.addEventListener(
+      'click',
+      function (event) {
+
+        event.preventDefault();
+
+        event.stopPropagation();
+
+
+        /* Close profile dropdown */
+
+        profileDropdown?.classList.remove('show');
+        profileBtn?.setAttribute('aria-expanded', 'false');
+
+
+        /* Open settings */
+
+        settingsModal?.classList.add(
+          'show'
         );
 
 
-        /* ==========================================================
-           CHANGE PROFILE PICTURE
-           ========================================================== */
+        if (profilePictureStatus) {
 
-        changeProfilePictureBtn?.addEventListener(
-          'click',
-          function (event) {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            profilePhotoMenu?.classList.remove('show');
-
-            profilePictureInput?.click();
-
-          }
-        );
-
-
-        /* ==========================================================
-           DELETE PROFILE PICTURE
-           ========================================================== */
-
-        deleteProfilePictureBtn?.addEventListener(
-          'click',
-          async function (event) {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            profilePhotoMenu?.classList.remove('show');
-
-            if (!user?.profilePicture) {
-              return;
-            }
-
-            const confirmed =
-              confirm('Delete your profile picture?');
-
-            if (!confirmed) {
-              return;
-            }
-
-            /* Use your existing remove-picture logic */
-            removeProfilePictureBtn?.click();
-
-          }
-        );
-
-
-        /* ==========================================================
-           OPEN SETTINGS
-           ========================================================== */
-
-        settingsBtn?.addEventListener(
-          'click',
-          function (event) {
-
-            event.preventDefault();
-
-            event.stopPropagation();
-
-
-            /* Close profile dropdown */
-
-            profileDropdown?.classList.remove('show');
-            profileBtn?.setAttribute('aria-expanded', 'false');
-
-
-            /* Open settings */
-
-            settingsModal?.classList.add(
-              'show'
-            );
-
-
-            if (profilePictureStatus) {
-
-              profilePictureStatus.textContent =
-                '';
-
-            }
-
-          }
-        );
-
-
-        /* ==========================================================
-           CLOSE SETTINGS
-           ========================================================== */
-
-        function closeSettings() {
-
-          settingsModal?.classList.remove(
-            'show'
-          );
+          profilePictureStatus.textContent =
+            '';
 
         }
 
-
-        closeSettingsBtn?.addEventListener(
-          'click',
-          closeSettings
-        );
+      }
+    );
 
 
-        /* Click outside modal */
+    /* ==========================================================
+       CLOSE SETTINGS
+       ========================================================== */
 
-        settingsModal?.addEventListener(
-          'click',
-          function (event) {
+    function closeSettings() {
 
-            if (
-              event.target === settingsModal
-            ) {
+      settingsModal?.classList.remove(
+        'show'
+      );
 
-              closeSettings();
-
-            }
-
-          }
-        );
+    }
 
 
-        /* ESC key */
-
-        document.addEventListener(
-          'keydown',
-          function (event) {
-
-            if (
-              event.key === 'Escape' &&
-              settingsModal?.classList.contains('show')
-            ) {
-
-              closeSettings();
-
-            }
-
-          }
-        );
+    closeSettingsBtn?.addEventListener(
+      'click',
+      closeSettings
+    );
 
 
-        /* ==========================================================
-           COMPRESS PROFILE PICTURE
-           ========================================================== */
+    /* Click outside modal */
 
-        function compressProfilePicture(file) {
+    settingsModal?.addEventListener(
+      'click',
+      function (event) {
 
-          return new Promise(
-            function (resolve, reject) {
+        if (
+          event.target === settingsModal
+        ) {
 
-              const reader =
-                new FileReader();
+          closeSettings();
+
+        }
+
+      }
+    );
 
 
-              reader.onload =
+    /* ESC key */
+
+    document.addEventListener(
+      'keydown',
+      function (event) {
+
+        if (
+          event.key === 'Escape' &&
+          settingsModal?.classList.contains('show')
+        ) {
+
+          closeSettings();
+
+        }
+
+      }
+    );
+
+
+    /* ==========================================================
+       COMPRESS PROFILE PICTURE
+       ========================================================== */
+
+    function compressProfilePicture(file) {
+
+      return new Promise(
+        function (resolve, reject) {
+
+          const reader =
+            new FileReader();
+
+
+          reader.onload =
+            function () {
+
+              const image =
+                new Image();
+
+
+              image.onload =
                 function () {
 
-                  const image =
-                    new Image();
+                  /*
+                     Profile picture does NOT need
+                     high resolution.
+ 
+                     Final image:
+                     128 × 128
+ 
+                     This drastically reduces
+                     database storage.
+                  */
+
+                  const SIZE = 128;
 
 
-                  image.onload =
-                    function () {
+                  const canvas =
+                    document.createElement(
+                      'canvas'
+                    );
 
-                      /*
-                         Profile picture does NOT need
-                         high resolution.
-    
-                         Final image:
-                         128 × 128
-    
-                         This drastically reduces
-                         database storage.
-                      */
+                  canvas.width =
+                    SIZE;
 
-                      const SIZE = 128;
+                  canvas.height =
+                    SIZE;
 
 
-                      const canvas =
-                        document.createElement(
-                          'canvas'
-                        );
-
-                      canvas.width =
-                        SIZE;
-
-                      canvas.height =
-                        SIZE;
+                  const ctx =
+                    canvas.getContext(
+                      '2d'
+                    );
 
 
-                      const ctx =
-                        canvas.getContext(
-                          '2d'
-                        );
+                  /*
+                     High quality image
+                     smoothing before resize.
+                  */
+
+                  ctx.imageSmoothingEnabled =
+                    true;
+
+                  ctx.imageSmoothingQuality =
+                    'high';
 
 
-                      /*
-                         High quality image
-                         smoothing before resize.
-                      */
+                  /*
+                     Cover crop.
+ 
+                     This keeps the image
+                     square without stretching.
+                  */
 
-                      ctx.imageSmoothingEnabled =
-                        true;
-
-                      ctx.imageSmoothingQuality =
-                        'high';
-
-
-                      /*
-                         Cover crop.
-    
-                         This keeps the image
-                         square without stretching.
-                      */
-
-                      const scale =
-                        Math.max(
-                          SIZE / image.width,
-                          SIZE / image.height
-                        );
+                  const scale =
+                    Math.max(
+                      SIZE / image.width,
+                      SIZE / image.height
+                    );
 
 
-                      const width =
-                        image.width * scale;
+                  const width =
+                    image.width * scale;
 
-                      const height =
-                        image.height * scale;
-
-
-                      const x =
-                        (SIZE - width) / 2;
-
-                      const y =
-                        (SIZE - height) / 2;
+                  const height =
+                    image.height * scale;
 
 
-                      ctx.drawImage(
-                        image,
-                        x,
-                        y,
-                        width,
-                        height
-                      );
+                  const x =
+                    (SIZE - width) / 2;
+
+                  const y =
+                    (SIZE - height) / 2;
 
 
-                      /*
-                         Convert to WebP.
-    
-                         WebP is considerably smaller
-                         than keeping the original image.
-    
-                         Quality 0.60 is enough for
-                         a small profile avatar.
-                      */
-
-                      const compressed =
-                        canvas.toDataURL(
-                          'image/webp',
-                          0.60
-                        );
+                  ctx.drawImage(
+                    image,
+                    x,
+                    y,
+                    width,
+                    height
+                  );
 
 
-                      resolve(
-                        compressed
-                      );
+                  /*
+                     Convert to WebP.
+ 
+                     WebP is considerably smaller
+                     than keeping the original image.
+ 
+                     Quality 0.60 is enough for
+                     a small profile avatar.
+                  */
 
-                    };
-
-
-                  image.onerror =
-                    function () {
-
-                      reject(
-                        new Error(
-                          'Unable to read image'
-                        )
-                      );
-
-                    };
+                  const compressed =
+                    canvas.toDataURL(
+                      'image/webp',
+                      0.60
+                    );
 
 
-                  image.src =
-                    reader.result;
+                  resolve(
+                    compressed
+                  );
 
                 };
 
 
-              reader.onerror =
+              image.onerror =
                 function () {
 
                   reject(
                     new Error(
-                      'Unable to read selected file'
+                      'Unable to read image'
                     )
                   );
 
                 };
 
 
-              reader.readAsDataURL(
-                file
+              image.src =
+                reader.result;
+
+            };
+
+
+          reader.onerror =
+            function () {
+
+              reject(
+                new Error(
+                  'Unable to read selected file'
+                )
               );
 
-            }
+            };
+
+
+          reader.readAsDataURL(
+            file
           );
+
+        }
+      );
+
+    }
+
+
+    /* ==========================================================
+       SAVE PROFILE PICTURE TO BACKEND
+       ========================================================== */
+
+    async function saveProfilePicture(
+      compressedImage
+    ) {
+
+      const token =
+        localStorage.getItem('token');
+
+
+      if (!token) {
+
+        throw new Error(
+          'Your login session has expired. Please login again.'
+        );
+
+      }
+
+
+      const response =
+        await fetch(
+          `${API_BASE}/api/auth/profile-picture`,
+          {
+
+            method: 'PUT',
+
+            headers: {
+
+              'Content-Type':
+                'application/json',
+
+              'Authorization':
+                `Bearer ${token}`
+
+            },
+
+            body: JSON.stringify({
+
+              profilePicture:
+                compressedImage
+
+            })
+
+          }
+        );
+
+
+      let data = null;
+
+
+      try {
+
+        data =
+          await response.json();
+
+      } catch (error) {
+
+        data = null;
+
+      }
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data?.message ||
+          'Unable to save profile picture'
+        );
+
+      }
+
+
+      return data;
+
+    }
+
+
+    /* ==========================================================
+       PROFILE PICTURE SELECT
+       ========================================================== */
+
+    profilePictureInput?.addEventListener(
+      'change',
+      async function () {
+
+        const file =
+          this.files?.[0];
+
+
+        if (!file) return;
+
+
+        /* --------------------------------------------------------
+           Validate file
+           -------------------------------------------------------- */
+
+        if (
+          !file.type.startsWith(
+            'image/'
+          )
+        ) {
+
+          if (profilePictureStatus) {
+
+            profilePictureStatus.textContent =
+              'Please select an image file.';
+
+          }
+
+          this.value = '';
+
+          return;
 
         }
 
 
-        /* ==========================================================
-           SAVE PROFILE PICTURE TO BACKEND
-           ========================================================== */
+        try {
 
-        async function saveProfilePicture(
-          compressedImage
+          if (profilePictureStatus) {
+
+            profilePictureStatus.textContent =
+              'Compressing picture...';
+
+          }
+
+
+          /* ------------------------------------------------------
+             Compress locally
+ 
+             Original file NEVER gets sent.
+             Only the compressed WebP is sent.
+             ------------------------------------------------------ */
+
+          const compressedImage =
+            await compressProfilePicture(
+              file
+            );
+
+
+          /* ------------------------------------------------------
+             Check compressed size
+ 
+             Base64 is slightly larger than
+             the binary WebP, but our limit is
+             still very small.
+             ------------------------------------------------------ */
+
+          const approxBytes =
+            Math.ceil(
+              compressedImage.length * 0.75
+            );
+
+
+          if (
+            approxBytes > 75000
+          ) {
+
+            throw new Error(
+              'Compressed profile picture is still too large.'
+            );
+
+          }
+
+
+          if (profilePictureStatus) {
+
+            profilePictureStatus.textContent =
+              'Saving profile picture...';
+
+          }
+
+
+          /* ------------------------------------------------------
+             Send to backend
+             ------------------------------------------------------ */
+
+          const data =
+            await saveProfilePicture(
+              compressedImage
+            );
+
+
+          /* ------------------------------------------------------
+             Update localStorage
+             ------------------------------------------------------ */
+
+          if (data?.user) {
+
+            user =
+              data.user;
+
+            localStorage.setItem(
+              'user',
+              JSON.stringify(user)
+            );
+
+          }
+          else {
+
+            /*
+               Fallback in case backend doesn't
+               return complete user object.
+            */
+
+            user.profilePicture =
+              compressedImage;
+
+            localStorage.setItem(
+              'user',
+              JSON.stringify(user)
+            );
+
+          }
+
+
+          /* ------------------------------------------------------
+             Update UI immediately
+             ------------------------------------------------------ */
+
+          renderProfile();
+
+
+          if (profilePictureStatus) {
+
+            profilePictureStatus.textContent =
+              'Profile picture updated ✓';
+
+          }
+
+
+          /* Allow selecting same image again */
+
+          this.value = '';
+
+
+        } catch (error) {
+
+          console.error(
+            'Profile picture error:',
+            error
+          );
+
+
+          if (profilePictureStatus) {
+
+            profilePictureStatus.textContent =
+              error.message ||
+              'Unable to update profile picture';
+
+          }
+
+
+          this.value = '';
+
+        }
+
+      }
+    );
+
+
+    /* ==========================================================
+       REMOVE PROFILE PICTURE
+       ========================================================== */
+
+    removeProfilePictureBtn?.addEventListener(
+      'click',
+      async function () {
+
+        if (
+          !user ||
+          !user.profilePicture
         ) {
 
+          if (profilePictureStatus) {
+
+            profilePictureStatus.textContent =
+              'No profile picture to remove.';
+
+          }
+
+          return;
+
+        }
+
+
+        try {
+
+          if (profilePictureStatus) {
+
+            profilePictureStatus.textContent =
+              'Removing picture...';
+
+          }
+
+
           const token =
-            localStorage.getItem('token');
+            localStorage.getItem(
+              'token'
+            );
 
 
           if (!token) {
@@ -760,7 +1051,7 @@
                 body: JSON.stringify({
 
                   profilePicture:
-                    compressedImage
+                    null
 
                 })
 
@@ -787,388 +1078,97 @@
 
             throw new Error(
               data?.message ||
-              'Unable to save profile picture'
+              'Unable to remove profile picture'
             );
 
           }
 
 
-          return data;
+          /* Update user */
+
+          if (data?.user) {
+
+            user =
+              data.user;
+
+          }
+          else {
+
+            user.profilePicture =
+              null;
+
+          }
+
+
+          localStorage.setItem(
+            'user',
+            JSON.stringify(user)
+          );
+
+
+          /* Update UI */
+
+          renderProfile();
+
+
+          if (profilePictureStatus) {
+
+            profilePictureStatus.textContent =
+              'Profile picture removed ✓';
+
+          }
+
+        } catch (error) {
+
+          console.error(
+            'Remove profile picture error:',
+            error
+          );
+
+
+          if (profilePictureStatus) {
+
+            profilePictureStatus.textContent =
+              error.message ||
+              'Unable to remove profile picture';
+
+          }
 
         }
 
-
-        /* ==========================================================
-           PROFILE PICTURE SELECT
-           ========================================================== */
-
-        profilePictureInput?.addEventListener(
-          'change',
-          async function () {
-
-            const file =
-              this.files?.[0];
-
-
-            if (!file) return;
-
-
-            /* --------------------------------------------------------
-               Validate file
-               -------------------------------------------------------- */
-
-            if (
-              !file.type.startsWith(
-                'image/'
-              )
-            ) {
-
-              if (profilePictureStatus) {
-
-                profilePictureStatus.textContent =
-                  'Please select an image file.';
-
-              }
-
-              this.value = '';
-
-              return;
-
-            }
-
-
-            try {
-
-              if (profilePictureStatus) {
-
-                profilePictureStatus.textContent =
-                  'Compressing picture...';
-
-              }
-
-
-              /* ------------------------------------------------------
-                 Compress locally
-    
-                 Original file NEVER gets sent.
-                 Only the compressed WebP is sent.
-                 ------------------------------------------------------ */
-
-              const compressedImage =
-                await compressProfilePicture(
-                  file
-                );
-
-
-              /* ------------------------------------------------------
-                 Check compressed size
-    
-                 Base64 is slightly larger than
-                 the binary WebP, but our limit is
-                 still very small.
-                 ------------------------------------------------------ */
-
-              const approxBytes =
-                Math.ceil(
-                  compressedImage.length * 0.75
-                );
-
-
-              if (
-                approxBytes > 75000
-              ) {
-
-                throw new Error(
-                  'Compressed profile picture is still too large.'
-                );
-
-              }
-
-
-              if (profilePictureStatus) {
-
-                profilePictureStatus.textContent =
-                  'Saving profile picture...';
-
-              }
-
-
-              /* ------------------------------------------------------
-                 Send to backend
-                 ------------------------------------------------------ */
-
-              const data =
-                await saveProfilePicture(
-                  compressedImage
-                );
-
-
-              /* ------------------------------------------------------
-                 Update localStorage
-                 ------------------------------------------------------ */
-
-              if (data?.user) {
-
-                user =
-                  data.user;
-
-                localStorage.setItem(
-                  'user',
-                  JSON.stringify(user)
-                );
-
-              }
-              else {
-
-                /*
-                   Fallback in case backend doesn't
-                   return complete user object.
-                */
-
-                user.profilePicture =
-                  compressedImage;
-
-                localStorage.setItem(
-                  'user',
-                  JSON.stringify(user)
-                );
-
-              }
-
-
-              /* ------------------------------------------------------
-                 Update UI immediately
-                 ------------------------------------------------------ */
-
-              renderProfile();
-
-
-              if (profilePictureStatus) {
-
-                profilePictureStatus.textContent =
-                  'Profile picture updated ✓';
-
-              }
-
-
-              /* Allow selecting same image again */
-
-              this.value = '';
-
-
-            } catch (error) {
-
-              console.error(
-                'Profile picture error:',
-                error
-              );
-
-
-              if (profilePictureStatus) {
-
-                profilePictureStatus.textContent =
-                  error.message ||
-                  'Unable to update profile picture';
-
-              }
-
-
-              this.value = '';
-
-            }
-
-          }
-        );
-
-
-        /* ==========================================================
-           REMOVE PROFILE PICTURE
-           ========================================================== */
-
-        removeProfilePictureBtn?.addEventListener(
-          'click',
-          async function () {
-
-            if (
-              !user ||
-              !user.profilePicture
-            ) {
-
-              if (profilePictureStatus) {
-
-                profilePictureStatus.textContent =
-                  'No profile picture to remove.';
-
-              }
-
-              return;
-
-            }
-
-
-            try {
-
-              if (profilePictureStatus) {
-
-                profilePictureStatus.textContent =
-                  'Removing picture...';
-
-              }
-
-
-              const token =
-                localStorage.getItem(
-                  'token'
-                );
-
-
-              if (!token) {
-
-                throw new Error(
-                  'Your login session has expired. Please login again.'
-                );
-
-              }
-
-
-              const response =
-                await fetch(
-                  `${API_BASE}/api/auth/profile-picture`,
-                  {
-
-                    method: 'PUT',
-
-                    headers: {
-
-                      'Content-Type':
-                        'application/json',
-
-                      'Authorization':
-                        `Bearer ${token}`
-
-                    },
-
-                    body: JSON.stringify({
-
-                      profilePicture:
-                        null
-
-                    })
-
-                  }
-                );
-
-
-              let data = null;
-
-
-              try {
-
-                data =
-                  await response.json();
-
-              } catch (error) {
-
-                data = null;
-
-              }
-
-
-              if (!response.ok) {
-
-                throw new Error(
-                  data?.message ||
-                  'Unable to remove profile picture'
-                );
-
-              }
-
-
-              /* Update user */
-
-              if (data?.user) {
-
-                user =
-                  data.user;
-
-              }
-              else {
-
-                user.profilePicture =
-                  null;
-
-              }
-
-
-              localStorage.setItem(
-                'user',
-                JSON.stringify(user)
-              );
-
-
-              /* Update UI */
-
-              renderProfile();
-
-
-              if (profilePictureStatus) {
-
-                profilePictureStatus.textContent =
-                  'Profile picture removed ✓';
-
-              }
-
-            } catch (error) {
-
-              console.error(
-                'Remove profile picture error:',
-                error
-              );
-
-
-              if (profilePictureStatus) {
-
-                profilePictureStatus.textContent =
-                  error.message ||
-                  'Unable to remove profile picture';
-
-              }
-
-            }
-
-          }
-        );
-
-
-
-        /* ==========================================================
-           LOGOUT
-           ========================================================== */
-
-        document
-          .getElementById('logoutBtn')
-          ?.addEventListener('click', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            const accountMenu = document.getElementById('profileDropdown');
-            accountMenu?.classList.remove('show');
-            if (accountMenu) {
-              accountMenu.hidden = true;
-              accountMenu.style.removeProperty('display');
-              accountMenu.style.removeProperty('visibility');
-              accountMenu.style.removeProperty('opacity');
-            }
-            document.getElementById('sidebarProfileBtn')?.setAttribute('aria-expanded', 'false');
-
-            // Clear the local session and return to the login page.
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            sessionStorage.clear();
-
-            const loginUrl = new URL(ROOT + 'login.html', window.location.href);
-            window.location.replace(loginUrl.href);
-          });
+      }
+    );
+
+
+
+    /* ==========================================================
+       LOGOUT
+       ========================================================== */
+
+    document
+      .getElementById('logoutBtn')
+      ?.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const accountMenu = document.getElementById('profileDropdown');
+        accountMenu?.classList.remove('show');
+        if (accountMenu) {
+          accountMenu.hidden = true;
+          accountMenu.style.removeProperty('display');
+          accountMenu.style.removeProperty('visibility');
+          accountMenu.style.removeProperty('opacity');
+        }
+        document.getElementById('sidebarProfileBtn')?.setAttribute('aria-expanded', 'false');
+
+        // Clear the local session and return to the login page.
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.clear();
+
+        const loginUrl = new URL(ROOT + 'login.html', window.location.href);
+        window.location.replace(loginUrl.href);
+      });
 
   }
 
@@ -1366,7 +1366,7 @@
     if (!window.pdfjsLib) await loadScript(PDFJS + 'pdf.min.js');
     if (!window.pdfjsLib.GlobalWorkerOptions.workerSrc) window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js';
     const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(await o.blob.arrayBuffer()) }).promise;
-    const show = Math.min(pdf.numPages, compact ? 1 : 8);
+    const show = compact && !o.previewAllPages ? 1 : pdf.numPages;
     const wrap = document.createElement('div');
     wrap.className = 'result-pages';
     for (let i = 1; i <= show; i++) {
@@ -1410,7 +1410,10 @@
   /* opts: { outputs:[{blob,fileName,mimeType}], title?, note?, zipName? } */
   UI.showResult = async function (opts) {
     const outputs = (opts.outputs || []).filter(o => o && o.blob).map(o => ({
-      blob: o.blob, fileName: o.fileName || 'file', mimeType: o.mimeType || o.blob.type || 'application/octet-stream'
+      blob: o.blob,
+      fileName: o.fileName || 'file',
+      mimeType: o.mimeType || o.blob.type || 'application/octet-stream',
+      previewAllPages: o.previewAllPages === true
     }));
     if (!outputs.length) return;
     UI.hideResult();
